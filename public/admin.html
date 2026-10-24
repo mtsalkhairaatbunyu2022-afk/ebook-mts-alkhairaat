@@ -519,13 +519,13 @@
             <button id="pdfZoomInBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-in"></i></button>
             <div class="vr bg-secondary mx-1 d-none d-md-block" style="height: 20px;"></div>
 
-            <!-- Mode Baca: Per Halaman vs Scroll Down -->
+            <!-- Mode Baca: Scroll Down (Default) vs Per Halaman -->
             <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Mode Baca">
-              <button id="modeSinglePageBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold py-1 px-2" title="Mode Baca Per Halaman">
-                <i class="bi bi-file-earmark-text me-1"></i> Per Halaman
-              </button>
-              <button id="modeScrollBtn" type="button" class="btn btn-sm btn-outline-light text-white py-1 px-2" title="Mode Baca Gulir ke Bawah (Scroll Down)">
+              <button id="modeScrollBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold py-1 px-2" title="Mode Baca Gulir ke Bawah (Scroll Down)">
                 <i class="bi bi-arrows-vertical me-1"></i> Scroll Down
+              </button>
+              <button id="modeSinglePageBtn" type="button" class="btn btn-sm btn-outline-light text-white py-1 px-2" title="Mode Baca Per Halaman">
+                <i class="bi bi-file-earmark-text me-1"></i> Per Halaman
               </button>
             </div>
           </div>
@@ -586,7 +586,7 @@
     let currentPdfDoc = null;
     let currentPdfPage = 1;
     let pdfZoomScale = 1.2;
-    let readerViewMode = 'single'; // 'single' or 'scroll'
+    let readerViewMode = 'scroll'; // Default to continuous scroll-down mode
     let scrollObserver = null;
     let renderedScrollPages = new Set();
 
@@ -664,8 +664,20 @@
         container.appendChild(wrapper);
       }
 
-      // IntersectionObserver for fast, lazy rendering while scrolling
+      // Preload first 3 pages immediately
+      const initialBatch = Math.min(3, currentPdfDoc.numPages);
+      for (let p = 1; p <= initialBatch; p++) {
+        await renderScrollPage(p);
+      }
+
+      // Modal body scroll handler for smooth page loading & counter tracking
       const modalBody = document.getElementById('readerModalBody');
+      if (modalBody) {
+        modalBody.removeEventListener('scroll', handleModalScrollCheck);
+        modalBody.addEventListener('scroll', handleModalScrollCheck, { passive: true });
+      }
+
+      // IntersectionObserver for fast, lazy rendering while scrolling
       scrollObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           const pageNum = parseInt(entry.target.getAttribute('data-page-num'));
@@ -679,8 +691,8 @@
         });
       }, {
         root: modalBody,
-        rootMargin: '500px 0px 500px 0px',
-        threshold: 0.1
+        rootMargin: '800px 0px 800px 0px',
+        threshold: 0.05
       });
 
       for (let i = 1; i <= currentPdfDoc.numPages; i++) {
@@ -688,11 +700,33 @@
         if (el) scrollObserver.observe(el);
       }
 
-      // Render the current page immediately
-      await renderScrollPage(currentPdfPage || 1);
       if (currentPdfPage > 1) {
         const targetEl = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
         if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function handleModalScrollCheck() {
+      if (!currentPdfDoc || readerViewMode !== 'scroll') return;
+      const modalBody = document.getElementById('readerModalBody');
+      if (!modalBody) return;
+      const scrollTop = modalBody.scrollTop;
+      const scrollBottom = scrollTop + modalBody.clientHeight;
+
+      for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+        const wrapper = document.getElementById(`pdfPageWrapper_${i}`);
+        if (!wrapper) continue;
+        const top = wrapper.offsetTop;
+        const bottom = top + wrapper.offsetHeight;
+        if (bottom >= scrollTop - 800 && top <= scrollBottom + 800) {
+          if (!renderedScrollPages.has(i)) {
+            renderScrollPage(i);
+          }
+        }
+        if (top <= scrollTop + modalBody.clientHeight / 2 && bottom >= scrollTop + modalBody.clientHeight / 2) {
+          document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${i} / ${currentPdfDoc.numPages}`;
+          currentPdfPage = i;
+        }
       }
     }
 
@@ -711,6 +745,9 @@
 
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+        canvas.style.width = `${Math.round(viewport.width / dpr)}px`;
+        canvas.style.height = `${Math.round(viewport.height / dpr)}px`;
+        canvas.style.maxWidth = '100%';
         wrapper.style.width = `${Math.round(viewport.width / dpr)}px`;
         wrapper.style.minHeight = `${Math.round(viewport.height / dpr)}px`;
 
@@ -732,23 +769,34 @@
       const scrollContainer = document.getElementById('pdfScrollContainer');
 
       if (mode === 'scroll') {
-        singleBtn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
-        singleBtn.classList.add('btn-outline-light', 'text-white');
-        scrollBtn.classList.remove('btn-outline-light', 'text-white');
-        scrollBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+        if (singleBtn) {
+          singleBtn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
+          singleBtn.classList.add('btn-outline-light', 'text-white');
+        }
+        if (scrollBtn) {
+          scrollBtn.classList.remove('btn-outline-light', 'text-white');
+          scrollBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+        }
 
-        singleCanvas.style.display = 'none';
+        if (singleCanvas) singleCanvas.style.display = 'none';
         initScrollDownView();
       } else {
-        scrollBtn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
-        scrollBtn.classList.add('btn-outline-light', 'text-white');
-        singleBtn.classList.remove('btn-outline-light', 'text-white');
-        singleBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+        if (scrollBtn) {
+          scrollBtn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
+          scrollBtn.classList.add('btn-outline-light', 'text-white');
+        }
+        if (singleBtn) {
+          singleBtn.classList.remove('btn-outline-light', 'text-white');
+          singleBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+        }
 
         if (scrollObserver) scrollObserver.disconnect();
-        scrollContainer.style.display = 'none';
-        singleCanvas.style.display = 'block';
-        renderModalPdfPage(currentPdfPage);
+        const modalBody = document.getElementById('readerModalBody');
+        if (modalBody) modalBody.removeEventListener('scroll', handleModalScrollCheck);
+
+        if (scrollContainer) scrollContainer.style.display = 'none';
+        if (singleCanvas) singleCanvas.style.display = 'block';
+        renderModalPdfPage(currentPdfPage || 1);
       }
     }
 
@@ -865,6 +913,13 @@
       spinner.classList.remove('d-none');
       canvas.style.display = 'none';
       iframe.style.display = 'none';
+      const scrollContainer = document.getElementById('pdfScrollContainer');
+      if (scrollContainer) {
+        scrollContainer.style.display = 'none';
+        scrollContainer.innerHTML = '';
+      }
+      const modalBody = document.getElementById('readerModalBody');
+      if (modalBody) modalBody.scrollTop = 0;
       if (errorCard) errorCard.style.display = 'none';
 
       const modal = new bootstrap.Modal(document.getElementById('webReaderModal'));
