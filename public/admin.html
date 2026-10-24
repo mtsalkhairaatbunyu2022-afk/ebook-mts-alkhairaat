@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Web Generator Katalog Buku - MTs Al-Khairaat Bunyu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      background-color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .navbar-custom {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    }
+    .card-custom {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .btn-primary-custom {
+      background-color: #1e3a8a;
+      border: none;
+    }
+    .btn-primary-custom:hover {
+      background-color: #1d4ed8;
+    }
+    .json-output {
+      background-color: #0f172a;
+      color: #38bdf8;
+      border-radius: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navbar -->
+  <nav class="navbar navbar-dark navbar-custom py-3 shadow-sm">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-5" href="#">
+        <i class="bi bi-journal-bookmark-fill text-warning fs-4"></i>
+        <span>Admin Web Generator Katalog E-Book MTs Al-Khairaat</span>
+      </a>
+      <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Khusus Laptop Guru / Operator</span>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <div class="row g-4">
+      
+      <!-- Form Input Buku Baru -->
+      <div class="col-lg-6">
+        <div class="card card-custom p-4 bg-white">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-plus-circle-fill text-primary fs-4"></i>
+            <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
+          </div>
+          <p class="text-muted small">Isi formulir di bawah ini untuk menambahkan buku baru ke katalog Cloudflare siswa.</p>
+          <hr class="my-3">
+
+          <form id="bookForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
+              <input type="text" id="title" class="form-control" placeholder="Contoh: Fiqih MTs Kelas VII" required>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
+                <input type="text" id="subject" class="form-control" placeholder="Contoh: Fiqih" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
+                <select id="gradeClass" class="form-select" required>
+                  <option value="Kelas VII">Kelas VII</option>
+                  <option value="Kelas VIII">Kelas VIII</option>
+                  <option value="Kelas IX">Kelas IX</option>
+                  <option value="Semua Kelas">Semua Kelas</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
+                <input type="text" id="author" class="form-control" placeholder="Contoh: H. Ahmad Syafi'i">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small">Tahun Terbit</label>
+                <input type="text" id="year" class="form-control" value="2026">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-secondary small">Link URL File PDF / DOCX Buku <span class="text-danger">*</span></label>
+              <input type="url" id="fileUrl" class="form-control" placeholder="https://mts-alkhairaat.pages.dev/books/fiqih_7.pdf" required>
+              <div class="form-text fs-7">Masukkan URL publik tempat file PDF/DOCX disimpan di Cloudflare atau Google Drive.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-secondary small">Deskripsi Singkat Buku</label>
+              <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-file-earmark-plus-fill"></i>
+              <span>Tambahkan ke Daftar Katalog</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Live Preview & JSON Generator Output -->
+      <div class="col-lg-6">
+        <div class="card card-custom p-4 bg-white mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-code-square text-success fs-4"></i>
+              <h5 class="fw-bold mb-0 text-dark">Hasil Kode catalog.json</h5>
+            </div>
+            <span id="bookCountBadge" class="badge bg-primary rounded-pill">3 Buku Tersimpan</span>
+          </div>
+          <p class="text-muted small mb-2">Kode JSON di bawah ini diperbarui secara otomatis setiap kali Anda menambahkan atau menghapus buku.</p>
+
+          <pre id="jsonViewer" class="json-output p-3 mb-3"></pre>
+
+          <div class="d-flex gap-2">
+            <button id="copyJsonBtn" class="btn btn-success flex-fill fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-clipboard-check"></i>
+              <span>Salin Kode JSON</span>
+            </button>
+            <button id="downloadJsonBtn" class="btn btn-outline-primary flex-fill fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-download"></i>
+              <span>Unduh File catalog.json</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Panduan Singkat untuk Guru -->
+        <div class="card card-custom p-4 bg-light border-0">
+          <h6 class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle-fill text-info"></i>
+            Cara Pakai di Laptop Guru:
+          </h6>
+          <ol class="small text-secondary mb-0 ps-3">
+            <li class="mb-1">Isi formulir buku baru di sebelah kiri, lalu klik <strong>Tambahkan ke Daftar Katalog</strong>.</li>
+            <li class="mb-1">Klik tombol <strong>Salin Kode JSON</strong> atau <strong>Unduh File catalog.json</strong>.</li>
+            <li>Ganti atau tempel file <code>catalog.json</code> di Cloudflare / GitHub. Dalam beberapa detik, seluruh HP siswa akan otomatis menerima buku baru tersebut!</li>
+          </ol>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Initial catalog sample
+    let catalog = [
+      {
+        "id": "book_fiqih_7",
+        "title": "Fiqih MTs Kelas VII",
+        "author": "H. Ahmad Syafi'i",
+        "subject": "Fiqih",
+        "gradeClass": "Kelas VII",
+        "teacherOwner": "Guru Agama MTs Al-Khairaat",
+        "year": "2026",
+        "fileUrl": "https://mts-alkhairaat.pages.dev/books/fiqih_7.pdf",
+        "localFilePath": "",
+        "isDownloaded": false,
+        "fileSize": 3120000,
+        "pageCount": 160,
+        "category": "mp",
+        "description": "Buku Mata Pelajaran Fiqih Kurikulum Madrasah Tsanawiyah Kelas VII."
+      },
+      {
+        "id": "book_akidah_akhlak_7",
+        "title": "Akidah Akhlak MTs Kelas VII",
+        "author": "Drs. H. Masan",
+        "subject": "Akidah Akhlak",
+        "gradeClass": "Kelas VII",
+        "teacherOwner": "Guru Agama MTs Al-Khairaat",
+        "year": "2026",
+        "fileUrl": "https://mts-alkhairaat.pages.dev/books/akidah_akhlak_7.pdf",
+        "localFilePath": "",
+        "isDownloaded": false,
+        "fileSize": 2850000,
+        "pageCount": 145,
+        "category": "mp",
+        "description": "Buku Pelajaran Akidah Akhlak untuk Siswa MTs Kelas VII."
+      },
+      {
+        "id": "book_ski_7",
+        "title": "Sejarah Kebudayaan Islam MTs Kelas VII",
+        "author": "H. Mahfud",
+        "subject": "Sejarah Kebudayaan Islam",
+        "gradeClass": "Kelas VII",
+        "teacherOwner": "Guru Sejarah MTs Al-Khairaat",
+        "year": "2026",
+        "fileUrl": "https://mts-alkhairaat.pages.dev/books/ski_7.pdf",
+        "localFilePath": "",
+        "isDownloaded": false,
+        "fileSize": 3500000,
+        "pageCount": 175,
+        "category": "mp",
+        "description": "Buku Teks Utama Sejarah Kebudayaan Islam (SKI) Kelas VII MTs."
+      }
+    ];
+
+    function updateView() {
+      const jsonViewer = document.getElementById('jsonViewer');
+      const bookCountBadge = document.getElementById('bookCountBadge');
+      jsonViewer.textContent = JSON.stringify(catalog, null, 2);
+      bookCountBadge.textContent = `${catalog.length} Buku Tersimpan`;
+    }
+
+    document.getElementById('bookForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const title = document.getElementById('title').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const gradeClass = document.getElementById('gradeClass').value;
+      const author = document.getElementById('author').value.trim() || 'Guru MTs Al-Khairaat';
+      const year = document.getElementById('year').value.trim() || '2026';
+      const fileUrl = document.getElementById('fileUrl').value.trim();
+      const description = document.getElementById('description').value.trim() || `Buku ${subject} untuk ${gradeClass} MTs Al-Khairaat.`;
+
+      const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4);
+
+      const newBook = {
+        id: id,
+        title: title,
+        author: author,
+        subject: subject,
+        gradeClass: gradeClass,
+        teacherOwner: "Guru MTs Al-Khairaat Bunyu",
+        year: year,
+        fileUrl: fileUrl,
+        localFilePath: "",
+        isDownloaded: false,
+        fileSize: 2500000,
+        pageCount: 120,
+        category: "mp",
+        description: description
+      };
+
+      catalog.push(newBook);
+      updateView();
+
+      // Reset form
+      document.getElementById('title').value = '';
+      document.getElementById('subject').value = '';
+      document.getElementById('author').value = '';
+      document.getElementById('fileUrl').value = '';
+      document.getElementById('description').value = '';
+
+      alert('Buku "' + title + '" berhasil ditambahkan ke generator katalog!');
+    });
+
+    document.getElementById('copyJsonBtn').addEventListener('click', function() {
+      const jsonText = JSON.stringify(catalog, null, 2);
+      navigator.clipboard.writeText(jsonText).then(() => {
+        alert('Kode JSON berhasil disalin ke clipboard! Silakan tempel (paste) di GitHub atau Cloudflare.');
+      }).catch(err => {
+        alert('Gagal menyalin otomatis, silakan salin teks dari kotak hitam secara manual.');
+      });
+    });
+
+    document.getElementById('downloadJsonBtn').addEventListener('click', function() {
+      const jsonText = JSON.stringify(catalog, null, 2);
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'catalog.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Initialize
+    updateView();
+  </script>
+</body>
+</html>
