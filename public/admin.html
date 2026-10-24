@@ -58,7 +58,7 @@
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-5" href="#">
         <i class="bi bi-journal-bookmark-fill text-warning fs-4"></i>
-        <span>Admin Generator Katalog E-Book MTs Al-Khairaat</span>
+        <span>Admin Generator Kode catalog.json - MTs Al-Khairaat</span>
       </a>
       <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Khusus Laptop Guru / Operator</span>
     </div>
@@ -70,10 +70,10 @@
     <div class="card card-custom p-3 mb-4 bg-white">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
-          <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-arrow-repeat text-primary me-2"></i>Kelola File catalog.json yang Ada</h6>
+          <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-arrow-repeat text-primary me-2"></i>Kelola & Buat Ulang catalog.json</h6>
           <p class="text-muted small mb-0">Impor catalog.json lama dari laptop Anda atau muat langsung dari server Cloudflare.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
           <button id="fetchLiveCatalogBtn" class="btn btn-outline-primary btn-sm fw-bold">
             <i class="bi bi-cloud-download me-1"></i> Muat Dari Cloudflare Live
           </button>
@@ -81,6 +81,9 @@
             <i class="bi bi-upload me-1"></i> Impor File catalog.json
             <input type="file" id="importJsonFile" accept=".json" class="d-none">
           </label>
+          <button id="resetCatalogBtn" class="btn btn-outline-danger btn-sm fw-bold">
+            <i class="bi bi-trash3 me-1"></i> Kosongkan & Buat Baru
+          </button>
         </div>
       </div>
     </div>
@@ -92,9 +95,9 @@
         <div class="card card-custom p-4 bg-white">
           <div class="d-flex align-items-center gap-2 mb-2">
             <i class="bi bi-file-earmark-arrow-up-fill text-primary fs-4"></i>
-            <h5 class="fw-bold mb-0 text-dark">Unggah Dokumen & Tambah Buku</h5>
+            <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
           </div>
-          <p class="text-muted small">Pilih file PDF buku pelajaran dari laptop Anda. Sistem akan secara <strong>otomatis mendeteksi judul, jumlah halaman, dan ukuran file</strong>!</p>
+          <p class="text-muted small">Isi formulir atau pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
           
           <!-- Unggah / Dropper File PDF -->
           <div class="upload-box mb-3" onclick="document.getElementById('pdfFileInput').click()">
@@ -154,9 +157,9 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF / Google Drive <span class="text-danger">*</span></label>
               <input type="url" id="fileUrl" class="form-control" placeholder="https://mts-alkhairaat.pages.dev/books/bahasa_arab_8.pdf" required>
-              <div class="form-text fs-7">Masukkan URL file di Cloudflare Pages atau Google Drive publik.</div>
+              <div class="form-text fs-7">Masukkan URL publik tempat file disimpan di Cloudflare Pages atau Google Drive.</div>
             </div>
 
             <div class="mb-3">
@@ -164,28 +167,59 @@
               <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary-custom text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-file-earmark-plus-fill"></i>
-              <span>Tambahkan Buku ke Daftar Catalog</span>
+            <!-- Tombol Utama Buat Kode catalog.json -->
+            <button type="submit" class="btn btn-primary-custom text-white w-100 py-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+              <i class="bi bi-cpu-fill text-warning fs-5"></i>
+              <span>⚡ Buat Kode catalog.json & Tambahkan Buku</span>
             </button>
           </form>
         </div>
       </div>
 
-      <!-- Daftar Buku & Kode catalog.json Output -->
+      <!-- Daftar Buku & Output Kode catalog.json -->
       <div class="col-lg-6">
         
+        <!-- Output JSON Generator -->
+        <div class="card card-custom p-4 bg-white mb-4 shadow-sm border border-primary border-2">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-code-square text-success fs-3"></i>
+              <h5 class="fw-bold mb-0 text-dark">Hasil Kode catalog.json</h5>
+            </div>
+            <span id="bookCountBadge" class="badge bg-primary fs-6 px-3 py-2 rounded-pill">0 Buku</span>
+          </div>
+          <p class="text-muted small mb-3">Klik tombol di bawah untuk memperbarui dan membuat ulang kode secara langsung.</p>
+
+          <!-- Tombol Khusus 'Buat Kode catalog.json' -->
+          <button id="generateJsonNowBtn" class="btn btn-warning text-dark w-100 py-2 mb-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>⚡ Buat / Refresh Kode catalog.json Sekarang</span>
+          </button>
+
+          <pre id="jsonViewer" class="json-output p-3 mb-3"></pre>
+
+          <div class="d-flex gap-2">
+            <button id="copyJsonBtn" class="btn btn-success flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-clipboard-check fs-5"></i>
+              <span>Salin Kode JSON</span>
+            </button>
+            <button id="downloadJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-download fs-5"></i>
+              <span>Unduh File catalog.json</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Daftar Buku Aktif -->
         <div class="card card-custom p-4 bg-white mb-4">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-journal-text text-primary fs-4"></i>
-              <h5 class="fw-bold mb-0 text-dark">Daftar Buku dalam Katalog</h5>
+              <h5 class="fw-bold mb-0 text-dark">Daftar Buku Terdaftar dalam Katalog</h5>
             </div>
-            <span id="bookCountBadge" class="badge bg-primary rounded-pill">0 Buku</span>
           </div>
 
-          <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+          <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
             <table class="table table-hover align-middle fs-7 mb-0">
               <thead class="table-light">
                 <tr>
@@ -203,41 +237,17 @@
           </div>
         </div>
 
-        <!-- Output JSON Generator -->
-        <div class="card card-custom p-4 bg-white mb-4">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-code-square text-success fs-4"></i>
-              <h5 class="fw-bold mb-0 text-dark">Hasil Kode catalog.json</h5>
-            </div>
-          </div>
-          <p class="text-muted small mb-2">Kode JSON di bawah ini diperbarui secara otomatis setiap kali Anda menambah atau menghapus buku.</p>
-
-          <pre id="jsonViewer" class="json-output p-3 mb-3"></pre>
-
-          <div class="d-flex gap-2">
-            <button id="copyJsonBtn" class="btn btn-success flex-fill fw-bold d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-clipboard-check"></i>
-              <span>Salin Kode JSON</span>
-            </button>
-            <button id="downloadJsonBtn" class="btn btn-outline-primary flex-fill fw-bold d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-download"></i>
-              <span>Unduh File catalog.json</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Panduan Langkah Singkat -->
         <div class="card card-custom p-4 bg-light border-0">
           <h6 class="fw-bold text-dark d-flex align-items-center gap-2">
             <i class="bi bi-lightbulb-fill text-warning"></i>
-            Bagaimana Cara Kerja Otomatisasi Ini?
+            Cara Menggunakan Hasil Kode catalog.json:
           </h6>
           <ol class="small text-secondary mb-0 ps-3">
-            <li class="mb-1"><strong>Unggah PDF:</strong> Pilih file PDF buku, sistem langsung menghitung total halaman dan besaran file secara presisi.</li>
-            <li class="mb-1"><strong>Tambahkan:</strong> Klik <em>Tambahkan Buku ke Daftar Catalog</em>.</li>
-            <li class="mb-1"><strong>Unduh / Salin:</strong> Klik <em>Unduh File catalog.json</em>.</li>
-            <li><strong>Upload ke Server:</strong> Tarik file <code>catalog.json</code> baru ini ke repository GitHub/Cloudflare Anda. Semua HP siswa akan otomatis bersinkronisasi!</li>
+            <li class="mb-1">Isi formulir atau pilih file PDF di sebelah kiri.</li>
+            <li class="mb-1">Klik tombol <strong>⚡ Buat Kode catalog.json & Tambahkan Buku</strong>.</li>
+            <li class="mb-1">Klik tombol <strong>Salin Kode JSON</strong> atau <strong>Unduh File catalog.json</strong>.</li>
+            <li>Ganti file <code>catalog.json</code> di Cloudflare / GitHub. Aplikasi di HP siswa akan otomatis memperbarui daftar buku secara publik!</li>
           </ol>
         </div>
 
@@ -308,12 +318,12 @@
       const bookTableBody = document.getElementById('bookTableBody');
 
       jsonViewer.textContent = JSON.stringify(catalog, null, 2);
-      bookCountBadge.textContent = `${catalog.length} Buku`;
+      bookCountBadge.textContent = `${catalog.length} Buku Tersimpan`;
 
       // Render Table Rows
       bookTableBody.innerHTML = '';
       if (catalog.length === 0) {
-        bookTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada buku dalam katalog.</td></tr>`;
+        bookTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada buku dalam katalog. Silakan isi form di sebelah kiri.</td></tr>`;
       } else {
         catalog.forEach((book, index) => {
           const tr = document.createElement('tr');
@@ -357,7 +367,7 @@
       // Auto Fill File Size
       document.getElementById('fileSize').value = file.size;
 
-      // Auto Fill Title from filename (clean clean extension and underscores)
+      // Auto Fill Title from filename
       let cleanTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
       cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
       document.getElementById('title').value = cleanTitle;
@@ -394,7 +404,7 @@
       }
     });
 
-    // Form Submit Handler
+    // Form Submit Handler (Buat Kode catalog.json)
     document.getElementById('bookForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -435,14 +445,20 @@
       document.getElementById('uploadStatusTitle').textContent = 'Klik atau Tarik File PDF Buku ke Sini';
       document.getElementById('uploadStatusDesc').textContent = 'Format PDF (Maksimal rekomendasi 50 MB)';
 
-      alert('Buku "' + title + '" berhasil ditambahkan ke daftar katalog!');
+      alert(`✅ Berhasil! Kode catalog.json telah dibuat untuk buku "${title}". Anda sekarang bisa mengunduh atau menyalin kodenya.`);
+    });
+
+    // Explicit Button: "Buat / Refresh Kode catalog.json Sekarang"
+    document.getElementById('generateJsonNowBtn').addEventListener('click', function() {
+      updateView();
+      alert(`✨ Kode catalog.json berhasil dibuat dan diperbarui! Total: ${catalog.length} buku. Silakan klik "Salin Kode JSON" atau "Unduh File catalog.json".`);
     });
 
     // Copy JSON Button
     document.getElementById('copyJsonBtn').addEventListener('click', function() {
       const jsonText = JSON.stringify(catalog, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
-        alert('Kode JSON berhasil disalin ke clipboard! Silakan tempel (paste) di catalog.json GitHub/Cloudflare.');
+        alert('📋 Kode catalog.json berhasil disalin ke clipboard! Silakan tempel (paste) di GitHub atau Cloudflare.');
       }).catch(err => {
         alert('Gagal menyalin otomatis, silakan salin teks dari kotak hitam secara manual.');
       });
@@ -460,6 +476,15 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    });
+
+    // Reset Catalog Button
+    document.getElementById('resetCatalogBtn').addEventListener('click', function() {
+      if (confirm('Apakah Anda yakin ingin mengosongkan katalog dan membuat dari awal?')) {
+        catalog = [];
+        updateView();
+        alert('Katalog telah dikosongkan. Silakan tambahkan buku baru.');
+      }
     });
 
     // Import Local JSON File
