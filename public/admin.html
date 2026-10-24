@@ -581,9 +581,12 @@
         const canvas = document.getElementById('pdfViewerCanvas');
         const ctx = canvas.getContext('2d');
 
-        const viewport = page.getViewport({ scale: pdfZoomScale });
+        const dpr = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale: pdfZoomScale * dpr });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+        canvas.style.width = `${Math.round(viewport.width / dpr)}px`;
+        canvas.style.height = `${Math.round(viewport.height / dpr)}px`;
 
         document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${num} / ${currentPdfDoc.numPages}`;
         document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
@@ -732,6 +735,8 @@
       } else {
         targetUrl = book.fileUrl;
       }
+
+      document.getElementById('readerOpenNewTabBtn').href = targetUrl || '#';
 
       // Handle Google Drive / Google Docs links via /preview iframe
       if (targetUrl && (targetUrl.includes('drive.google.com') || targetUrl.includes('docs.google.com'))) {
