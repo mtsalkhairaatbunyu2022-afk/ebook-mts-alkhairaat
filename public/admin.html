@@ -535,6 +535,20 @@
             <div class="spinner-border text-warning mb-2" role="status"></div>
             <p class="fw-bold mb-0">Memuat Halaman Buku PDF...</p>
           </div>
+          <!-- Error Card Container -->
+          <div id="pdfErrorCard" class="text-center text-white p-4 m-auto" style="display: none; max-width: 620px;">
+            <i class="bi bi-exclamation-triangle-fill text-warning display-3 mb-3 d-block"></i>
+            <h5 class="fw-bold mb-2">File PDF Belum Diunggah ke Server Cloudflare</h5>
+            <p class="text-light opacity-75 small mb-3">URL <code id="pdfErrorUrlText" class="text-warning"></code> belum tersedia di server.</p>
+            <div class="alert alert-warning text-dark fs-7 text-start mb-0 shadow-sm">
+              <strong class="d-block mb-1">💡 Cara Agar Buku Terbaca Instan di Laptop Guru:</strong>
+              <ol class="mb-0 ps-3">
+                <li>Kembali ke tab <strong>Kelola Katalog (catalog.json)</strong>.</li>
+                <li>Tarik atau pilih file PDF buku asli dari laptop Anda ke kotak unggah.</li>
+                <li>Klik tombol <strong>⚡ Buat Kode catalog.json & Tambahkan Buku</strong>.</li>
+              </ol>
+            </div>
+          </div>
           <!-- Native PDF Canvas View -->
           <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded" style="max-width: 98%; display: none;"></canvas>
           <!-- Fallback Iframe -->
@@ -681,7 +695,7 @@
       });
     }
 
-    // Open Web Reader Modal with Native PDF.js Rendering
+    // Open Web Reader Modal with Native PDF.js Rendering & Instant Local Blob Support
     async function openWebReader(bookId) {
       const book = catalog.find(b => b.id === bookId);
       if (!book) return;
@@ -693,10 +707,12 @@
       const spinner = document.getElementById('pdfLoadingSpinner');
       const canvas = document.getElementById('pdfViewerCanvas');
       const iframe = document.getElementById('readerIframe');
+      const errorCard = document.getElementById('pdfErrorCard');
 
       spinner.classList.remove('d-none');
       canvas.style.display = 'none';
       iframe.style.display = 'none';
+      if (errorCard) errorCard.style.display = 'none';
 
       const modal = new bootstrap.Modal(document.getElementById('webReaderModal'));
       modal.show();
@@ -705,33 +721,59 @@
       currentPdfPage = 1;
       pdfZoomScale = 1.2;
 
-      let fileUrl = book.fileUrl;
+      // Check IndexedDB first for local file uploaded from laptop
+      let idbFile = await getPdfFromIDB(book.id);
+      let targetUrl = "";
 
-      // Try rendering with PDF.js client-side first
-      if (window.pdfjsLib && fileUrl) {
+      if (idbFile) {
+        targetUrl = URL.createObjectURL(idbFile);
+      } else if (book.localBlobUrl) {
+        targetUrl = book.localBlobUrl;
+      } else {
+        targetUrl = book.fileUrl;
+      }
+
+      // Handle Google Drive / Google Docs links via /preview iframe
+      if (targetUrl && (targetUrl.includes('drive.google.com') || targetUrl.includes('docs.google.com'))) {
+        let driveEmbedUrl = targetUrl;
+        const fileIdMatch = targetUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          driveEmbedUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+        } else if (!targetUrl.endsWith('/preview')) {
+          driveEmbedUrl = targetUrl.replace(/\/view.*$/, '/preview');
+        }
+        spinner.classList.add('d-none');
+        iframe.src = driveEmbedUrl;
+        iframe.style.display = 'block';
+        return;
+      }
+
+      // Try rendering with PDF.js client-side
+      if (window.pdfjsLib && targetUrl) {
         try {
-          const loadingTask = pdfjsLib.getDocument(fileUrl);
+          const loadingTask = pdfjsLib.getDocument(targetUrl);
           currentPdfDoc = await loadingTask.promise;
           spinner.classList.add('d-none');
           await renderModalPdfPage(1);
           return;
         } catch (pdfErr) {
-          console.warn("PDF.js client fetch fallback to iframe viewer:", pdfErr);
+          console.warn("PDF.js client fetch failed:", pdfErr);
+          // If PDF.js canvas fetch fails on Blob, use native Blob iframe
+          if (targetUrl && targetUrl.startsWith('blob:')) {
+            spinner.classList.add('d-none');
+            iframe.src = targetUrl;
+            iframe.style.display = 'block';
+            return;
+          }
         }
       }
 
-      // Fallback if client-side PDF.js fetch is blocked
+      // Show clear error card if file cannot be read or returns 404 (prevents rendering 404 index.html)
       spinner.classList.add('d-none');
-      if (fileUrl.includes('drive.google.com/file/d/')) {
-        const fileIdMatch = fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (fileIdMatch && fileIdMatch[1]) {
-          fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
-        }
-      } else if (fileUrl.startsWith('http')) {
-        fileUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUrl)}`;
+      if (errorCard) {
+        document.getElementById('pdfErrorUrlText').textContent = book.fileUrl;
+        errorCard.style.display = 'block';
       }
-      iframe.src = fileUrl;
-      iframe.style.display = 'block';
     }
 
     // Modal Page Controls Event Listeners
@@ -847,9 +889,67 @@
       e.preventDefault();
     }, false);
 
+    // =====================================
+    // INDEXEDDB PERMANENT PDF STORAGE
+    // =====================================
+    const IDB_NAME = 'EbookLibraryDB';
+    const IDB_STORE = 'pdf_files';
+
+    function openPdfDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(IDB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(IDB_STORE)) {
+            db.createObjectStore(IDB_STORE);
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function savePdfToIDB(bookId, file) {
+      try {
+        const db = await openPdfDB();
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.put(file, bookId);
+        return new Promise((resolve) => {
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (e) {
+        console.warn("IndexedDB save warning:", e);
+        return false;
+      }
+    }
+
+    async function getPdfFromIDB(bookId) {
+      try {
+        const db = await openPdfDB();
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.get(bookId);
+        return new Promise((resolve) => {
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        console.warn("IndexedDB get warning:", e);
+        return null;
+      }
+    }
+
+    let currentUploadedBlobUrl = "";
+    let currentFileObject = null;
+
     // Process PDF File Metadata silently without opening any new tab or popup preview
     async function processPdfFile(file) {
       if (!file) return;
+
+      currentFileObject = file;
+      currentUploadedBlobUrl = URL.createObjectURL(file);
 
       const uploadStatusTitle = document.getElementById('uploadStatusTitle');
       const uploadStatusDesc = document.getElementById('uploadStatusDesc');
@@ -945,10 +1045,23 @@
           }
         });
       }
+
+      const fileUrlInput = document.getElementById('fileUrl');
+      if (fileUrlInput) {
+        fileUrlInput.addEventListener('change', function() {
+          const val = this.value.trim();
+          if (val.includes('drive.google.com') || val.includes('docs.google.com')) {
+            const fileIdMatch = val.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+            if (fileIdMatch && fileIdMatch[1]) {
+              this.value = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+            }
+          }
+        });
+      }
     });
 
     // Form Submit Handler
-    document.getElementById('bookForm').addEventListener('submit', function(e) {
+    document.getElementById('bookForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const title = document.getElementById('title').value.trim();
@@ -963,6 +1076,10 @@
 
       const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4);
 
+      if (currentFileObject) {
+        await savePdfToIDB(id, currentFileObject);
+      }
+
       const newBook = {
         id: id,
         title: title,
@@ -972,13 +1089,16 @@
         teacherOwner: "Guru MTs Al-Khairaat Bunyu",
         year: year,
         fileUrl: fileUrl,
-        localFilePath: "",
+        localBlobUrl: currentUploadedBlobUrl || "",
         isDownloaded: false,
         fileSize: fileSize,
         pageCount: pageCount,
         category: "mp",
         description: description
       };
+
+      currentUploadedBlobUrl = "";
+      currentFileObject = null;
 
       catalog.push(newBook);
       updateView();

@@ -1,6 +1,6 @@
 {
-  "summary":  "Rencana implementasi arsitektur penyediaan buku siap pakai untuk siswa Madrasah dengan pemisahan Mode Siswa (baca-saja offline) dan Mode Guru (manajemen & pembaruan katalog).",
-  "updatedAt":  "2026-10-24T00:54:39.325029430Z",
+  "summary":  "Rencana kerja & petunjuk langkah demi langkah unggah file PDF buku di Portal Admin hingga berhasil dibaca di Ruang Baca Guru secara langsung/lokal.",
+  "updatedAt":  "2026-10-24T11:39:00.055373035Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
