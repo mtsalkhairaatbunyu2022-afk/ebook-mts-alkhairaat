@@ -517,6 +517,17 @@
             <button id="pdfZoomOutBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-out"></i></button>
             <span class="text-light fs-7 font-monospace" id="pdfZoomDisplay">120%</span>
             <button id="pdfZoomInBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-in"></i></button>
+            <div class="vr bg-secondary mx-1 d-none d-md-block" style="height: 20px;"></div>
+
+            <!-- Mode Baca: Per Halaman vs Scroll Down -->
+            <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Mode Baca">
+              <button id="modeSinglePageBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold py-1 px-2" title="Mode Baca Per Halaman">
+                <i class="bi bi-file-earmark-text me-1"></i> Per Halaman
+              </button>
+              <button id="modeScrollBtn" type="button" class="btn btn-sm btn-outline-light text-white py-1 px-2" title="Mode Baca Gulir ke Bawah (Scroll Down)">
+                <i class="bi bi-arrows-vertical me-1"></i> Scroll Down
+              </button>
+            </div>
           </div>
 
           <div class="d-flex align-items-center gap-2">
@@ -529,7 +540,7 @@
           </div>
         </div>
 
-        <div class="modal-body p-0 bg-dark position-relative overflow-auto d-flex justify-content-center align-items-start" style="height: calc(100vh - 65px);">
+        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex justify-content-center align-items-start" style="height: calc(100vh - 65px);">
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
@@ -549,8 +560,10 @@
               </ol>
             </div>
           </div>
-          <!-- Native PDF Canvas View -->
+          <!-- Native PDF Canvas View (Single Page) -->
           <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded" style="max-width: 98%; display: none;"></canvas>
+          <!-- Continuous Scroll Down Container -->
+          <div id="pdfScrollContainer" class="d-flex flex-column align-items-center gap-3 w-100 py-3" style="display: none;"></div>
           <!-- Fallback Iframe -->
           <iframe id="readerIframe" src="" class="w-100 h-100 border-0" style="display: none;"></iframe>
         </div>
@@ -573,6 +586,9 @@
     let currentPdfDoc = null;
     let currentPdfPage = 1;
     let pdfZoomScale = 1.2;
+    let readerViewMode = 'single'; // 'single' or 'scroll'
+    let scrollObserver = null;
+    let renderedScrollPages = new Set();
 
     async function renderModalPdfPage(num) {
       if (!currentPdfDoc) return;
@@ -597,8 +613,142 @@
         }).promise;
 
         canvas.style.display = 'block';
+        document.getElementById('pdfScrollContainer').style.display = 'none';
       } catch (err) {
         console.error("Gagal merender halaman PDF:", err);
+      }
+    }
+
+    // =====================================
+    // SCROLL-DOWN (CONTINUOUS) READING ENGINE
+    // =====================================
+    async function initScrollDownView() {
+      if (!currentPdfDoc) return;
+      const container = document.getElementById('pdfScrollContainer');
+      const singleCanvas = document.getElementById('pdfViewerCanvas');
+      singleCanvas.style.display = 'none';
+      container.style.display = 'flex';
+      container.innerHTML = '';
+      renderedScrollPages.clear();
+
+      if (scrollObserver) {
+        scrollObserver.disconnect();
+      }
+
+      // Sample first page for initial wrapper dimensions
+      let estWidth = 800;
+      let estHeight = 1100;
+      try {
+        const firstPage = await currentPdfDoc.getPage(1);
+        const initialViewport = firstPage.getViewport({ scale: pdfZoomScale });
+        estWidth = Math.round(initialViewport.width);
+        estHeight = Math.round(initialViewport.height);
+      } catch (e) {}
+
+      // Create lightweight placeholder wrappers for all pages
+      for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.id = `pdfPageWrapper_${i}`;
+        wrapper.className = 'pdf-scroll-page shadow-lg my-2 rounded overflow-hidden bg-white text-center';
+        wrapper.setAttribute('data-page-num', i);
+        wrapper.style.width = `${estWidth}px`;
+        wrapper.style.minHeight = `${estHeight}px`;
+        wrapper.style.maxWidth = '98%';
+
+        const canvas = document.createElement('canvas');
+        canvas.id = `pdfScrollCanvas_${i}`;
+        canvas.style.display = 'block';
+        canvas.style.width = '100%';
+
+        wrapper.appendChild(canvas);
+        container.appendChild(wrapper);
+      }
+
+      // IntersectionObserver for fast, lazy rendering while scrolling
+      const modalBody = document.getElementById('readerModalBody');
+      scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const pageNum = parseInt(entry.target.getAttribute('data-page-num'));
+          if (entry.isIntersecting) {
+            if (!renderedScrollPages.has(pageNum)) {
+              renderScrollPage(pageNum);
+            }
+            document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${pageNum} / ${currentPdfDoc.numPages}`;
+            currentPdfPage = pageNum;
+          }
+        });
+      }, {
+        root: modalBody,
+        rootMargin: '500px 0px 500px 0px',
+        threshold: 0.1
+      });
+
+      for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+        const el = document.getElementById(`pdfPageWrapper_${i}`);
+        if (el) scrollObserver.observe(el);
+      }
+
+      // Render the current page immediately
+      await renderScrollPage(currentPdfPage || 1);
+      if (currentPdfPage > 1) {
+        const targetEl = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
+        if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    async function renderScrollPage(num) {
+      if (!currentPdfDoc || renderedScrollPages.has(num)) return;
+      try {
+        renderedScrollPages.add(num);
+        const page = await currentPdfDoc.getPage(num);
+        const canvas = document.getElementById(`pdfScrollCanvas_${num}`);
+        const wrapper = document.getElementById(`pdfPageWrapper_${num}`);
+        if (!canvas || !wrapper) return;
+
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale: pdfZoomScale * dpr });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        wrapper.style.width = `${Math.round(viewport.width / dpr)}px`;
+        wrapper.style.minHeight = `${Math.round(viewport.height / dpr)}px`;
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        }).promise;
+      } catch (err) {
+        console.warn(`Gagal merender halaman scroll ${num}:`, err);
+        renderedScrollPages.delete(num);
+      }
+    }
+
+    function setReaderViewMode(mode) {
+      readerViewMode = mode;
+      const singleBtn = document.getElementById('modeSinglePageBtn');
+      const scrollBtn = document.getElementById('modeScrollBtn');
+      const singleCanvas = document.getElementById('pdfViewerCanvas');
+      const scrollContainer = document.getElementById('pdfScrollContainer');
+
+      if (mode === 'scroll') {
+        singleBtn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
+        singleBtn.classList.add('btn-outline-light', 'text-white');
+        scrollBtn.classList.remove('btn-outline-light', 'text-white');
+        scrollBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+
+        singleCanvas.style.display = 'none';
+        initScrollDownView();
+      } else {
+        scrollBtn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
+        scrollBtn.classList.add('btn-outline-light', 'text-white');
+        singleBtn.classList.remove('btn-outline-light', 'text-white');
+        singleBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+
+        if (scrollObserver) scrollObserver.disconnect();
+        scrollContainer.style.display = 'none';
+        singleCanvas.style.display = 'block';
+        renderModalPdfPage(currentPdfPage);
       }
     }
 
@@ -759,7 +909,11 @@
           const loadingTask = pdfjsLib.getDocument(targetUrl);
           currentPdfDoc = await loadingTask.promise;
           spinner.classList.add('d-none');
-          await renderModalPdfPage(1);
+          if (readerViewMode === 'scroll') {
+            await initScrollDownView();
+          } else {
+            await renderModalPdfPage(1);
+          }
           return;
         } catch (pdfErr) {
           console.warn("PDF.js client fetch failed:", pdfErr);
@@ -786,32 +940,66 @@
       document.getElementById('pdfPrevPageBtn').addEventListener('click', () => {
         if (currentPdfDoc && currentPdfPage > 1) {
           currentPdfPage--;
-          renderModalPdfPage(currentPdfPage);
+          if (readerViewMode === 'scroll') {
+            const el = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${currentPdfPage} / ${currentPdfDoc.numPages}`;
+          } else {
+            renderModalPdfPage(currentPdfPage);
+          }
         }
       });
 
       document.getElementById('pdfNextPageBtn').addEventListener('click', () => {
         if (currentPdfDoc && currentPdfPage < currentPdfDoc.numPages) {
           currentPdfPage++;
-          renderModalPdfPage(currentPdfPage);
+          if (readerViewMode === 'scroll') {
+            const el = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${currentPdfPage} / ${currentPdfDoc.numPages}`;
+          } else {
+            renderModalPdfPage(currentPdfPage);
+          }
         }
       });
 
       document.getElementById('pdfZoomInBtn').addEventListener('click', () => {
         pdfZoomScale += 0.2;
-        renderModalPdfPage(currentPdfPage);
+        document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
+        if (readerViewMode === 'scroll') {
+          renderedScrollPages.clear();
+          initScrollDownView();
+        } else {
+          renderModalPdfPage(currentPdfPage);
+        }
       });
 
       document.getElementById('pdfZoomOutBtn').addEventListener('click', () => {
         if (pdfZoomScale > 0.4) {
           pdfZoomScale -= 0.2;
-          renderModalPdfPage(currentPdfPage);
+          document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
+          if (readerViewMode === 'scroll') {
+            renderedScrollPages.clear();
+            initScrollDownView();
+          } else {
+            renderModalPdfPage(currentPdfPage);
+          }
         }
       });
 
-      // Stop iframe loading when modal is closed
+      // Mode Baca Buttons
+      const singleBtn = document.getElementById('modeSinglePageBtn');
+      const scrollBtn = document.getElementById('modeScrollBtn');
+      if (singleBtn) singleBtn.addEventListener('click', () => setReaderViewMode('single'));
+      if (scrollBtn) scrollBtn.addEventListener('click', () => setReaderViewMode('scroll'));
+
+      // Stop iframe loading and cleanup scroll observer when modal is closed
       document.getElementById('webReaderModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('readerIframe').src = '';
+        if (scrollObserver) scrollObserver.disconnect();
+        const scrollContainer = document.getElementById('pdfScrollContainer');
+        if (scrollContainer) scrollContainer.innerHTML = '';
+        renderedScrollPages.clear();
         currentPdfDoc = null;
       });
     });
