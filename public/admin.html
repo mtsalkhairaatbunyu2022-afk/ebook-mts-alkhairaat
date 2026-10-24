@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Web Generator Katalog Buku - MTs Al-Khairaat Bunyu</title>
+  <title>Admin Web Generator Katalog & Akun Siswa - MTs Al-Khairaat Bunyu</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <!-- PDF.js for automatic PDF metadata & page count extraction -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- SheetJS for Excel (.xlsx, .xls, .csv) parsing & export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     body {
       background-color: #f8fafc;
@@ -49,6 +51,24 @@
       background-color: #dbeafe;
       border-color: #2563eb;
     }
+    .upload-excel-box {
+      border: 2px dashed #10b981;
+      background-color: #ecfdf5;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    .upload-excel-box:hover {
+      background-color: #d1fae5;
+      border-color: #059669;
+    }
+    .nav-tabs .nav-link.active {
+      font-weight: bold;
+      color: #1e3a8a;
+      border-bottom: 3px solid #1e3a8a;
+    }
   </style>
 </head>
 <body>
@@ -58,7 +78,7 @@
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-5" href="#">
         <i class="bi bi-journal-bookmark-fill text-warning fs-4"></i>
-        <span>Admin Generator Kode catalog.json - MTs Al-Khairaat</span>
+        <span>Admin Generator Katalog & Data Siswa MTs Al-Khairaat</span>
       </a>
       <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Khusus Laptop Guru / Operator</span>
     </div>
@@ -66,196 +86,297 @@
 
   <div class="container my-4">
 
-    <!-- Top Action Bar for Catalog Sync & Import -->
-    <div class="card card-custom p-3 mb-4 bg-white">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-          <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-arrow-repeat text-primary me-2"></i>Kelola & Buat Ulang catalog.json</h6>
-          <p class="text-muted small mb-0">Impor catalog.json lama dari laptop Anda atau muat langsung dari server Cloudflare.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          <button id="fetchLiveCatalogBtn" class="btn btn-outline-primary btn-sm fw-bold">
-            <i class="bi bi-cloud-download me-1"></i> Muat Dari Cloudflare Live
-          </button>
-          <label class="btn btn-outline-secondary btn-sm fw-bold mb-0">
-            <i class="bi bi-upload me-1"></i> Impor File catalog.json
-            <input type="file" id="importJsonFile" accept=".json" class="d-none">
-          </label>
-          <button id="resetCatalogBtn" class="btn btn-outline-danger btn-sm fw-bold">
-            <i class="bi bi-trash3 me-1"></i> Kosongkan & Buat Baru
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Navigation Tabs (Kelola Katalog Buku VS Impor Massal Siswa) -->
+    <ul class="nav nav-tabs mb-4 border-0" id="adminTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fs-6 py-2 px-4 me-2" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalogSection" type="button" role="tab">
+          <i class="bi bi-journal-album me-2"></i>Kelola Katalog Buku (catalog.json)
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fs-6 py-2 px-4" id="students-tab" data-bs-toggle="tab" data-bs-target="#studentsSection" type="button" role="tab">
+          <i class="bi bi-people-fill me-2 text-success"></i>📊 Impor Massal Siswa (Excel / XLSX)
+        </button>
+      </li>
+    </ul>
 
-    <div class="row g-4">
-      
-      <!-- Form Input Buku Baru & Unggah Dokumen -->
-      <div class="col-lg-6">
-        <div class="card card-custom p-4 bg-white">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi bi-file-earmark-arrow-up-fill text-primary fs-4"></i>
-            <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
+    <div class="tab-content" id="adminTabsContent">
+
+      <!-- TAB 1: KELOLA KATALOG BUKU -->
+      <div class="tab-pane fade show active" id="catalogSection" role="tabpanel">
+
+        <!-- Top Action Bar for Catalog Sync & Import -->
+        <div class="card card-custom p-3 mb-4 bg-white">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-arrow-repeat text-primary me-2"></i>Kelola & Buat Ulang catalog.json</h6>
+              <p class="text-muted small mb-0">Impor catalog.json lama dari laptop Anda atau muat langsung dari server Cloudflare.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button id="fetchLiveCatalogBtn" class="btn btn-outline-primary btn-sm fw-bold">
+                <i class="bi bi-cloud-download me-1"></i> Muat Dari Cloudflare Live
+              </button>
+              <label class="btn btn-outline-secondary btn-sm fw-bold mb-0">
+                <i class="bi bi-upload me-1"></i> Impor File catalog.json
+                <input type="file" id="importJsonFile" accept=".json" class="d-none">
+              </label>
+              <button id="resetCatalogBtn" class="btn btn-outline-danger btn-sm fw-bold">
+                <i class="bi bi-trash3 me-1"></i> Kosongkan & Buat Baru
+              </button>
+            </div>
           </div>
-          <p class="text-muted small">Isi formulir atau pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
+        </div>
+
+        <div class="row g-4">
           
-          <!-- Unggah / Dropper File PDF -->
-          <div class="upload-box mb-3" onclick="document.getElementById('pdfFileInput').click()">
-            <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
-            <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik File PDF Buku ke Sini</h6>
-            <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Maksimal rekomendasi 50 MB)</p>
-            <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
+          <!-- Form Input Buku Baru & Unggah Dokumen -->
+          <div class="col-lg-6">
+            <div class="card card-custom p-4 bg-white">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-file-earmark-arrow-up-fill text-primary fs-4"></i>
+                <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
+              </div>
+              <p class="text-muted small">Isi formulir atau pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
+              
+              <!-- Unggah / Dropper File PDF -->
+              <div class="upload-box mb-3" onclick="document.getElementById('pdfFileInput').click()">
+                <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik File PDF Buku ke Sini</h6>
+                <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Maksimal rekomendasi 50 MB)</p>
+                <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
+              </div>
+
+              <div id="pdfProcessingAlert" class="alert alert-info d-none align-items-center gap-2 py-2 fs-7" role="alert">
+                <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+                <span>Sedang membaca metadata PDF & menghitung total halaman...</span>
+              </div>
+
+              <hr class="my-3">
+
+              <form id="bookForm">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
+                  <input type="text" id="title" class="form-control" placeholder="Contoh: Bahasa Arab Kelas VIII" required>
+                </div>
+
+                <div class="row g-2 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
+                    <input type="text" id="subject" class="form-control" placeholder="Contoh: Bahasa Arab" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
+                    <select id="gradeClass" class="form-select" required>
+                      <option value="Kelas VII">Kelas VII</option>
+                      <option value="Kelas VIII">Kelas VIII</option>
+                      <option value="Kelas IX">Kelas IX</option>
+                      <option value="Semua Kelas">Semua Kelas</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary small">Jumlah Halaman</label>
+                    <input type="number" id="pageCount" class="form-control" placeholder="120" value="120">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary small">Ukuran File (Bytes)</label>
+                    <input type="number" id="fileSize" class="form-control" placeholder="2500000" value="2500000">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary small">Tahun Terbit</label>
+                    <input type="text" id="year" class="form-control" value="2026">
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
+                  <input type="text" id="author" class="form-control" placeholder="Contoh: MTs Al-Khairaat Bunyu">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF / Google Drive <span class="text-danger">*</span></label>
+                  <input type="url" id="fileUrl" class="form-control" placeholder="https://mts-alkhairaat.pages.dev/books/bahasa_arab_8.pdf" required>
+                  <div class="form-text fs-7">Masukkan URL publik tempat file disimpan di Cloudflare Pages atau Google Drive.</div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary small">Deskripsi Singkat Buku</label>
+                  <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
+                </div>
+
+                <!-- Tombol Utama Buat Kode catalog.json -->
+                <button type="submit" class="btn btn-primary-custom text-white w-100 py-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                  <i class="bi bi-cpu-fill text-warning fs-5"></i>
+                  <span>⚡ Buat Kode catalog.json & Tambahkan Buku</span>
+                </button>
+              </form>
+            </div>
           </div>
 
-          <div id="pdfProcessingAlert" class="alert alert-info d-none align-items-center gap-2 py-2 fs-7" role="alert">
-            <div class="spinner-border spinner-border-sm text-info" role="status"></div>
-            <span>Sedang membaca metadata PDF & menghitung total halaman...</span>
+          <!-- Daftar Buku & Output Kode catalog.json -->
+          <div class="col-lg-6">
+            
+            <!-- Output JSON Generator -->
+            <div class="card card-custom p-4 bg-white mb-4 shadow-sm border border-primary border-2">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-code-square text-success fs-3"></i>
+                  <h5 class="fw-bold mb-0 text-dark">Hasil Kode catalog.json</h5>
+                </div>
+                <span id="bookCountBadge" class="badge bg-primary fs-6 px-3 py-2 rounded-pill">0 Buku</span>
+              </div>
+              <p class="text-muted small mb-3">Klik tombol di bawah untuk memperbarui dan membuat ulang kode secara langsung.</p>
+
+              <!-- Tombol Khusus 'Buat Kode catalog.json' -->
+              <button id="generateJsonNowBtn" class="btn btn-warning text-dark w-100 py-2 mb-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>⚡ Buat / Refresh Kode catalog.json Sekarang</span>
+              </button>
+
+              <pre id="jsonViewer" class="json-output p-3 mb-3"></pre>
+
+              <div class="d-flex gap-2">
+                <button id="copyJsonBtn" class="btn btn-success flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-clipboard-check fs-5"></i>
+                  <span>Salin Kode JSON</span>
+                </button>
+                <button id="downloadJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-download fs-5"></i>
+                  <span>Unduh File catalog.json</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Daftar Buku Aktif -->
+            <div class="card card-custom p-4 bg-white mb-4">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-journal-text text-primary fs-4"></i>
+                  <h5 class="fw-bold mb-0 text-dark">Daftar Buku Terdaftar dalam Katalog</h5>
+                </div>
+              </div>
+
+              <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-hover align-middle fs-7 mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Judul Buku</th>
+                      <th>Mata Pelajaran</th>
+                      <th>Kelas</th>
+                      <th>Halaman</th>
+                      <th class="text-end">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bookTableBody">
+                    <!-- Row items rendered by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
 
-          <hr class="my-3">
-
-          <form id="bookForm">
-            <div class="mb-3">
-              <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
-              <input type="text" id="title" class="form-control" placeholder="Contoh: Bahasa Arab Kelas VIII" required>
-            </div>
-
-            <div class="row g-2 mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
-                <input type="text" id="subject" class="form-control" placeholder="Contoh: Bahasa Arab" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
-                <select id="gradeClass" class="form-select" required>
-                  <option value="Kelas VII">Kelas VII</option>
-                  <option value="Kelas VIII">Kelas VIII</option>
-                  <option value="Kelas IX">Kelas IX</option>
-                  <option value="Semua Kelas">Semua Kelas</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row g-2 mb-3">
-              <div class="col-md-4">
-                <label class="form-label fw-semibold text-secondary small">Jumlah Halaman</label>
-                <input type="number" id="pageCount" class="form-control" placeholder="120" value="120">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold text-secondary small">Ukuran File (Bytes)</label>
-                <input type="number" id="fileSize" class="form-control" placeholder="2500000" value="2500000">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold text-secondary small">Tahun Terbit</label>
-                <input type="text" id="year" class="form-control" value="2026">
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
-              <input type="text" id="author" class="form-control" placeholder="Contoh: MTs Al-Khairaat Bunyu">
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF / Google Drive <span class="text-danger">*</span></label>
-              <input type="url" id="fileUrl" class="form-control" placeholder="https://mts-alkhairaat.pages.dev/books/bahasa_arab_8.pdf" required>
-              <div class="form-text fs-7">Masukkan URL publik tempat file disimpan di Cloudflare Pages atau Google Drive.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-semibold text-secondary small">Deskripsi Singkat Buku</label>
-              <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
-            </div>
-
-            <!-- Tombol Utama Buat Kode catalog.json -->
-            <button type="submit" class="btn btn-primary-custom text-white w-100 py-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 shadow-sm">
-              <i class="bi bi-cpu-fill text-warning fs-5"></i>
-              <span>⚡ Buat Kode catalog.json & Tambahkan Buku</span>
-            </button>
-          </form>
         </div>
       </div>
 
-      <!-- Daftar Buku & Output Kode catalog.json -->
-      <div class="col-lg-6">
-        
-        <!-- Output JSON Generator -->
-        <div class="card card-custom p-4 bg-white mb-4 shadow-sm border border-primary border-2">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-code-square text-success fs-3"></i>
-              <h5 class="fw-bold mb-0 text-dark">Hasil Kode catalog.json</h5>
-            </div>
-            <span id="bookCountBadge" class="badge bg-primary fs-6 px-3 py-2 rounded-pill">0 Buku</span>
-          </div>
-          <p class="text-muted small mb-3">Klik tombol di bawah untuk memperbarui dan membuat ulang kode secara langsung.</p>
+      <!-- TAB 2: IMPOR MASSAL SISWA VIA EXCEL (.XLSX / .CSV) -->
+      <div class="tab-pane fade" id="studentsSection" role="tabpanel">
+        <div class="row g-4">
 
-          <!-- Tombol Khusus 'Buat Kode catalog.json' -->
-          <button id="generateJsonNowBtn" class="btn btn-warning text-dark w-100 py-2 mb-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
-            <i class="bi bi-lightning-charge-fill"></i>
-            <span>⚡ Buat / Refresh Kode catalog.json Sekarang</span>
-          </button>
+          <!-- Left Column: Upload Excel / Input Manual -->
+          <div class="col-lg-5">
+            <div class="card card-custom p-4 bg-white">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-file-earmark-excel-fill text-success fs-3"></i>
+                <h5 class="fw-bold mb-0 text-dark">Unggah File Excel / CSV Siswa</h5>
+              </div>
+              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) dari laptop Anda dengan kolom: <strong>Nama</strong> dan <strong>Kelas</strong> (Contoh: <code>Ahmad, Kelas VII</code>).</p>
 
-          <pre id="jsonViewer" class="json-output p-3 mb-3"></pre>
+              <!-- Upload Dropzone for Excel -->
+              <div class="upload-excel-box mb-3" onclick="document.getElementById('excelFileInput').click()">
+                <i class="bi bi-cloud-arrow-up-fill text-success fs-1"></i>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="excelUploadTitle">Pilih / Tarik File Excel (.xlsx / .csv)</h6>
+                <p class="text-muted fs-7 mb-0" id="excelUploadDesc">Format file Excel dengan kolom Nama & Kelas</p>
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="d-none">
+              </div>
 
-          <div class="d-flex gap-2">
-            <button id="copyJsonBtn" class="btn btn-success flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-clipboard-check fs-5"></i>
-              <span>Salin Kode JSON</span>
-            </button>
-            <button id="downloadJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-download fs-5"></i>
-              <span>Unduh File catalog.json</span>
-            </button>
-          </div>
-        </div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-dark small">Atau Paste / Ketik Manual:</span>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="loadSampleStudentData()">Isi Contoh Data</button>
+              </div>
 
-        <!-- Daftar Buku Aktif -->
-        <div class="card card-custom p-4 bg-white mb-4">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-journal-text text-primary fs-4"></i>
-              <h5 class="fw-bold mb-0 text-dark">Daftar Buku Terdaftar dalam Katalog</h5>
+              <textarea id="manualStudentInput" class="form-control mb-3 fs-7" rows="5" placeholder="Ahmad, Kelas VII&#10;Siti Aisyah, Kelas VIII&#10;Budi Santoso, Kelas IX"></textarea>
+
+              <button id="processStudentDataBtn" class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-gear-wide-connected"></i>
+                <span>Proses & Buat Akun Siswa Massal</span>
+              </button>
             </div>
           </div>
 
-          <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-            <table class="table table-hover align-middle fs-7 mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Judul Buku</th>
-                  <th>Mata Pelajaran</th>
-                  <th>Kelas</th>
-                  <th>Halaman</th>
-                  <th class="text-end">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="bookTableBody">
-                <!-- Row items rendered by JS -->
-              </tbody>
-            </table>
+          <!-- Right Column: Results & Export Table -->
+          <div class="col-lg-7">
+            <div class="card card-custom p-4 bg-white">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                  <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-card-checklist text-primary me-2"></i>Daftar Akun Siswa Hasil Impor</h5>
+                  <p class="text-muted small mb-0">Password akun otomatis dikunci sesuai jenjang kelas.</p>
+                </div>
+                <span id="studentCountBadge" class="badge bg-success fs-6 px-3 py-2 rounded-pill">0 Siswa</span>
+              </div>
+
+              <div class="table-responsive mb-3" style="max-height: 320px; overflow-y: auto;">
+                <table class="table table-striped table-hover align-middle fs-7 mb-0">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>#</th>
+                      <th>Nama Siswa</th>
+                      <th>Jenjang Kelas</th>
+                      <th>Username Login</th>
+                      <th>Kata Sandi / Pass</th>
+                    </tr>
+                  </thead>
+                  <tbody id="studentTableBody">
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">Belum ada data siswa diimpor. Silakan unggah file Excel di sebelah kiri.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2">
+                <button id="downloadExcelStudentBtn" class="btn btn-success flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
+                  <span>Unduh Kartu Login Siswa (Excel)</span>
+                </button>
+                <button id="copyStudentTextBtn" class="btn btn-outline-secondary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-clipboard-check fs-5"></i>
+                  <span>Salin Teks Akun</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Lock Password Guidance -->
+            <div class="card card-custom p-3 bg-light border-0 mt-3">
+              <h6 class="fw-bold text-dark fs-7 mb-1"><i class="bi bi-shield-lock-fill text-warning me-1"></i>Aturan Kata Sandi Akses Otomatis:</h6>
+              <ul class="small text-secondary mb-0 ps-3 fs-7">
+                <li><strong>Kelas VII:</strong> Password <code>2027</code> (Mengakses buku Kelas VII)</li>
+                <li><strong>Kelas VIII:</strong> Password <code>2026</code> (Mengakses buku Kelas VIII)</li>
+                <li><strong>Kelas IX:</strong> Password <code>2025</code> (Mengakses buku Kelas IX)</li>
+              </ul>
+            </div>
           </div>
-        </div>
 
-        <!-- Panduan Langkah Singkat -->
-        <div class="card card-custom p-4 bg-light border-0">
-          <h6 class="fw-bold text-dark d-flex align-items-center gap-2">
-            <i class="bi bi-lightbulb-fill text-warning"></i>
-            Cara Menggunakan Hasil Kode catalog.json:
-          </h6>
-          <ol class="small text-secondary mb-0 ps-3">
-            <li class="mb-1">Isi formulir atau pilih file PDF di sebelah kiri.</li>
-            <li class="mb-1">Klik tombol <strong>⚡ Buat Kode catalog.json & Tambahkan Buku</strong>.</li>
-            <li class="mb-1">Klik tombol <strong>Salin Kode JSON</strong> atau <strong>Unduh File catalog.json</strong>.</li>
-            <li>Ganti file <code>catalog.json</code> di Cloudflare / GitHub. Aplikasi di HP siswa akan otomatis memperbarui daftar buku secara publik!</li>
-          </ol>
         </div>
-
       </div>
 
     </div>
+
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Initialize PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -311,6 +432,8 @@
         "description": "Buku Teks Utama Sejarah Kebudayaan Islam (SKI) Kelas VII MTs."
       }
     ];
+
+    let importedStudents = [];
 
     function updateView() {
       const jsonViewer = document.getElementById('jsonViewer');
@@ -372,7 +495,7 @@
       cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
       document.getElementById('title').value = cleanTitle;
 
-      // Auto Detect Subject if filename contains hints
+      // Auto Detect Subject
       const lowerName = file.name.toLowerCase();
       if (lowerName.includes("fiqih")) document.getElementById('subject').value = "Fiqih";
       else if (lowerName.includes("akidah")) document.getElementById('subject').value = "Akidah Akhlak";
@@ -404,7 +527,7 @@
       }
     });
 
-    // Form Submit Handler (Buat Kode catalog.json)
+    // Form Submit Handler
     document.getElementById('bookForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -445,22 +568,20 @@
       document.getElementById('uploadStatusTitle').textContent = 'Klik atau Tarik File PDF Buku ke Sini';
       document.getElementById('uploadStatusDesc').textContent = 'Format PDF (Maksimal rekomendasi 50 MB)';
 
-      alert(`✅ Berhasil! Kode catalog.json telah dibuat untuk buku "${title}". Anda sekarang bisa mengunduh atau menyalin kodenya.`);
+      alert(`✅ Berhasil! Kode catalog.json telah dibuat untuk buku "${title}".`);
     });
 
-    // Explicit Button: "Buat / Refresh Kode catalog.json Sekarang"
+    // Explicit Button: Refresh JSON
     document.getElementById('generateJsonNowBtn').addEventListener('click', function() {
       updateView();
-      alert(`✨ Kode catalog.json berhasil dibuat dan diperbarui! Total: ${catalog.length} buku. Silakan klik "Salin Kode JSON" atau "Unduh File catalog.json".`);
+      alert(`✨ Kode catalog.json berhasil dibuat dan diperbarui! Total: ${catalog.length} buku.`);
     });
 
     // Copy JSON Button
     document.getElementById('copyJsonBtn').addEventListener('click', function() {
       const jsonText = JSON.stringify(catalog, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
-        alert('📋 Kode catalog.json berhasil disalin ke clipboard! Silakan tempel (paste) di GitHub atau Cloudflare.');
-      }).catch(err => {
-        alert('Gagal menyalin otomatis, silakan salin teks dari kotak hitam secara manual.');
+        alert('📋 Kode catalog.json berhasil disalin ke clipboard!');
       });
     });
 
@@ -483,7 +604,6 @@
       if (confirm('Apakah Anda yakin ingin mengosongkan katalog dan membuat dari awal?')) {
         catalog = [];
         updateView();
-        alert('Katalog telah dikosongkan. Silakan tambahkan buku baru.');
       }
     });
 
@@ -499,9 +619,7 @@
           if (Array.isArray(imported)) {
             catalog = imported;
             updateView();
-            alert('Berhasil mengimpor ' + imported.length + ' buku dari file catalog.json!');
-          } else {
-            alert('Format file JSON tidak valid. Harus berupa daftar array [ ... ]');
+            alert('Berhasil mengimpor ' + imported.length + ' buku!');
           }
         } catch (err) {
           alert('Gagal membaca file JSON: ' + err.message);
@@ -518,13 +636,199 @@
           const liveData = await res.json();
           catalog = liveData;
           updateView();
-          alert('Berhasil memuat katalog terbaru dari Cloudflare! Total: ' + liveData.length + ' buku.');
-        } else {
-          alert('Gagal mengambil catalog.json dari server (Status ' + res.status + ').');
+          alert('Berhasil memuat katalog terbaru dari Cloudflare!');
         }
       } catch (err) {
         alert('Gagal mengambil catalog.json live: ' + err.message);
       }
+    });
+
+    // --- STUDENT BULK IMPORT LOGIC VIA EXCEL / CSV ---
+    function normalizeGrade(raw) {
+      if (!raw) return 'Kelas VII';
+      const str = raw.toString().toLowerCase();
+      if (str.includes('7') || str.includes('vii')) return 'Kelas VII';
+      if (str.includes('8') || str.includes('viii')) return 'Kelas VIII';
+      if (str.includes('9') || str.includes('ix')) return 'Kelas IX';
+      return 'Kelas VII';
+    }
+
+    function getPasswordForGrade(grade) {
+      if (grade === 'Kelas VII') return '2027';
+      if (grade === 'Kelas VIII') return '2026';
+      if (grade === 'Kelas IX') return '2025';
+      return '2027';
+    }
+
+    function processStudentList(rows) {
+      importedStudents = [];
+      rows.forEach((row, idx) => {
+        let name = '';
+        let gradeRaw = '';
+
+        if (Array.isArray(row)) {
+          // If first element is a number or "No", then row format is [No, Nama, Kelas]
+          const col0 = (row[0] || '').toString().trim();
+          const col1 = (row[1] || '').toString().trim();
+          const col2 = (row[2] || '').toString().trim();
+
+          if (col0.toLowerCase() === 'no' || col1.toLowerCase() === 'nama') {
+            // Skip Header row
+            return;
+          }
+
+          if (!isNaN(parseInt(col0)) && col1.length > 0) {
+            // Format: [1, "AQEELA ZAHRATUSSYIFA", "VIII"]
+            name = col1;
+            gradeRaw = col2 || 'Kelas VII';
+          } else {
+            // Format: ["AQEELA ZAHRATUSSYIFA", "VIII"]
+            name = col0;
+            gradeRaw = col1 || 'Kelas VII';
+          }
+        } else if (typeof row === 'object') {
+          name = row['Nama'] || row['NAMA'] || row['Nama Siswa'] || row['nama'] || Object.values(row)[1] || Object.values(row)[0] || '';
+          gradeRaw = row['Kelas'] || row['KELAS'] || row['Jenjang'] || Object.values(row)[2] || Object.values(row)[1] || 'Kelas VII';
+        }
+
+        if (name && name.toString().trim() !== '' && name.toString().toLowerCase() !== 'nama') {
+          const cleanName = name.toString().trim();
+          const cleanGrade = normalizeGrade(gradeRaw);
+          const password = getPasswordForGrade(cleanGrade);
+          const username = cleanName;
+
+          importedStudents.push({
+            no: importedStudents.length + 1,
+            nama: cleanName,
+            kelas: cleanGrade,
+            username: username,
+            password: password
+          });
+        }
+      });
+
+      renderStudentTable();
+    }
+
+    function renderStudentTable() {
+      const studentTableBody = document.getElementById('studentTableBody');
+      const studentCountBadge = document.getElementById('studentCountBadge');
+
+      studentCountBadge.textContent = `${importedStudents.length} Siswa Terdaftar`;
+      studentTableBody.innerHTML = '';
+
+      if (importedStudents.length === 0) {
+        studentTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Belum ada data siswa diimpor. Silakan unggah file Excel di sebelah kiri.</td></tr>`;
+        return;
+      }
+
+      importedStudents.forEach((stu) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${stu.no}</td>
+          <td class="fw-semibold text-dark">${stu.nama}</td>
+          <td><span class="badge bg-primary-subtle text-primary-emphasis">${stu.kelas}</span></td>
+          <td><code>${stu.username}</code></td>
+          <td><span class="badge bg-success font-monospace fs-7">${stu.password}</span></td>
+        `;
+        studentTableBody.appendChild(tr);
+      });
+    }
+
+    // Excel File Upload Handler
+    document.getElementById('excelFileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById('excelUploadTitle').textContent = file.name;
+      document.getElementById('excelUploadDesc').textContent = `Membaca data Excel...`;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          processStudentList(jsonRows);
+          document.getElementById('excelUploadDesc').textContent = `Berhasil membaca ${importedStudents.length} data siswa!`;
+          alert(`✅ Berhasil mengimpor ${importedStudents.length} siswa dari file Excel "${file.name}"!`);
+        } catch (err) {
+          alert('Gagal membaca file Excel: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Manual Textarea Student Input Handler
+    document.getElementById('processStudentDataBtn').addEventListener('click', function() {
+      const rawText = document.getElementById('manualStudentInput').value.trim();
+      if (!rawText && importedStudents.length === 0) {
+        alert('Silakan pilih file Excel atau ketik data siswa pada kotak di atas.');
+        return;
+      }
+
+      if (rawText) {
+        const lines = rawText.split('\n');
+        const rows = lines.map(line => line.split(','));
+        processStudentList(rows);
+        alert(`✅ Berhasil memproses ${importedStudents.length} akun siswa!`);
+      }
+    });
+
+    function loadSampleStudentData() {
+      document.getElementById('manualStudentInput').value = 
+`1, AQEELA ZAHRATUSSYIFA, VIII
+2, BRAYN NUR, VIII
+3, EVAN SYAHPUTRA, VIII
+4, HAZRAH NUR FATIYAH, VIII
+5, MUHAMMAD FADHIL PRASETYA, VIII
+6, ALGEZI ACHMAD GIFAHRI, IX
+7, ASHILAH AZZARAH, IX
+8, M DARMA, IX
+9, MUHAMAT SYAFRI, IX
+10, WULAN PURNAMA SARI, IX`;
+    }
+
+    // Download Excel Student Credentials Button
+    document.getElementById('downloadExcelStudentBtn').addEventListener('click', function() {
+      if (importedStudents.length === 0) {
+        alert('Belum ada data siswa untuk diunduh. Silakan impor file Excel siswa terlebih dahulu.');
+        return;
+      }
+
+      const excelData = importedStudents.map(s => ({
+        'No': s.no,
+        'Nama Siswa': s.nama,
+        'Jenjang Kelas': s.kelas,
+        'Nama Login': s.username,
+        'Kata Sandi / Pass': s.password
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Kartu Login Siswa');
+
+      XLSX.writeFile(workbook, 'Kartu_Login_Siswa_MTs_AlKhairaat.xlsx');
+    });
+
+    // Copy Student Credentials Text
+    document.getElementById('copyStudentTextBtn').addEventListener('click', function() {
+      if (importedStudents.length === 0) {
+        alert('Belum ada data siswa untuk disalin.');
+        return;
+      }
+
+      let text = "📋 *DAFTAR AKUN LOGIN SISWA MTS AL-KHAIRAAT BUNYU*\n\n";
+      importedStudents.forEach(s => {
+        text += `${s.no}. *${s.nama}* (${s.kelas})\n   👉 Username: ${s.username}\n   🔑 Password: ${s.password}\n\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('📋 Daftar akun login siswa berhasil disalin! Bisa langsung dibagikan ke WhatsApp Wali Kelas.');
+      });
     });
 
     // Initialize View
