@@ -1,19 +1,18 @@
-
 [
   {
-    "id": "book_informatika_5445",
-    "title": "BUKU INFORMATIKA  KELAS VII",
+    "id": "book_informatika_1445",
+    "title": "BUKU INFORMATIKA  KELAS VIII",
     "author": "MTs Alkhairaat Bunyu",
     "subject": "Informatika",
     "gradeClass": "Kelas VII",
     "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
     "year": "2026",
-    "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/buku_informatika__kelas_vii.pdf",
+    "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/buku_informatika__kelas_viii_.pdf",
     "localFilePath": "",
     "isDownloaded": false,
-    "fileSize": 10671013,
+    "fileSize": 12976539,
     "pageCount": 280,
     "category": "mp",
-    "description": "Buku Bacaan Siswa"
+    "description": "Buku Siswa"
   }
 ]
