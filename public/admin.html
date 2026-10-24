@@ -6,6 +6,8 @@
   <title>Admin Web Generator Katalog Buku - MTs Al-Khairaat Bunyu</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <!-- PDF.js for automatic PDF metadata & page count extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
     body {
       background-color: #f8fafc;
@@ -31,8 +33,21 @@
       color: #38bdf8;
       border-radius: 12px;
       font-family: 'Courier New', Courier, monospace;
-      max-height: 400px;
+      max-height: 350px;
       overflow-y: auto;
+    }
+    .upload-box {
+      border: 2px dashed #3b82f6;
+      background-color: #eff6ff;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    .upload-box:hover {
+      background-color: #dbeafe;
+      border-color: #2563eb;
     }
   </style>
 </head>
@@ -43,35 +58,69 @@
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-5" href="#">
         <i class="bi bi-journal-bookmark-fill text-warning fs-4"></i>
-        <span>Admin Web Generator Katalog E-Book MTs Al-Khairaat</span>
+        <span>Admin Generator Katalog E-Book MTs Al-Khairaat</span>
       </a>
       <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Khusus Laptop Guru / Operator</span>
     </div>
   </nav>
 
-  <div class="container my-5">
+  <div class="container my-4">
+
+    <!-- Top Action Bar for Catalog Sync & Import -->
+    <div class="card card-custom p-3 mb-4 bg-white">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-arrow-repeat text-primary me-2"></i>Kelola File catalog.json yang Ada</h6>
+          <p class="text-muted small mb-0">Impor catalog.json lama dari laptop Anda atau muat langsung dari server Cloudflare.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="fetchLiveCatalogBtn" class="btn btn-outline-primary btn-sm fw-bold">
+            <i class="bi bi-cloud-download me-1"></i> Muat Dari Cloudflare Live
+          </button>
+          <label class="btn btn-outline-secondary btn-sm fw-bold mb-0">
+            <i class="bi bi-upload me-1"></i> Impor File catalog.json
+            <input type="file" id="importJsonFile" accept=".json" class="d-none">
+          </label>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
       
-      <!-- Form Input Buku Baru -->
+      <!-- Form Input Buku Baru & Unggah Dokumen -->
       <div class="col-lg-6">
         <div class="card card-custom p-4 bg-white">
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <i class="bi bi-plus-circle-fill text-primary fs-4"></i>
-            <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-file-earmark-arrow-up-fill text-primary fs-4"></i>
+            <h5 class="fw-bold mb-0 text-dark">Unggah Dokumen & Tambah Buku</h5>
           </div>
-          <p class="text-muted small">Isi formulir di bawah ini untuk menambahkan buku baru ke katalog Cloudflare siswa.</p>
+          <p class="text-muted small">Pilih file PDF buku pelajaran dari laptop Anda. Sistem akan secara <strong>otomatis mendeteksi judul, jumlah halaman, dan ukuran file</strong>!</p>
+          
+          <!-- Unggah / Dropper File PDF -->
+          <div class="upload-box mb-3" onclick="document.getElementById('pdfFileInput').click()">
+            <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
+            <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik File PDF Buku ke Sini</h6>
+            <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Maksimal rekomendasi 50 MB)</p>
+            <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
+          </div>
+
+          <div id="pdfProcessingAlert" class="alert alert-info d-none align-items-center gap-2 py-2 fs-7" role="alert">
+            <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+            <span>Sedang membaca metadata PDF & menghitung total halaman...</span>
+          </div>
+
           <hr class="my-3">
 
           <form id="bookForm">
             <div class="mb-3">
               <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
-              <input type="text" id="title" class="form-control" placeholder="Contoh: Fiqih MTs Kelas VII" required>
+              <input type="text" id="title" class="form-control" placeholder="Contoh: Bahasa Arab Kelas VIII" required>
             </div>
 
             <div class="row g-2 mb-3">
               <div class="col-md-6">
                 <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
-                <input type="text" id="subject" class="form-control" placeholder="Contoh: Fiqih" required>
+                <input type="text" id="subject" class="form-control" placeholder="Contoh: Bahasa Arab" required>
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
@@ -85,20 +134,29 @@
             </div>
 
             <div class="row g-2 mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
-                <input type="text" id="author" class="form-control" placeholder="Contoh: H. Ahmad Syafi'i">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold text-secondary small">Jumlah Halaman</label>
+                <input type="number" id="pageCount" class="form-control" placeholder="120" value="120">
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold text-secondary small">Ukuran File (Bytes)</label>
+                <input type="number" id="fileSize" class="form-control" placeholder="2500000" value="2500000">
+              </div>
+              <div class="col-md-4">
                 <label class="form-label fw-semibold text-secondary small">Tahun Terbit</label>
                 <input type="text" id="year" class="form-control" value="2026">
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold text-secondary small">Link URL File PDF / DOCX Buku <span class="text-danger">*</span></label>
-              <input type="url" id="fileUrl" class="form-control" placeholder="https://mts-alkhairaat.pages.dev/books/fiqih_7.pdf" required>
-              <div class="form-text fs-7">Masukkan URL publik tempat file PDF/DOCX disimpan di Cloudflare atau Google Drive.</div>
+              <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
+              <input type="text" id="author" class="form-control" placeholder="Contoh: MTs Al-Khairaat Bunyu">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF <span class="text-danger">*</span></label>
+              <input type="url" id="fileUrl" class="form-control" placeholder="https://mts-alkhairaat.pages.dev/books/bahasa_arab_8.pdf" required>
+              <div class="form-text fs-7">Masukkan URL file di Cloudflare Pages atau Google Drive publik.</div>
             </div>
 
             <div class="mb-3">
@@ -108,23 +166,52 @@
 
             <button type="submit" class="btn btn-primary-custom text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
               <i class="bi bi-file-earmark-plus-fill"></i>
-              <span>Tambahkan ke Daftar Katalog</span>
+              <span>Tambahkan Buku ke Daftar Catalog</span>
             </button>
           </form>
         </div>
       </div>
 
-      <!-- Live Preview & JSON Generator Output -->
+      <!-- Daftar Buku & Kode catalog.json Output -->
       <div class="col-lg-6">
+        
+        <!-- Daftar Buku Aktif -->
         <div class="card card-custom p-4 bg-white mb-4">
           <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-journal-text text-primary fs-4"></i>
+              <h5 class="fw-bold mb-0 text-dark">Daftar Buku dalam Katalog</h5>
+            </div>
+            <span id="bookCountBadge" class="badge bg-primary rounded-pill">0 Buku</span>
+          </div>
+
+          <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+            <table class="table table-hover align-middle fs-7 mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Judul Buku</th>
+                  <th>Mata Pelajaran</th>
+                  <th>Kelas</th>
+                  <th>Halaman</th>
+                  <th class="text-end">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="bookTableBody">
+                <!-- Row items rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Output JSON Generator -->
+        <div class="card card-custom p-4 bg-white mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-2">
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-code-square text-success fs-4"></i>
               <h5 class="fw-bold mb-0 text-dark">Hasil Kode catalog.json</h5>
             </div>
-            <span id="bookCountBadge" class="badge bg-primary rounded-pill">3 Buku Tersimpan</span>
           </div>
-          <p class="text-muted small mb-2">Kode JSON di bawah ini diperbarui secara otomatis setiap kali Anda menambahkan atau menghapus buku.</p>
+          <p class="text-muted small mb-2">Kode JSON di bawah ini diperbarui secara otomatis setiap kali Anda menambah atau menghapus buku.</p>
 
           <pre id="jsonViewer" class="json-output p-3 mb-3"></pre>
 
@@ -140,16 +227,17 @@
           </div>
         </div>
 
-        <!-- Panduan Singkat untuk Guru -->
+        <!-- Panduan Langkah Singkat -->
         <div class="card card-custom p-4 bg-light border-0">
           <h6 class="fw-bold text-dark d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle-fill text-info"></i>
-            Cara Pakai di Laptop Guru:
+            <i class="bi bi-lightbulb-fill text-warning"></i>
+            Bagaimana Cara Kerja Otomatisasi Ini?
           </h6>
           <ol class="small text-secondary mb-0 ps-3">
-            <li class="mb-1">Isi formulir buku baru di sebelah kiri, lalu klik <strong>Tambahkan ke Daftar Katalog</strong>.</li>
-            <li class="mb-1">Klik tombol <strong>Salin Kode JSON</strong> atau <strong>Unduh File catalog.json</strong>.</li>
-            <li>Ganti atau tempel file <code>catalog.json</code> di Cloudflare / GitHub. Dalam beberapa detik, seluruh HP siswa akan otomatis menerima buku baru tersebut!</li>
+            <li class="mb-1"><strong>Unggah PDF:</strong> Pilih file PDF buku, sistem langsung menghitung total halaman dan besaran file secara presisi.</li>
+            <li class="mb-1"><strong>Tambahkan:</strong> Klik <em>Tambahkan Buku ke Daftar Catalog</em>.</li>
+            <li class="mb-1"><strong>Unduh / Salin:</strong> Klik <em>Unduh File catalog.json</em>.</li>
+            <li><strong>Upload ke Server:</strong> Tarik file <code>catalog.json</code> baru ini ke repository GitHub/Cloudflare Anda. Semua HP siswa akan otomatis bersinkronisasi!</li>
           </ol>
         </div>
 
@@ -159,6 +247,9 @@
   </div>
 
   <script>
+    // Initialize PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
     // Initial catalog sample
     let catalog = [
       {
@@ -169,7 +260,7 @@
         "gradeClass": "Kelas VII",
         "teacherOwner": "Guru Agama MTs Al-Khairaat",
         "year": "2026",
-        "fileUrl": "https://mts-alkhairaat.pages.dev/books/fiqih_7.pdf",
+        "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/fiqih_7.pdf",
         "localFilePath": "",
         "isDownloaded": false,
         "fileSize": 3120000,
@@ -185,7 +276,7 @@
         "gradeClass": "Kelas VII",
         "teacherOwner": "Guru Agama MTs Al-Khairaat",
         "year": "2026",
-        "fileUrl": "https://mts-alkhairaat.pages.dev/books/akidah_akhlak_7.pdf",
+        "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/akidah_akhlak_7.pdf",
         "localFilePath": "",
         "isDownloaded": false,
         "fileSize": 2850000,
@@ -201,7 +292,7 @@
         "gradeClass": "Kelas VII",
         "teacherOwner": "Guru Sejarah MTs Al-Khairaat",
         "year": "2026",
-        "fileUrl": "https://mts-alkhairaat.pages.dev/books/ski_7.pdf",
+        "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/ski_7.pdf",
         "localFilePath": "",
         "isDownloaded": false,
         "fileSize": 3500000,
@@ -214,20 +305,108 @@
     function updateView() {
       const jsonViewer = document.getElementById('jsonViewer');
       const bookCountBadge = document.getElementById('bookCountBadge');
+      const bookTableBody = document.getElementById('bookTableBody');
+
       jsonViewer.textContent = JSON.stringify(catalog, null, 2);
-      bookCountBadge.textContent = `${catalog.length} Buku Tersimpan`;
+      bookCountBadge.textContent = `${catalog.length} Buku`;
+
+      // Render Table Rows
+      bookTableBody.innerHTML = '';
+      if (catalog.length === 0) {
+        bookTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada buku dalam katalog.</td></tr>`;
+      } else {
+        catalog.forEach((book, index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="fw-semibold text-dark">${book.title}</td>
+            <td><span class="badge bg-light text-dark border">${book.subject}</span></td>
+            <td><span class="badge bg-info-subtle text-info-emphasis">${book.gradeClass}</span></td>
+            <td>${book.pageCount} hlm</td>
+            <td class="text-end">
+              <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteBook(${index})">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          `;
+          bookTableBody.appendChild(tr);
+        });
+      }
     }
 
+    function deleteBook(index) {
+      if (confirm(`Hapus "${catalog[index].title}" dari katalog?`)) {
+        catalog.splice(index, 1);
+        updateView();
+      }
+    }
+
+    // PDF File Auto Extraction
+    document.getElementById('pdfFileInput').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const uploadStatusTitle = document.getElementById('uploadStatusTitle');
+      const uploadStatusDesc = document.getElementById('uploadStatusDesc');
+      const pdfProcessingAlert = document.getElementById('pdfProcessingAlert');
+
+      uploadStatusTitle.textContent = file.name;
+      uploadStatusDesc.textContent = `Ukuran File: ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+      pdfProcessingAlert.classList.remove('d-none');
+      pdfProcessingAlert.classList.add('d-flex');
+
+      // Auto Fill File Size
+      document.getElementById('fileSize').value = file.size;
+
+      // Auto Fill Title from filename (clean clean extension and underscores)
+      let cleanTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+      cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+      document.getElementById('title').value = cleanTitle;
+
+      // Auto Detect Subject if filename contains hints
+      const lowerName = file.name.toLowerCase();
+      if (lowerName.includes("fiqih")) document.getElementById('subject').value = "Fiqih";
+      else if (lowerName.includes("akidah")) document.getElementById('subject').value = "Akidah Akhlak";
+      else if (lowerName.includes("ski") || lowerName.includes("sejarah")) document.getElementById('subject').value = "SKI";
+      else if (lowerName.includes("arab")) document.getElementById('subject').value = "Bahasa Arab";
+      else if (lowerName.includes("quran") || lowerName.includes("hadis")) document.getElementById('subject').value = "Al-Qur'an Hadis";
+      else document.getElementById('subject').value = cleanTitle;
+
+      // Auto Detect Grade Class
+      if (lowerName.includes("vii") || lowerName.includes("7")) document.getElementById('gradeClass').value = "Kelas VII";
+      else if (lowerName.includes("viii") || lowerName.includes("8")) document.getElementById('gradeClass').value = "Kelas VIII";
+      else if (lowerName.includes("ix") || lowerName.includes("9")) document.getElementById('gradeClass').value = "Kelas IX";
+
+      // Auto Suggest Cloudflare Pages URL
+      const cleanFileName = file.name.toLowerCase().replace(/\s+/g, '_');
+      document.getElementById('fileUrl').value = `https://ebook-mts-alkhairaat.pages.dev/books/${cleanFileName}`;
+
+      // Extract PDF page count via PDF.js
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        document.getElementById('pageCount').value = pdf.numPages;
+        alert(`Berhasil membaca PDF! Total Halaman: ${pdf.numPages} hlm, Ukuran: ${(file.size / (1024 * 1024)).toFixed(2)} MB.`);
+      } catch (err) {
+        console.warn("Gagal membaca halaman PDF otomatis:", err);
+      } finally {
+        pdfProcessingAlert.classList.add('d-none');
+        pdfProcessingAlert.classList.remove('d-flex');
+      }
+    });
+
+    // Form Submit Handler
     document.getElementById('bookForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
       const title = document.getElementById('title').value.trim();
       const subject = document.getElementById('subject').value.trim();
       const gradeClass = document.getElementById('gradeClass').value;
-      const author = document.getElementById('author').value.trim() || 'Guru MTs Al-Khairaat';
+      const author = document.getElementById('author').value.trim() || 'MTs Al-Khairaat Bunyu';
       const year = document.getElementById('year').value.trim() || '2026';
       const fileUrl = document.getElementById('fileUrl').value.trim();
-      const description = document.getElementById('description').value.trim() || `Buku ${subject} untuk ${gradeClass} MTs Al-Khairaat.`;
+      const pageCount = parseInt(document.getElementById('pageCount').value) || 100;
+      const fileSize = parseInt(document.getElementById('fileSize').value) || 2500000;
+      const description = document.getElementById('description').value.trim() || `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`;
 
       const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4);
 
@@ -242,8 +421,8 @@
         fileUrl: fileUrl,
         localFilePath: "",
         isDownloaded: false,
-        fileSize: 2500000,
-        pageCount: 120,
+        fileSize: fileSize,
+        pageCount: pageCount,
         category: "mp",
         description: description
       };
@@ -251,25 +430,25 @@
       catalog.push(newBook);
       updateView();
 
-      // Reset form
-      document.getElementById('title').value = '';
-      document.getElementById('subject').value = '';
-      document.getElementById('author').value = '';
-      document.getElementById('fileUrl').value = '';
-      document.getElementById('description').value = '';
+      // Reset Form
+      document.getElementById('bookForm').reset();
+      document.getElementById('uploadStatusTitle').textContent = 'Klik atau Tarik File PDF Buku ke Sini';
+      document.getElementById('uploadStatusDesc').textContent = 'Format PDF (Maksimal rekomendasi 50 MB)';
 
-      alert('Buku "' + title + '" berhasil ditambahkan ke generator katalog!');
+      alert('Buku "' + title + '" berhasil ditambahkan ke daftar katalog!');
     });
 
+    // Copy JSON Button
     document.getElementById('copyJsonBtn').addEventListener('click', function() {
       const jsonText = JSON.stringify(catalog, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
-        alert('Kode JSON berhasil disalin ke clipboard! Silakan tempel (paste) di GitHub atau Cloudflare.');
+        alert('Kode JSON berhasil disalin ke clipboard! Silakan tempel (paste) di catalog.json GitHub/Cloudflare.');
       }).catch(err => {
         alert('Gagal menyalin otomatis, silakan salin teks dari kotak hitam secara manual.');
       });
     });
 
+    // Download JSON Button
     document.getElementById('downloadJsonBtn').addEventListener('click', function() {
       const jsonText = JSON.stringify(catalog, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
@@ -283,7 +462,47 @@
       URL.revokeObjectURL(url);
     });
 
-    // Initialize
+    // Import Local JSON File
+    document.getElementById('importJsonFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          if (Array.isArray(imported)) {
+            catalog = imported;
+            updateView();
+            alert('Berhasil mengimpor ' + imported.length + ' buku dari file catalog.json!');
+          } else {
+            alert('Format file JSON tidak valid. Harus berupa daftar array [ ... ]');
+          }
+        } catch (err) {
+          alert('Gagal membaca file JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Fetch Live Catalog from Cloudflare
+    document.getElementById('fetchLiveCatalogBtn').addEventListener('click', async function() {
+      try {
+        const res = await fetch('/catalog.json');
+        if (res.ok) {
+          const liveData = await res.json();
+          catalog = liveData;
+          updateView();
+          alert('Berhasil memuat katalog terbaru dari Cloudflare! Total: ' + liveData.length + ' buku.');
+        } else {
+          alert('Gagal mengambil catalog.json dari server (Status ' + res.status + ').');
+        }
+      } catch (err) {
+        alert('Gagal mengambil catalog.json live: ' + err.message);
+      }
+    });
+
+    // Initialize View
     updateView();
   </script>
 </body>
