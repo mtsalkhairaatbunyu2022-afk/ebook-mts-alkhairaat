@@ -198,10 +198,10 @@
               <p class="text-muted small">Pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
               
               <!-- Unggah / Dropper File PDF -->
-              <div class="upload-box mb-3" onclick="document.getElementById('pdfFileInput').click()">
+              <div class="upload-box mb-3" id="pdfDropZone">
                 <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
-                <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik File PDF Buku ke Sini</h6>
-                <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Maksimal rekomendasi 50 MB)</p>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik (Drag & Drop) File PDF Buku ke Sini</h6>
+                <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Tarik file dari laptop atau klik untuk memilih file)</p>
                 <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
               </div>
 
@@ -495,7 +495,7 @@
   <div class="modal fade" id="webReaderModal" tabindex="-1" aria-labelledby="webReaderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen-custom modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header bg-dark text-white py-2 px-3">
+        <div class="modal-header bg-dark text-white py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-book text-warning fs-5"></i>
             <div>
@@ -503,17 +503,42 @@
               <small class="text-muted" id="readerModalSubtitle">Mode Presentasi Guru & Layar Proyektor</small>
             </div>
           </div>
+
+          <!-- Direct Page Control Toolbar for Presentation -->
+          <div class="d-flex align-items-center gap-2">
+            <button id="pdfPrevPageBtn" class="btn btn-sm btn-outline-warning text-white fw-bold py-1 px-2">
+              <i class="bi bi-chevron-left me-1"></i> Prev
+            </button>
+            <span class="text-white fs-7 font-monospace fw-bold px-2" id="pdfPageNumDisplay">Halaman 1 / 1</span>
+            <button id="pdfNextPageBtn" class="btn btn-sm btn-outline-warning text-white fw-bold py-1 px-2">
+              Next <i class="bi bi-chevron-right ms-1"></i>
+            </button>
+            <div class="vr bg-secondary mx-1 d-none d-md-block" style="height: 20px;"></div>
+            <button id="pdfZoomOutBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-out"></i></button>
+            <span class="text-light fs-7 font-monospace" id="pdfZoomDisplay">120%</span>
+            <button id="pdfZoomInBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-in"></i></button>
+          </div>
+
           <div class="d-flex align-items-center gap-2">
             <a id="readerOpenNewTabBtn" href="#" target="_blank" class="btn btn-outline-light btn-sm">
-              <i class="bi bi-box-arrow-up-right me-1"></i> Buka Tab Baru
+              <i class="bi bi-box-arrow-up-right me-1"></i> Buka File PDF
             </a>
             <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
               <i class="bi bi-x-lg me-1"></i> Tutup
             </button>
           </div>
         </div>
-        <div class="modal-body p-0 bg-secondary" style="height: calc(100vh - 55px);">
-          <iframe id="readerIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+
+        <div class="modal-body p-0 bg-dark position-relative overflow-auto d-flex justify-content-center align-items-start" style="height: calc(100vh - 65px);">
+          <!-- Loading Spinner -->
+          <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
+            <div class="spinner-border text-warning mb-2" role="status"></div>
+            <p class="fw-bold mb-0">Memuat Halaman Buku PDF...</p>
+          </div>
+          <!-- Native PDF Canvas View -->
+          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded" style="max-width: 98%; display: none;"></canvas>
+          <!-- Fallback Iframe -->
+          <iframe id="readerIframe" src="" class="w-100 h-100 border-0" style="display: none;"></iframe>
         </div>
       </div>
     </div>
@@ -531,9 +556,64 @@
     let currentTeacherFilterGrade = 'ALL';
     let currentTeacherSearchQuery = '';
 
+    let currentPdfDoc = null;
+    let currentPdfPage = 1;
+    let pdfZoomScale = 1.2;
+
+    async function renderModalPdfPage(num) {
+      if (!currentPdfDoc) return;
+      try {
+        const page = await currentPdfDoc.getPage(num);
+        const canvas = document.getElementById('pdfViewerCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const viewport = page.getViewport({ scale: pdfZoomScale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${num} / ${currentPdfDoc.numPages}`;
+        document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        }).promise;
+
+        canvas.style.display = 'block';
+      } catch (err) {
+        console.error("Gagal merender halaman PDF:", err);
+      }
+    }
+
     // =====================================
     // RENDER TEACHER BOOKSHELF (RUANG BACA)
     // =====================================
+    async function renderPdfCoverThumbnail(pdfUrl, canvasId) {
+      if (!pdfUrl || !window.pdfjsLib) return;
+      try {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+
+        const viewport = page.getViewport({ scale: 0.6 });
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+
+        canvas.style.display = 'block';
+      } catch (err) {
+        console.log("Menggunakan sampul visual standar:", err.message);
+      }
+    }
+
     function renderTeacherBookshelf() {
       const grid = document.getElementById('teacherBooksGrid');
       grid.innerHTML = '';
@@ -554,21 +634,26 @@
           <div class="col-12 text-center py-5">
             <i class="bi bi-journal-x fs-1 text-muted"></i>
             <h5 class="fw-bold mt-2 text-dark">Buku Tidak Ditemukan</h5>
-            <p class="text-muted small">Coba ubah kata kunci pencarian atau pilih saringan kelas yang berbeda.</p>
+            <p class="text-muted small">Belum ada buku dalam katalog atau ganti saringan kelas.</p>
           </div>
         `;
         return;
       }
 
-      filtered.forEach(book => {
+      filtered.forEach((book, index) => {
         const col = document.createElement('div');
         col.className = 'col-md-6 col-lg-4 col-xl-3';
+        const canvasId = `pdf_cover_canvas_${index}`;
+
         col.innerHTML = `
-          <div class="card book-card h-100 shadow-sm">
-            <div class="book-cover">
-              <i class="bi bi-book-fill fs-1 text-warning mb-2"></i>
-              <h6 class="fw-bold mb-0 text-white text-truncate w-100 px-2" title="${book.title}">${book.title}</h6>
-              <span class="badge bg-light text-dark mt-2 fw-semibold">${book.subject}</span>
+          <div class="card book-card h-100 shadow-sm overflow-hidden">
+            <div class="book-cover position-relative overflow-hidden d-flex flex-column align-items-center justify-content-center p-3 text-center" style="min-height: 180px; cursor: pointer;" onclick="openWebReader('${book.id}')">
+              <canvas id="${canvasId}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0.9; display: none;"></canvas>
+              <div class="position-relative z-1 text-center w-100">
+                <i class="bi bi-book-fill fs-1 text-warning mb-2 d-block"></i>
+                <h6 class="fw-bold mb-1 text-white text-truncate w-100 px-2" title="${book.title}">${book.title}</h6>
+                <span class="badge bg-light text-dark fw-semibold">${book.subject}</span>
+              </div>
             </div>
             <div class="card-body p-3 d-flex flex-column justify-content-between">
               <div>
@@ -583,42 +668,105 @@
               </div>
               <button class="btn btn-primary-custom text-white w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" onclick="openWebReader('${book.id}')">
                 <i class="bi bi-eye-fill"></i>
-                <span>Baca Buku Sekarang</span>
+                <span>Pratinjau & Baca Buku</span>
               </button>
             </div>
           </div>
         `;
         grid.appendChild(col);
+
+        if (book.fileUrl && book.fileUrl.startsWith('http')) {
+          renderPdfCoverThumbnail(book.fileUrl, canvasId);
+        }
       });
     }
 
-    // Open Web Reader Modal
-    function openWebReader(bookId) {
+    // Open Web Reader Modal with Native PDF.js Rendering
+    async function openWebReader(bookId) {
       const book = catalog.find(b => b.id === bookId);
       if (!book) return;
 
       document.getElementById('readerModalTitle').textContent = book.title;
       document.getElementById('readerModalSubtitle').textContent = `${book.subject} • ${book.gradeClass} • Penulis: ${book.author}`;
-      
-      let readerUrl = book.fileUrl;
-      // Convert standard Google Drive link to preview embed URL
-      if (readerUrl.includes('drive.google.com/file/d/')) {
-        const fileIdMatch = readerUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (fileIdMatch && fileIdMatch[1]) {
-          readerUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
-        }
-      }
-
-      document.getElementById('readerIframe').src = readerUrl;
       document.getElementById('readerOpenNewTabBtn').href = book.fileUrl;
+
+      const spinner = document.getElementById('pdfLoadingSpinner');
+      const canvas = document.getElementById('pdfViewerCanvas');
+      const iframe = document.getElementById('readerIframe');
+
+      spinner.classList.remove('d-none');
+      canvas.style.display = 'none';
+      iframe.style.display = 'none';
 
       const modal = new bootstrap.Modal(document.getElementById('webReaderModal'));
       modal.show();
+
+      currentPdfDoc = null;
+      currentPdfPage = 1;
+      pdfZoomScale = 1.2;
+
+      let fileUrl = book.fileUrl;
+
+      // Try rendering with PDF.js client-side first
+      if (window.pdfjsLib && fileUrl) {
+        try {
+          const loadingTask = pdfjsLib.getDocument(fileUrl);
+          currentPdfDoc = await loadingTask.promise;
+          spinner.classList.add('d-none');
+          await renderModalPdfPage(1);
+          return;
+        } catch (pdfErr) {
+          console.warn("PDF.js client fetch fallback to iframe viewer:", pdfErr);
+        }
+      }
+
+      // Fallback if client-side PDF.js fetch is blocked
+      spinner.classList.add('d-none');
+      if (fileUrl.includes('drive.google.com/file/d/')) {
+        const fileIdMatch = fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+        }
+      } else if (fileUrl.startsWith('http')) {
+        fileUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUrl)}`;
+      }
+      iframe.src = fileUrl;
+      iframe.style.display = 'block';
     }
 
-    // Stop iframe loading when modal is closed
-    document.getElementById('webReaderModal').addEventListener('hidden.bs.modal', function () {
-      document.getElementById('readerIframe').src = '';
+    // Modal Page Controls Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('pdfPrevPageBtn').addEventListener('click', () => {
+        if (currentPdfDoc && currentPdfPage > 1) {
+          currentPdfPage--;
+          renderModalPdfPage(currentPdfPage);
+        }
+      });
+
+      document.getElementById('pdfNextPageBtn').addEventListener('click', () => {
+        if (currentPdfDoc && currentPdfPage < currentPdfDoc.numPages) {
+          currentPdfPage++;
+          renderModalPdfPage(currentPdfPage);
+        }
+      });
+
+      document.getElementById('pdfZoomInBtn').addEventListener('click', () => {
+        pdfZoomScale += 0.2;
+        renderModalPdfPage(currentPdfPage);
+      });
+
+      document.getElementById('pdfZoomOutBtn').addEventListener('click', () => {
+        if (pdfZoomScale > 0.4) {
+          pdfZoomScale -= 0.2;
+          renderModalPdfPage(currentPdfPage);
+        }
+      });
+
+      // Stop iframe loading when modal is closed
+      document.getElementById('webReaderModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('readerIframe').src = '';
+        currentPdfDoc = null;
+      });
     });
 
     // Filter Buttons in Ruang Baca Guru
@@ -691,16 +839,23 @@
       }
     }
 
-    // PDF File Auto Extraction
-    document.getElementById('pdfFileInput').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
+    // Global prevention of default browser drop behavior (prevents opening dropped PDF in a new tab)
+    window.addEventListener('dragover', function(e) {
+      e.preventDefault();
+    }, false);
+    window.addEventListener('drop', function(e) {
+      e.preventDefault();
+    }, false);
+
+    // Process PDF File Metadata silently without opening any new tab or popup preview
+    async function processPdfFile(file) {
       if (!file) return;
 
       const uploadStatusTitle = document.getElementById('uploadStatusTitle');
       const uploadStatusDesc = document.getElementById('uploadStatusDesc');
       const pdfProcessingAlert = document.getElementById('pdfProcessingAlert');
 
-      uploadStatusTitle.textContent = file.name;
+      uploadStatusTitle.textContent = `📄 ${file.name}`;
       uploadStatusDesc.textContent = `Ukuran File: ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
       pdfProcessingAlert.classList.remove('d-none');
       pdfProcessingAlert.classList.add('d-flex');
@@ -732,17 +887,63 @@
       const cleanFileName = file.name.toLowerCase().replace(/\s+/g, '_');
       document.getElementById('fileUrl').value = `https://ebook-mts-alkhairaat.pages.dev/books/${cleanFileName}`;
 
-      // Extract PDF page count via PDF.js
+      // Extract PDF page count via PDF.js silently without opening any popup/new tab
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         document.getElementById('pageCount').value = pdf.numPages;
-        alert(`Berhasil membaca PDF! Total Halaman: ${pdf.numPages} hlm, Ukuran: ${(file.size / (1024 * 1024)).toFixed(2)} MB.`);
+        uploadStatusDesc.textContent = `Ukuran: ${(file.size / (1024 * 1024)).toFixed(2)} MB • ${pdf.numPages} Halaman (Metadata Terbaca)`;
       } catch (err) {
         console.warn("Gagal membaca halaman PDF otomatis:", err);
       } finally {
         pdfProcessingAlert.classList.add('d-none');
         pdfProcessingAlert.classList.remove('d-flex');
+      }
+    }
+
+    // Bind Drag and Drop and File Input events
+    document.addEventListener('DOMContentLoaded', function() {
+      const pdfDropZone = document.getElementById('pdfDropZone');
+      const pdfFileInput = document.getElementById('pdfFileInput');
+
+      if (pdfDropZone) {
+        pdfDropZone.addEventListener('click', function() {
+          if (pdfFileInput) pdfFileInput.click();
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+          pdfDropZone.addEventListener(eventName, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            pdfDropZone.style.backgroundColor = '#dbeafe';
+            pdfDropZone.style.borderColor = '#2563eb';
+          }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+          pdfDropZone.addEventListener(eventName, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            pdfDropZone.style.backgroundColor = '';
+            pdfDropZone.style.borderColor = '';
+          }, false);
+        });
+
+        pdfDropZone.addEventListener('drop', function(e) {
+          const dt = e.dataTransfer;
+          if (dt && dt.files && dt.files.length > 0) {
+            const file = dt.files[0];
+            processPdfFile(file);
+          }
+        });
+      }
+
+      if (pdfFileInput) {
+        pdfFileInput.addEventListener('change', function(e) {
+          if (e.target.files && e.target.files[0]) {
+            processPdfFile(e.target.files[0]);
+          }
+        });
       }
     });
 
