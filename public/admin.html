@@ -553,7 +553,7 @@
           </div>
         </div>
 
-        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex justify-content-center align-items-start" style="height: calc(100vh - 65px);">
+        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex flex-column align-items-center py-3" style="height: calc(100vh - 65px);">
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
@@ -574,7 +574,7 @@
             </div>
           </div>
           <!-- Native PDF Canvas View (Single Page) -->
-          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded" style="max-width: 98%; display: none;"></canvas>
+          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-block" style="max-width: 98%; display: none;"></canvas>
           <!-- Continuous Scroll Down Container -->
           <div id="pdfScrollContainer" class="d-flex flex-column align-items-center gap-3 w-100 py-3" style="display: none;"></div>
           <!-- Fallback Iframe -->
