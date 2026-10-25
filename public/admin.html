@@ -272,6 +272,20 @@
                 </button>
               </form>
             </div>
+            
+            <!-- Tambahan: Bulk URL Section -->
+            <div class="card card-custom p-4 bg-white mt-3">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-list-ol text-primary fs-4"></i>
+                <h5 class="fw-bold mb-0 text-dark">Tambah Banyak Buku Sekaligus</h5>
+              </div>
+              <p class="text-muted small">Paste daftar URL langsung (format direct link, per baris):</p>
+              <textarea id="bulkUrls" class="form-control mb-3 fs-7" rows="4" placeholder="https://.../buku1.pdf&#10;https://.../buku2.pdf"></textarea>
+              <button id="processBulkBtn" class="btn btn-primary-custom text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-cloud-plus-fill"></i>
+                <span>Proses Semua URL</span>
+              </button>
+            </div>
           </div>
 
           <!-- Daftar Buku & Output Kode catalog.json -->
@@ -506,7 +520,7 @@
   <!-- MODAL: WEB PDF READER UNTUK GURU / KELAS -->
   <!-- ========================================== -->
   <div class="modal fade" id="webReaderModal" tabindex="-1" aria-labelledby="webReaderModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen-custom modal-dialog-centered">
+    <div class="modal-dialog modal-fullscreen-custom">
       <div class="modal-content">
         <div class="modal-header bg-dark text-white py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div class="d-flex align-items-center gap-2">
@@ -553,7 +567,7 @@
           </div>
         </div>
 
-        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex flex-column align-items-center py-3" style="height: calc(100vh - 65px);">
+        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex flex-column py-3" style="height: calc(100vh - 65px);">
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
@@ -574,7 +588,7 @@
             </div>
           </div>
           <!-- Native PDF Canvas View (Single Page) -->
-          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-block" style="max-width: 98%; display: none;"></canvas>
+          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-block" style="display: none;"></canvas>
           <!-- Continuous Scroll Down Container -->
           <div id="pdfScrollContainer" class="d-flex flex-column align-items-center gap-3 w-100 py-3" style="display: none;"></div>
           <!-- Fallback Iframe -->
@@ -1689,6 +1703,36 @@
       navigator.clipboard.writeText(text).then(() => {
         alert('📋 Daftar akun login siswa berhasil disalin! Bisa langsung dibagikan ke WhatsApp Wali Kelas.');
       });
+    });
+
+    // Bulk Process Function
+    document.getElementById('processBulkBtn').addEventListener('click', async () => {
+      const textArea = document.getElementById('bulkUrls');
+      const lines = textArea.value.split('\n');
+      
+      let count = 0;
+      for (const line of lines) {
+        const trimmedUrl = line.trim();
+        if (trimmedUrl) {
+          const newBook = {
+            id: 'book_' + Math.random().toString(36).substr(2, 9),
+            title: trimmedUrl.split('/').pop().replace('.pdf', '') || 'Buku Baru ' + (catalog.length + 1),
+            fileUrl: trimmedUrl,
+            subject: 'Buku',
+            gradeClass: 'Kelas VII',
+            pageCount: 0,
+            fileSize: 0,
+            author: 'MTs Al-Khairaat Bunyu',
+            description: 'Ditambahkan via Bulk'
+          };
+          catalog.push(newBook);
+          count++;
+        }
+      }
+      
+      updateCatalogUI();
+      alert('Berhasil menambah ' + count + ' buku ke katalog.');
+      textArea.value = '';
     });
 
     // Auto load live catalog & student data or local saved data on initial start
