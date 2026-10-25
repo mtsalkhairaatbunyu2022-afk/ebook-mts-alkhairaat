@@ -1093,6 +1093,14 @@
       const bookCountBadge = document.getElementById('bookCountBadge');
       const bookTableBody = document.getElementById('bookTableBody');
 
+      // Persist catalog changes (additions, edits, deletions) to localStorage so page refresh doesn't resurrect deleted books
+      try {
+        localStorage.setItem('admin_catalog_override', JSON.stringify(catalog));
+        localStorage.setItem('admin_catalog_has_saved', 'true');
+      } catch (e) {
+        console.warn('Gagal menyimpan katalog ke localStorage:', e);
+      }
+
       jsonViewer.textContent = JSON.stringify(catalog, null, 2);
       bookCountBadge.textContent = `${catalog.length} Buku Tersimpan`;
 
@@ -1423,6 +1431,8 @@
         if (res.ok) {
           const liveData = await res.json();
           catalog = liveData;
+          localStorage.setItem('admin_catalog_override', JSON.stringify(catalog));
+          localStorage.setItem('admin_catalog_has_saved', 'true');
           updateView();
           alert('Berhasil memuat katalog terbaru dari Cloudflare! Total: ' + liveData.length + ' buku.');
         }
@@ -1617,18 +1627,32 @@
       });
     });
 
-    // Auto load live catalog on initial start
+    // Auto load live catalog or local saved catalog on initial start
     (async function init() {
-      try {
-        const res = await fetch('/catalog.json');
-        if (res.ok) {
-          const liveData = await res.json();
-          if (Array.isArray(liveData) && liveData.length > 0) {
-            catalog = liveData;
+      const hasSaved = localStorage.getItem('admin_catalog_has_saved');
+      if (hasSaved === 'true') {
+        try {
+          const stored = localStorage.getItem('admin_catalog_override');
+          if (stored) {
+            catalog = JSON.parse(stored);
           }
+        } catch (e) {
+          console.warn('Gagal membaca data dari localStorage:', e);
         }
-      } catch (e) {
-        console.log('Menggunakan data katalog lokal.');
+      } else {
+        try {
+          const res = await fetch('/catalog.json');
+          if (res.ok) {
+            const liveData = await res.json();
+            if (Array.isArray(liveData)) {
+              catalog = liveData;
+              localStorage.setItem('admin_catalog_override', JSON.stringify(catalog));
+              localStorage.setItem('admin_catalog_has_saved', 'true');
+            }
+          }
+        } catch (e) {
+          console.log('Menggunakan data katalog lokal.');
+        }
       }
       updateView();
     })();

@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
@@ -64,7 +65,8 @@ import android.content.Intent
 @Composable
 fun WelcomeDashboardScreen(
     viewModel: AppViewModel,
-    onStartApp: () -> Unit
+    onStartApp: () -> Unit,
+    onLoginWithCard: () -> Unit = onStartApp
 ) {
     Box(
         modifier = Modifier
@@ -222,6 +224,35 @@ fun WelcomeDashboardScreen(
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Secondary Option: Login using Student Card
+                    OutlinedButton(
+                        onClick = onLoginWithCard,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .testTag("btn_masuk_kartu_siswa"),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "MASUK DENGAN KARTU SISWA",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -232,13 +263,15 @@ fun WelcomeDashboardScreen(
 fun BookDashboard(
     viewModel: AppViewModel,
     user: UserEntity,
-    onBookSelected: (BookEntity) -> Unit
+    onBookSelected: (BookEntity) -> Unit,
+    onOpenLogin: () -> Unit = {}
 ) {
     val books by viewModel.filteredBooks.collectAsState()
     var showUploadDialog by remember { mutableStateOf(false) }
     var bookToDelete by remember { mutableStateOf<BookEntity?>(null) }
 
     val isTeacher = user.role == "TEACHER" || user.role == "ADMIN"
+    val isNamedStudent = !isTeacher && user.id != "usr_student_default"
 
     Scaffold(
         floatingActionButton = {
@@ -275,25 +308,60 @@ fun BookDashboard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isTeacher) "Mode Guru (Pengajar)" else "Perpustakaan Digital Siswa",
+                                text = if (isTeacher) "Mode Guru (Pengajar)" else if (isNamedStudent) "Assalamu'alaikum, ${user.name}" else "Perpustakaan Digital Siswa",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (isTeacher) MaterialTheme.colorScheme.secondary else Color.White.copy(alpha = 0.2f),
-                                modifier = Modifier.padding(top = 4.dp).testTag("user_role_tag")
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 4.dp)
                             ) {
-                                Text(
-                                    text = if (isTeacher) "PENGELOLA KURIKULUM & MATERI" else "MODE BACA SISWA (SIAP PAKAI)",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = if (isTeacher) MaterialTheme.colorScheme.onSecondary else Color.White,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isTeacher) MaterialTheme.colorScheme.secondary else Color.White.copy(alpha = 0.2f),
+                                    modifier = Modifier.testTag("user_role_tag")
+                                ) {
+                                    Text(
+                                        text = if (isTeacher) "PENGELOLA KURIKULUM & MATERI" else if (isNamedStudent) "SISWA ${user.gradeClass.uppercase()}" else "MODE BACA SISWA (SIAP PAKAI)",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = if (isTeacher) MaterialTheme.colorScheme.onSecondary else Color.White,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                // Quick button to open Login / Switch Account
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color.White.copy(alpha = 0.28f),
+                                    modifier = Modifier
+                                        .clickable { onOpenLogin() }
+                                        .testTag("btn_quick_user_login")
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (isNamedStudent) "Ganti Akun" else "Masuk Kartu",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -301,7 +369,7 @@ fun BookDashboard(
                             imageVector = if (isTeacher) Icons.Default.School else Icons.AutoMirrored.Filled.MenuBook,
                             contentDescription = "Role Icon",
                             tint = Color.White.copy(alpha = 0.9f),
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp).padding(start = 8.dp)
                         )
                     }
 
@@ -386,14 +454,14 @@ fun BookDashboard(
                 }
             }
 
-            // Filters selector header row
+            // Filters selector header row (matching Ruang Baca Guru in Admin Portal)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = "Saring Berdasarkan Parameter",
+                    text = "Saring Jenjang Kelas & Kategori",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -401,52 +469,47 @@ fun BookDashboard(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (user.role != "STUDENT" || user.gradeClass.isBlank() || user.gradeClass == "Semua Kelas") {
-                        // Kelas Filter Dropdown
-                        var filterExpanded by remember { mutableStateOf(false) }
-                        Box {
-                            FilterChipButton(
-                                text = if (viewModel.selectedGradeFilter.isEmpty()) "Pilih Kelas" else viewModel.selectedGradeFilter,
-                                isSelected = viewModel.selectedGradeFilter.isNotEmpty(),
-                                onClick = { filterExpanded = true }
-                            )
-                            DropdownMenu(
-                                expanded = filterExpanded,
-                                onDismissRequest = { filterExpanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Pilih Kelas (Semua Kelas)") },
-                                    onClick = {
-                                        viewModel.selectedGradeFilter = ""
-                                        filterExpanded = false
-                                    }
-                                )
-                                listOf("Kelas VII", "Kelas VIII", "Kelas IX", "Semua Kelas").forEach { grade ->
-                                    DropdownMenuItem(
-                                        text = { Text(grade) },
-                                        onClick = {
-                                            viewModel.selectedGradeFilter = if (grade == "Semua Kelas") "" else grade
-                                            filterExpanded = false
-                                        }
-                                    )
-                                }
-                            }
+                    val grades = listOf("Semua Kelas", "Kelas VII", "Kelas VIII", "Kelas IX")
+                    grades.forEach { grade ->
+                        val isSelected = if (grade == "Semua Kelas") {
+                            viewModel.selectedGradeFilter.isEmpty() || viewModel.selectedGradeFilter == "Semua Kelas"
+                        } else {
+                            viewModel.selectedGradeFilter == grade
                         }
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                viewModel.selectedGradeFilter = if (grade == "Semua Kelas") "" else grade
+                            },
+                            label = { Text(grade, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
                     }
 
                     // Kategori Filter chip picker
-                    FilterChipButton(
-                        text = if (viewModel.selectedCategoryFilter.isEmpty()) "Semua Kategori" else viewModel.selectedCategoryFilter,
-                        isSelected = viewModel.selectedCategoryFilter.isNotEmpty(),
+                    FilterChip(
+                        selected = viewModel.selectedCategoryFilter.isNotEmpty(),
                         onClick = {
                             viewModel.selectedCategoryFilter = when (viewModel.selectedCategoryFilter) {
                                 "" -> "Mata Pelajaran"
                                 "Mata Pelajaran" -> "Referensi Tambahan"
                                 else -> ""
                             }
+                        },
+                        label = {
+                            Text(
+                                if (viewModel.selectedCategoryFilter.isEmpty()) "Semua Kategori" else viewModel.selectedCategoryFilter,
+                                fontSize = 12.sp
+                            )
                         }
                     )
                 }
@@ -475,7 +538,7 @@ fun BookDashboard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Buku pelajaran telah disiapkan oleh Guru. Siap langsung dibaca secara offline tanpa perlu unggah mandiri.",
+                            text = "Katalog terhubung dengan Portal Admin & Guru. Buku otomatis diperbarui dan dapat dibaca langsung.",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -496,21 +559,44 @@ fun BookDashboard(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.MenuBook,
                             contentDescription = "Empty",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Buku Tidak Ditemukan",
+                            text = "Belum Ada Buku Tersedia",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Gunakan kata kunci pencarian atau saringan yang berbeda.",
+                            text = if (viewModel.selectedGradeFilter.isNotEmpty())
+                                "Tidak ada buku untuk ${viewModel.selectedGradeFilter}. Coba pilih 'Semua Kelas' atau sinkronkan dengan Portal Admin."
+                            else
+                                "Buku bawaan dikosongkan. Buku yang ditambahkan di Portal Admin & Guru akan otomatis muncul di sini.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (viewModel.selectedGradeFilter.isNotEmpty()) {
+                                OutlinedButton(
+                                    onClick = { viewModel.selectedGradeFilter = "" }
+                                ) {
+                                    Text("Lihat Semua Kelas")
+                                }
+                            }
+                            Button(
+                                onClick = { viewModel.syncCatalogFromCloudflare() },
+                                modifier = Modifier.testTag("btn_sync_catalog")
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Sinkronkan Katalog")
+                            }
+                        }
                     }
                 }
             } else {
@@ -609,96 +695,165 @@ fun BookGridCard(
 
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("book_item_${book.id}")
             .clickable { onBookSelected(book) },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Elegant Cover representation
+            // Elegant Cover representation matching Ruang Baca Guru in admin.html
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp)
+                    .height(145.dp)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-                                MaterialTheme.colorScheme.primary
+                                Color(0xFF1E3A8A), // deep education blue
+                                Color(0xFF2563EB)
                             )
                         )
                     )
-                    .padding(12.dp)
+                    .padding(8.dp)
             ) {
+                // Top-Start Grade Class badge (Warning Yellow)
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFFF59E0B),
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Text(
+                        text = book.gradeClass,
+                        color = Color.Black,
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+
+                // Top-End Subject badge (White pill)
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.White.copy(alpha = 0.92f),
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(
+                        text = book.subject,
+                        color = Color(0xFF1E3A8A),
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+
                 if (onDelete != null) {
                     IconButton(
                         onClick = onDelete,
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
+                            .align(Alignment.BottomEnd)
                             .size(24.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Hapus Buku",
-                            tint = Color.White.copy(alpha = 0.7f),
+                            tint = Color.White.copy(alpha = 0.8f),
                             modifier = Modifier.size(16.dp)
                         )
                     }
                 }
-                
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(top = 18.dp, start = 4.dp, end = 4.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.MenuBook,
                         contentDescription = "Book",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(28.dp)
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(24.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = book.title,
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 3,
+                        maxLines = 2,
                         textAlign = TextAlign.Center,
                         overflow = TextOverflow.Ellipsis,
                         lineHeight = 15.sp
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = book.author,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 9.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
-            // Details section representation
+            // Details section representation matching Ruang Baca Guru
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                    ) {
+                        Text(
+                            text = book.gradeClass,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    Text(
+                        text = "${book.pageCount} Hal",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = book.author,
+                    text = "Penulis: ${book.author}",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "${book.subject} • Kelas ${book.gradeClass}",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.secondary,
-                    maxLines = 1
-                )
+
+                if (book.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = book.description,
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Progress indicators for active download or simple click status
+                // Progress indicators for active download or 'Pratinjau & Baca Buku' Button
                 when {
                     downloadTask != null && downloadTask.status == "DOWNLOADING" -> {
                         Column {
@@ -716,44 +871,29 @@ fun BookGridCard(
                             )
                         }
                     }
-                    book.isDownloaded -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Downloaded",
-                                tint = SuccessGreen,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Text(
-                                text = "Tersedia Offline",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = SuccessGreen
-                            )
-                        }
-                    }
                     else -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "${book.pageCount} Hal",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Button(
+                            onClick = { onBookSelected(book) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E3A8A),
+                                contentColor = Color.White
                             )
-
+                        ) {
                             Icon(
-                                imageVector = Icons.Default.CloudDownload,
-                                contentDescription = "Unduh",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable { onUnduh() }
+                                imageVector = Icons.Default.Visibility,
+                                contentDescription = null,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (book.isDownloaded) "Buka Buku" else "Pratinjau & Baca",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -2099,4 +2239,159 @@ fun ChangeTeacherPinDialog(
         }
     )
 }
+
+@Composable
+fun StudentLoginDialog(
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit,
+    onLoginSuccess: () -> Unit = {}
+) {
+    var nameInput by remember { mutableStateOf(viewModel.loginEmail) }
+    var passwordInput by remember { mutableStateOf(viewModel.loginPassword) }
+    var showPassword by remember { mutableStateOf(false) }
+    var localError by remember { mutableStateOf<String?>(null) }
+    val isAuthenticating = viewModel.isAuthenticating
+    val authError = viewModel.authError
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Masuk Kartu Siswa / Guru", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = "Gunakan Nama Siswa dan Sandi Kelas yang tertera pada Kartu Login madrasah.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = {
+                        nameInput = it
+                        localError = null
+                        viewModel.loginEmail = it
+                    },
+                    label = { Text("Nama Siswa (atau 'guru')") },
+                    placeholder = { Text("Nama sesuai kartu") },
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("input_student_login_name")
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = passwordInput,
+                    onValueChange = {
+                        passwordInput = it
+                        localError = null
+                        viewModel.loginPassword = it
+                    },
+                    label = { Text("Kata Sandi") },
+                    placeholder = { Text("Sandi kelas (cth: 2026)") },
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = null)
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showPassword) "Sembunyikan" else "Tampilkan"
+                            )
+                        }
+                    },
+                    visualTransformation = if (showPassword) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth().testTag("input_student_login_password")
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Info card for Class Passwords
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = "💡 Panduan Sandi Kelas (Kartu Login):",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("• Kelas VII : sandi 2027 (atau 'kelas7')", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("• Kelas VIII : sandi 2026 (atau 'kelas8')", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("• Kelas IX : sandi 2025 (atau 'kelas9')", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("• Guru : user 'guru', sandi '1926'", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+
+                val displayError = localError ?: authError
+                if (displayError != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = displayError,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (nameInput.isBlank()) {
+                        localError = "Nama siswa tidak boleh kosong"
+                        return@Button
+                    }
+                    if (passwordInput.isBlank()) {
+                        localError = "Kata sandi wajib diisi"
+                        return@Button
+                    }
+                    viewModel.loginEmail = nameInput
+                    viewModel.loginPassword = passwordInput
+                    viewModel.performLogin {
+                        onLoginSuccess()
+                        onDismiss()
+                    }
+                },
+                enabled = !isAuthenticating,
+                modifier = Modifier.testTag("btn_confirm_student_login")
+            ) {
+                if (isAuthenticating) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Memeriksa...")
+                } else {
+                    Text("Masuk Sekarang")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
 

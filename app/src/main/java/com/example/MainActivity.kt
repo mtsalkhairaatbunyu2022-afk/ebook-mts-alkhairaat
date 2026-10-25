@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
             // Bind system theme & VM dark mode states
             MyApplicationTheme(darkTheme = viewModel.isAppDarkMode) {
                 var hasStartedApp by remember { mutableStateOf(true) }
+                var requestOpenLogin by remember { mutableStateOf(false) }
                 val userState by viewModel.loggedInUser.collectAsState()
                 val fallbackUser = remember {
                     com.example.data.UserEntity(
@@ -81,6 +82,11 @@ class MainActivity : ComponentActivity() {
                             onStartApp = {
                                 viewModel.ensureFullAccessUser()
                                 hasStartedApp = true
+                            },
+                            onLoginWithCard = {
+                                viewModel.ensureFullAccessUser()
+                                hasStartedApp = true
+                                requestOpenLogin = true
                             }
                         )
                     } else {
@@ -88,6 +94,8 @@ class MainActivity : ComponentActivity() {
                         MainAppContent(
                             viewModel = viewModel,
                             user = currentUser,
+                            requestOpenLogin = requestOpenLogin,
+                            onResetOpenLogin = { requestOpenLogin = false },
                             onBackToWelcome = {
                                 hasStartedApp = false
                             }
@@ -115,6 +123,8 @@ enum class LayoutState {
 fun MainAppContent(
     viewModel: AppViewModel,
     user: com.example.data.UserEntity,
+    requestOpenLogin: Boolean = false,
+    onResetOpenLogin: () -> Unit = {},
     onBackToWelcome: () -> Unit = {}
 ) {
     var activeLayoutState by rememberSaveable { mutableStateOf(LayoutState.MAIN_SHELL) }
@@ -122,7 +132,16 @@ fun MainAppContent(
     var selectedBookDetail by remember { mutableStateOf<BookEntity?>(null) }
     var showTeacherPinDialog by remember { mutableStateOf(false) }
     var showChangePinDialog by remember { mutableStateOf(false) }
+    var showStudentLoginDialog by remember { mutableStateOf(false) }
     val isTeacher = user.role == "TEACHER" || user.role == "ADMIN"
+    val isNamedStudent = !isTeacher && user.id != "usr_student_default"
+
+    LaunchedEffect(requestOpenLogin) {
+        if (requestOpenLogin) {
+            showStudentLoginDialog = true
+            onResetOpenLogin()
+        }
+    }
 
     // Dynamic edge-to-edge layout styling
     AnimatedContent(
@@ -243,6 +262,30 @@ fun MainAppContent(
                                     }
 
                                     DropdownMenuItem(
+                                        text = { Text(if (isNamedStudent) "Ganti Akun (${user.name})" else "Masuk Kartu Siswa") },
+                                        onClick = {
+                                            userMenuExpanded = false
+                                            showStudentLoginDialog = true
+                                        },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Person, contentDescription = null)
+                                        }
+                                    )
+
+                                    if (isNamedStudent) {
+                                        DropdownMenuItem(
+                                            text = { Text("Keluar Akun (Akses Bebas)") },
+                                            onClick = {
+                                                userMenuExpanded = false
+                                                viewModel.performLogout()
+                                            },
+                                            leadingIcon = {
+                                                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
+                                            }
+                                        )
+                                    }
+
+                                    DropdownMenuItem(
                                         text = { Text("Dashboard Awal") },
                                         onClick = {
                                             userMenuExpanded = false
@@ -305,6 +348,9 @@ fun MainAppContent(
                                     onBookSelected = { book ->
                                         selectedBookDetail = book
                                         activeLayoutState = LayoutState.BOOK_DETAIL
+                                    },
+                                    onOpenLogin = {
+                                        showStudentLoginDialog = true
                                     }
                                 )
                             }
@@ -322,6 +368,15 @@ fun MainAppContent(
                     }
                 }
 
+                if (showStudentLoginDialog) {
+                    StudentLoginDialog(
+                        viewModel = viewModel,
+                        onDismiss = { showStudentLoginDialog = false },
+                        onLoginSuccess = {
+                            showStudentLoginDialog = false
+                        }
+                    )
+                }
                 if (showTeacherPinDialog) {
                     TeacherPinDialog(
                         onDismiss = { showTeacherPinDialog = false },

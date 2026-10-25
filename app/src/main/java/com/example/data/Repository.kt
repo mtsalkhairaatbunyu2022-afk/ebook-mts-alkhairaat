@@ -55,108 +55,104 @@ class Repository(
     // Download Tasks Stream
     val allDownloads: Flow<List<DownloadTaskEntity>> = downloadTaskDao.getAllDownloadTasks()
 
-    // Initialize/Seed Mock Book Catalog
+    // Initialize Local Database without preloaded mock books
     suspend fun seedDatabaseIfNeeded() {
         withContext(Dispatchers.IO) {
-            val existingBooks = bookDao.getAllBooks().firstOrNull()
-            if (existingBooks.isNullOrEmpty()) {
-                Log.d("Repository", "Seeding initial local book metadata catalog")
-                val mockBooks = listOf(
-                    BookEntity(
-                        id = "book_bahasa_arab_7",
-                        title = "Bahasa Arab MTs Kelas VII",
-                        author = "Faruq Baharudin",
-                        subject = "Bahasa Arab",
-                        gradeClass = "Kelas VII",
-                        teacherOwner = "Kementerian Agama RI",
-                        year = "2020",
-                        fileUrl = "bundled_asset",
-                        localFilePath = "bundled_asset",
-                        isDownloaded = true,
-                        fileSize = 2498166,
-                        pageCount = 151,
-                        category = "mp",
-                        description = "Buku pelajaran Bahasa Arab untuk MTs Kelas VII. Penulis: Faruq Baharudin, Cetakan ke-1 Tahun 2020. Penomoran cerdas otomatis: 6 halaman romawi dan Halaman 1 dimulai tepat pada Bab 1 (Lembar 7)."
-                    ),
-                    BookEntity(
-                        id = "book_informatika_7",
-                        title = "Informatika SMP/MTs Kelas VII",
-                        author = "Irya Wisnubhadra, Maresha Caroline Wijanto, dkk.",
-                        subject = "Informatika",
-                        gradeClass = "Kelas VII",
-                        teacherOwner = "Kemendikbudristek RI",
-                        year = "2021",
-                        fileUrl = "bundled_asset",
-                        localFilePath = "bundled_asset",
-                        isDownloaded = true,
-                        fileSize = 10671013,
-                        pageCount = 288,
-                        category = "mp",
-                        description = "Buku teks utama Informatika untuk SMP/MTs Kelas VII. Penomoran cerdas otomatis: 16 halaman romawi dan Halaman 1 dimulai tepat pada Bab 1 (Lembar 17)."
-                    )
-                )
-                bookDao.insertBooks(mockBooks)
+            // Delete legacy mock books from database and cache so the app default is completely empty
+            bookDao.deleteBookById("book_bahasa_arab_7")
+            bookDao.deleteBookById("book_informatika_7")
+            bookDao.deleteBookById("book_bahasa_arab_1767")
+            try {
+                File(context.filesDir, "book_bahasa_arab_7.pdf").delete()
+                File(context.filesDir, "book_informatika_7.pdf").delete()
+                File(context.filesDir, "book_bahasa_arab_1767.pdf").delete()
+            } catch (_: Exception) {}
 
-                val mockCategories = listOf(
+            // Clean up any existing non-custom books to ensure fresh start
+            val currentBooks = bookDao.getAllBooks().firstOrNull() ?: emptyList()
+            for (cb in currentBooks) {
+                if (!cb.id.startsWith("custom_")) {
+                    bookDao.deleteBookById(cb.id)
+                    try {
+                        val f = File(context.filesDir, "${cb.id}.pdf")
+                        if (f.exists()) f.delete()
+                    } catch (_: Exception) {}
+                }
+            }
+
+            // Initialize default categories if needed
+            val existingCategories = categoryDao.getAllCategories().firstOrNull()
+            if (existingCategories.isNullOrEmpty()) {
+                val defaultCategories = listOf(
                     CategoryEntity("mp", "Mata Pelajaran"),
                     CategoryEntity("rf", "Referensi Tambahan"),
                     CategoryEntity("fk", "Fiksi Literasi"),
                     CategoryEntity("gr", "Khusus Guru")
                 )
-                categoryDao.insertCategories(mockCategories)
-            } else {
-                // Ensure Informatika is also present if database was already created earlier
-                if (bookDao.getBookByIdSync("book_informatika_7") == null) {
-                    bookDao.insertBook(
-                        BookEntity(
-                            id = "book_informatika_7",
-                            title = "Informatika SMP/MTs Kelas VII",
-                            author = "Irya Wisnubhadra, Maresha Caroline Wijanto, dkk.",
-                            subject = "Informatika",
-                            gradeClass = "Kelas VII",
-                            teacherOwner = "Kemendikbudristek RI",
-                            year = "2021",
-                            fileUrl = "bundled_asset",
-                            localFilePath = "bundled_asset",
-                            isDownloaded = true,
-                            fileSize = 10671013,
-                            pageCount = 288,
-                            category = "mp",
-                            description = "Buku teks utama Informatika untuk SMP/MTs Kelas VII. Penomoran cerdas otomatis: 16 halaman romawi dan Halaman 1 dimulai tepat pada Bab 1 (Lembar 17)."
-                        )
-                    )
-                }
-                // Extract bundled books to filesDir immediately on boot so students have 0 waiting time
-                extractBundledBookIfNeeded("book_bahasa_arab_7", "books/bahasa_arab_7.pdf")
-                extractBundledBookIfNeeded("book_informatika_7", "books/informatika_7.pdf")
+                categoryDao.insertCategories(defaultCategories)
             }
+
             ensureDefaultUser()
         }
     }
 
     suspend fun syncRemoteCatalog(baseUrl: String): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val normalizedUrl = when {
-                baseUrl.endsWith("/catalog.json") -> baseUrl
-                baseUrl.endsWith("/") -> "${baseUrl}catalog.json"
-                else -> "$baseUrl/catalog.json"
+            val candidateUrls = mutableListOf<String>()
+            val trimmedBase = baseUrl.trim()
+            if (trimmedBase.isNotBlank()) {
+                val normalized = when {
+                    trimmedBase.endsWith("/catalog.json") -> trimmedBase
+                    trimmedBase.endsWith("/") -> "${trimmedBase}catalog.json"
+                    else -> "$trimmedBase/catalog.json"
+                }
+                candidateUrls.add(normalized)
             }
-            Log.d("Repository", "Mencoba sinkronisasi katalog remote dari: $normalizedUrl")
-
-            val url = URL(normalizedUrl)
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 5000
-                readTimeout = 5000
-                requestMethod = "GET"
-                setRequestProperty("Accept", "application/json")
+            if (!candidateUrls.contains("https://ebook-mts-alkhairaat.pages.dev/catalog.json")) {
+                candidateUrls.add("https://ebook-mts-alkhairaat.pages.dev/catalog.json")
             }
-
-            val responseCode = connection.responseCode
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                return@withContext Result.failure(Exception("HTTP $responseCode dari server katalog"))
+            if (!candidateUrls.contains("https://ais-dev-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app/catalog.json")) {
+                candidateUrls.add("https://ais-dev-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app/catalog.json")
             }
 
-            val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
+            var jsonString: String? = null
+            var sourceUsed = ""
+
+            for (targetUrl in candidateUrls) {
+                try {
+                    Log.d("Repository", "Mencoba ambil catalog dari: $targetUrl")
+                    val url = URL(targetUrl)
+                    val conn = (url.openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 4000
+                        readTimeout = 4000
+                        requestMethod = "GET"
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                        jsonString = conn.inputStream.bufferedReader().use { it.readText() }
+                        sourceUsed = targetUrl
+                        break
+                    }
+                } catch (netErr: Exception) {
+                    Log.d("Repository", "Koneksi ke $targetUrl gagal: ${netErr.message}")
+                }
+            }
+
+            // If network fails (e.g. offline/airplane mode/emulator network block), fallback to asset catalog.json
+            if (jsonString.isNullOrBlank()) {
+                try {
+                    jsonString = context.assets.open("catalog.json").bufferedReader().use { it.readText() }
+                    sourceUsed = "assets/catalog.json"
+                    Log.d("Repository", "Menggunakan fallback offline catalog dari assets")
+                } catch (assetErr: Exception) {
+                    Log.d("Repository", "Asset catalog.json tidak ditemukan atau kosong")
+                }
+            }
+
+            if (jsonString.isNullOrBlank()) {
+                return@withContext Result.failure(Exception("Tidak dapat terhubung ke server katalog."))
+            }
+
             val jsonArray = if (jsonString.trim().startsWith("[")) {
                 JSONArray(jsonString)
             } else {
@@ -164,37 +160,53 @@ class Repository(
                 jsonObject.optJSONArray("books") ?: JSONArray()
             }
 
+            val remoteBookIds = mutableSetOf<String>()
             var syncedCount = 0
+
             for (i in 0 until jsonArray.length()) {
                 val item = jsonArray.getJSONObject(i)
-                val bookId = item.optString("id", "")
+                val bookId = item.optString("id", "").trim()
                 if (bookId.isNotBlank()) {
+                    remoteBookIds.add(bookId)
                     val existing = bookDao.getBookByIdSync(bookId)
                     val book = BookEntity(
                         id = bookId,
                         title = item.optString("title", "Buku Baru"),
-                        author = item.optString("author", "Guru MTs"),
-                        subject = item.optString("subject", "Umum"),
+                        author = item.optString("author", "MTs Al-Khairaat Bunyu"),
+                        subject = item.optString("subject", "Mata Pelajaran"),
                         gradeClass = item.optString("gradeClass", "Kelas VII"),
                         teacherOwner = item.optString("teacherOwner", "Guru Sekolah"),
                         year = item.optString("year", "2026"),
                         fileUrl = item.optString("fileUrl", ""),
-                        localFilePath = existing?.localFilePath ?: "",
+                        localFilePath = existing?.localFilePath,
                         isDownloaded = existing?.isDownloaded ?: false,
-                        fileSize = item.optLong("fileSize", 2000000L),
+                        fileSize = item.optLong("fileSize", 0L),
                         pageCount = item.optInt("pageCount", 100),
                         category = item.optString("category", "mp"),
-                        description = item.optString("description", "Buku diperbarui dari server Cloudflare"),
+                        description = item.optString("description", "Buku Bacaan Siswa"),
                         isOcrReady = true
                     )
                     bookDao.insertBook(book)
                     syncedCount++
                 }
             }
-            logAudit("system", "Sinkronisasi Cloudflare", "SYNC_KATALOG", "Sinkronisasi berhasil: $syncedCount buku diperbarui dari Cloudflare Pages.")
+
+            // Remove local books that are not in the remote catalog (unless created manually via app upload)
+            val currentBooks = bookDao.getAllBooks().firstOrNull() ?: emptyList()
+            for (cb in currentBooks) {
+                if (!cb.id.startsWith("custom_") && !remoteBookIds.contains(cb.id)) {
+                    bookDao.deleteBookById(cb.id)
+                    try {
+                        val f = File(context.filesDir, "${cb.id}.pdf")
+                        if (f.exists()) f.delete()
+                    } catch (_: Exception) {}
+                }
+            }
+
+            logAudit("system", "Sinkronisasi Server", "SYNC_KATALOG", "Sinkronisasi berhasil: $syncedCount buku diperbarui dari $sourceUsed.")
             Result.success(syncedCount)
         } catch (e: Exception) {
-            Log.w("Repository", "Gagal sinkronisasi katalog remote: ${e.message}")
+            Log.w("Repository", "Gagal sinkronisasi katalog: ${e.message}")
             Result.failure(e)
         }
     }
@@ -287,6 +299,9 @@ class Repository(
                     id = "usr_admin"
                     gradeClass = "Semua Kelas"
                 } else if (identifier.lowercase() == "guru") {
+                    if (inputPassword != "1926" && inputPassword.lowercase() != "guru") {
+                        throw Exception("Kata sandi guru salah! Gunakan PIN Guru '1926'")
+                    }
                     role = "TEACHER"
                     name = "Guru (Pengajar)"
                     id = "usr_teacher"
@@ -372,6 +387,39 @@ class Repository(
         val file = File(context.filesDir, "$bookId.pdf")
         if (file.exists() && file.length() > 0) {
             return@withContext file // Already prepared
+        }
+
+        // Try downloading actual PDF from remote URL (Cloudflare Pages or Google Drive) if provided
+        if (book.fileUrl.startsWith("http://") || book.fileUrl.startsWith("https://")) {
+            try {
+                var downloadUrl = book.fileUrl
+                val driveMatch = Regex("/(?:file/d/|open\\?id=|uc\\?id=)([a-zA-Z0-9_-]+)").find(downloadUrl)
+                if (driveMatch != null) {
+                    downloadUrl = "https://drive.google.com/uc?export=download&id=${driveMatch.groupValues[1]}"
+                }
+                val url = URL(downloadUrl)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 8000
+                    readTimeout = 12000
+                    instanceFollowRedirects = true
+                    setRequestProperty("User-Agent", "Mozilla/5.0")
+                }
+                if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                    val tempFile = File(context.filesDir, "${bookId}_temp.pdf")
+                    conn.inputStream.use { input ->
+                        FileOutputStream(tempFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    if (tempFile.exists() && tempFile.length() > 500) {
+                        tempFile.renameTo(file)
+                        Log.i("Repository", "Berhasil mengunduh berkas PDF asli dari: $downloadUrl (${file.length()} bytes)")
+                        return@withContext file
+                    }
+                }
+            } catch (dlErr: Exception) {
+                Log.w("Repository", "Gagal mengunduh berkas PDF dari ${book.fileUrl}: ${dlErr.message}, menggunakan generator dokumen.")
+            }
         }
 
         // Check if bundled actual PDF exists in assets/books/

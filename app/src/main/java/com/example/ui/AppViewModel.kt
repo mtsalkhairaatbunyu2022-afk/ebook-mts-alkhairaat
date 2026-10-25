@@ -20,7 +20,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // App Share URL configuration (persisted in SharedPreferences)
     private val prefs = application.getSharedPreferences("school_ebook_prefs", android.content.Context.MODE_PRIVATE)
     var appShareUrl by mutableStateOf(
-        prefs.getString("app_share_url", "https://ais-pre-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app") ?: "https://ais-pre-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app"
+        prefs.getString("app_share_url", "https://ebook-mts-alkhairaat.pages.dev") ?: "https://ebook-mts-alkhairaat.pages.dev"
     )
         private set
 
@@ -113,10 +113,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         selectedCategoryFilterState,
         loggedInUser
     ) { query, grade, category, user ->
-        val effectiveGrade = if (user?.role == "STUDENT") {
-            if (user.gradeClass.isBlank() || user.gradeClass == "Semua Kelas") grade else user.gradeClass
-        } else {
+        val effectiveGrade = if (grade.isNotEmpty() && grade != "Semua Kelas") {
             grade
+        } else if (grade == "Semua Kelas") {
+            ""
+        } else if (user?.role == "STUDENT" && user.gradeClass.isNotBlank() && user.gradeClass != "Semua Kelas") {
+            user.gradeClass
+        } else {
+            ""
         }
         android.util.Log.d("AppViewModel", "Filtering books: query='$query', effectiveGrade='$effectiveGrade', category='$category', userRole='${user?.role}', userName='${user?.name}'")
         repository.searchAndFilter(query, effectiveGrade, category)
@@ -163,7 +167,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     syncStatusMessage = if (count > 0) {
                         "Katalog berhasil diperbarui! $count buku siap digunakan."
                     } else {
-                        "Katalog sudah versi terbaru."
+                        "Katalog bersih (0 buku)."
                     }
                 }
                 .onFailure {
@@ -181,32 +185,36 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Auth Commands
-    fun performLogin(onSuccess: () -> Unit) {
+    fun performLogin(onSuccess: () -> Unit = {}) {
         if (loginEmail.isBlank() || loginPassword.isBlank()) {
-            authError = "Email dan kata sandi wajib diisi"
+            authError = "Nama siswa dan kata sandi wajib diisi"
             return
         }
         isAuthenticating = true
         authError = null
         viewModelScope.launch {
             repository.login(loginEmail, loginPassword)
-                .onSuccess {
+                .onSuccess { user ->
                     isAuthenticating = false
                     authError = null
-                    // Clear search and filter states upon successful login to avoid filter leakage across users
+                    // Clear search and filter states upon successful login
                     searchQueryState.value = ""
-                    selectedGradeFilterState.value = ""
+                    if (user.gradeClass.startsWith("Kelas")) {
+                        selectedGradeFilterState.value = user.gradeClass
+                    } else {
+                        selectedGradeFilterState.value = ""
+                    }
                     selectedCategoryFilterState.value = ""
                     onSuccess()
                 }
                 .onFailure { err ->
                     isAuthenticating = false
-                    authError = err.localizedMessage ?: "Masuk gagal, periksa jaringan atau sandi Anda"
+                    authError = err.localizedMessage ?: "Masuk gagal, periksa sandi Anda"
                 }
         }
     }
 
-    fun performLogout(onComplete: () -> Unit) {
+    fun performLogout(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             repository.logout()
             loginEmail = ""
@@ -215,6 +223,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             searchQueryState.value = ""
             selectedGradeFilterState.value = ""
             selectedCategoryFilterState.value = ""
+            repository.ensureDefaultUser()
             onComplete()
         }
     }
