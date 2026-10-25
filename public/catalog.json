@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "book_bahasa_arab_2661",
+    "title": "BAHASA ARAB  KELAS VIII",
+    "author": "MTs Al-Khairaat Bunyu",
+    "subject": "Bahasa Arab",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/bahasa_arab__kelas_viii.pdf",
+    "localBlobUrl": "blob:https://ebook-mts-alkhairaat.pages.dev/22f61c14-5421-4db0-8ec9-d8df36d5284a",
+    "isDownloaded": false,
+    "fileSize": 3880866,
+    "pageCount": 123,
+    "category": "mp",
+    "description": "Buku Siswa"
+  }
+]
