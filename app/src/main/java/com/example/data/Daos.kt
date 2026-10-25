@@ -11,6 +11,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE isLoggedIn = 1 LIMIT 1")
     suspend fun getLoggedInUserSync(): UserEntity?
     
+    @Query("SELECT * FROM users WHERE LOWER(name) = LOWER(:identifier) OR LOWER(email) = LOWER(:identifier) LIMIT 1")
+    suspend fun getUserByIdentifier(identifier: String): UserEntity?
+
     @Query("SELECT * FROM users WHERE name = :name LIMIT 1")
     suspend fun getUserByName(name: String): UserEntity?
 
@@ -25,6 +28,9 @@ interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUsers(users: List<UserEntity>)
 
     @Query("UPDATE users SET isLoggedIn = 0")
     suspend fun clearSession()

@@ -133,6 +133,7 @@ fun MainAppContent(
     var showTeacherPinDialog by remember { mutableStateOf(false) }
     var showChangePinDialog by remember { mutableStateOf(false) }
     var showStudentLoginDialog by remember { mutableStateOf(false) }
+    var showStudentChangePasswordDialog by remember { mutableStateOf(false) }
     val isTeacher = user.role == "TEACHER" || user.role == "ADMIN"
     val isNamedStudent = !isTeacher && user.id != "usr_student_default"
 
@@ -374,6 +375,16 @@ fun MainAppContent(
                         onDismiss = { showStudentLoginDialog = false },
                         onLoginSuccess = {
                             showStudentLoginDialog = false
+                        }
+                    )
+                }
+                if (showStudentChangePasswordDialog && isNamedStudent) {
+                    StudentChangePasswordDialog(
+                        user = user,
+                        viewModel = viewModel,
+                        onDismiss = { showStudentChangePasswordDialog = false },
+                        onSuccess = {
+                            showStudentChangePasswordDialog = false
                         }
                     )
                 }

@@ -407,14 +407,27 @@
                 </table>
               </div>
 
-              <div class="d-flex flex-wrap gap-2">
+              <div class="d-flex flex-wrap gap-2 mb-2">
                 <button id="downloadExcelStudentBtn" class="btn btn-success flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
-                  <span>Unduh Kartu Login Siswa (Excel)</span>
+                  <span>Unduh Kartu Login (Excel)</span>
+                </button>
+                <button id="downloadStudentsJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-download fs-5"></i>
+                  <span>Unduh students.json</span>
+                </button>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button id="copyStudentsJsonBtn" class="btn btn-outline-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-clipboard-code fs-5"></i>
+                  <span>Salin Kode JSON Siswa</span>
                 </button>
                 <button id="copyStudentTextBtn" class="btn btn-outline-secondary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-clipboard-check fs-5"></i>
-                  <span>Salin Teks Akun</span>
+                  <span>Salin Teks Akun (WA)</span>
+                </button>
+                <button id="resetStudentsBtn" class="btn btn-outline-danger py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-trash3"></i>
                 </button>
               </div>
             </div>
@@ -1506,19 +1519,35 @@
       renderStudentTable();
     }
 
+    function deleteStudent(index) {
+      if (confirm(`Hapus akun siswa "${importedStudents[index].nama}"?`)) {
+        importedStudents.splice(index, 1);
+        // Reindex numbers
+        importedStudents.forEach((s, idx) => s.no = idx + 1);
+        renderStudentTable();
+      }
+    }
+
     function renderStudentTable() {
       const studentTableBody = document.getElementById('studentTableBody');
       const studentCountBadge = document.getElementById('studentCountBadge');
+
+      try {
+        localStorage.setItem('admin_students_override', JSON.stringify(importedStudents));
+        localStorage.setItem('admin_students_has_saved', 'true');
+      } catch (e) {
+        console.warn('Gagal menyimpan data siswa ke localStorage:', e);
+      }
 
       studentCountBadge.textContent = `${importedStudents.length} Siswa Terdaftar`;
       studentTableBody.innerHTML = '';
 
       if (importedStudents.length === 0) {
-        studentTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Belum ada data siswa diimpor. Silakan unggah file Excel di sebelah kiri.</td></tr>`;
+        studentTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Belum ada data siswa diimpor. Silakan unggah file Excel di sebelah kiri.</td></tr>`;
         return;
       }
 
-      importedStudents.forEach((stu) => {
+      importedStudents.forEach((stu, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${stu.no}</td>
@@ -1526,6 +1555,11 @@
           <td><span class="badge bg-primary-subtle text-primary-emphasis">${stu.kelas}</span></td>
           <td><code>${stu.username}</code></td>
           <td><span class="badge bg-success font-monospace fs-7">${stu.password}</span></td>
+          <td class="text-end">
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteStudent(${index})" title="Hapus Akun Siswa">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
         `;
         studentTableBody.appendChild(tr);
       });
@@ -1610,6 +1644,36 @@
       XLSX.writeFile(workbook, 'Kartu_Login_Siswa_MTs_AlKhairaat.xlsx');
     });
 
+    // Download students.json File
+    document.getElementById('downloadStudentsJsonBtn').addEventListener('click', function() {
+      const jsonText = JSON.stringify(importedStudents, null, 2);
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'students.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Copy JSON Code for students.json
+    document.getElementById('copyStudentsJsonBtn').addEventListener('click', function() {
+      const jsonText = JSON.stringify(importedStudents, null, 2);
+      navigator.clipboard.writeText(jsonText).then(() => {
+        alert('📋 Kode students.json berhasil disalin ke clipboard!');
+      });
+    });
+
+    // Reset Students Data
+    document.getElementById('resetStudentsBtn').addEventListener('click', function() {
+      if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun siswa?')) {
+        importedStudents = [];
+        renderStudentTable();
+      }
+    });
+
     // Copy Student Credentials Text
     document.getElementById('copyStudentTextBtn').addEventListener('click', function() {
       if (importedStudents.length === 0) {
@@ -1627,17 +1691,18 @@
       });
     });
 
-    // Auto load live catalog or local saved catalog on initial start
+    // Auto load live catalog & student data or local saved data on initial start
     (async function init() {
-      const hasSaved = localStorage.getItem('admin_catalog_has_saved');
-      if (hasSaved === 'true') {
+      // 1. Load Catalog
+      const hasSavedCatalog = localStorage.getItem('admin_catalog_has_saved');
+      if (hasSavedCatalog === 'true') {
         try {
           const stored = localStorage.getItem('admin_catalog_override');
           if (stored) {
             catalog = JSON.parse(stored);
           }
         } catch (e) {
-          console.warn('Gagal membaca data dari localStorage:', e);
+          console.warn('Gagal membaca catalog dari localStorage:', e);
         }
       } else {
         try {
@@ -1654,7 +1719,36 @@
           console.log('Menggunakan data katalog lokal.');
         }
       }
+
+      // 2. Load Students
+      const hasSavedStudents = localStorage.getItem('admin_students_has_saved');
+      if (hasSavedStudents === 'true') {
+        try {
+          const storedStu = localStorage.getItem('admin_students_override');
+          if (storedStu) {
+            importedStudents = JSON.parse(storedStu);
+          }
+        } catch (e) {
+          console.warn('Gagal membaca students dari localStorage:', e);
+        }
+      } else {
+        try {
+          const resStu = await fetch('/students.json');
+          if (resStu.ok) {
+            const liveStu = await resStu.json();
+            if (Array.isArray(liveStu)) {
+              importedStudents = liveStu;
+              localStorage.setItem('admin_students_override', JSON.stringify(importedStudents));
+              localStorage.setItem('admin_students_has_saved', 'true');
+            }
+          }
+        } catch (e) {
+          console.log('Menggunakan data siswa lokal.');
+        }
+      }
+
       updateView();
+      renderStudentTable();
     })();
   </script>
 </body>

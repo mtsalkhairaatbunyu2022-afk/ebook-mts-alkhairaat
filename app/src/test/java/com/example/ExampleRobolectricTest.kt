@@ -127,4 +127,39 @@ class ExampleRobolectricTest {
     assertNotNull(foundRomanThree)
     assertEquals(3, foundRomanThree!!.physicalIndex)
   }
+
+  @Test
+  fun `test student login validation against synced student accounts`() = kotlinx.coroutines.runBlocking {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val db = androidx.room.Room.inMemoryDatabaseBuilder(context, com.example.data.AppDatabase::class.java)
+        .allowMainThreadQueries()
+        .build()
+    val repository = com.example.data.Repository(context, db)
+
+    // Seed database and sync students
+    repository.seedDatabaseIfNeeded()
+    val syncResult = repository.syncRemoteStudents("")
+    org.junit.Assert.assertTrue(syncResult.isSuccess)
+
+    val allStudents = db.userDao().getAllStudents().first()
+    org.junit.Assert.assertTrue("Students should be populated, count: ${allStudents.size}", allStudents.size > 1)
+
+    // 1. Valid Student Login (from students.json)
+    val validResult = repository.login("AQEELA ZAHRATUSSYIFA", "2026")
+    org.junit.Assert.assertTrue("Login failed: ${validResult.exceptionOrNull()?.message}", validResult.isSuccess)
+    val user = validResult.getOrNull()
+    assertNotNull(user)
+    assertEquals("AQEELA ZAHRATUSSYIFA", user!!.name)
+    assertEquals("Kelas VIII", user.gradeClass)
+
+    // 2. Invalid Student Password
+    val invalidPassResult = repository.login("AQEELA ZAHRATUSSYIFA", "wrong_password")
+    org.junit.Assert.assertTrue(invalidPassResult.isFailure)
+
+    // 3. Unregistered Student Login Attempt (must be rejected)
+    val unregisteredResult = repository.login("STUDENT_NOT_CREATED_BY_TEACHER", "2026")
+    org.junit.Assert.assertTrue(unregisteredResult.isFailure)
+
+    db.close()
+  }
 }

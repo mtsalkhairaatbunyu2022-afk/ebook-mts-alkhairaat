@@ -33,6 +33,18 @@ class Repository(
     private val auditLogDao = appDatabase.auditLogDao()
     private val noteDao = appDatabase.noteDao()
 
+    private val prefs = context.getSharedPreferences("school_ebook_prefs", Context.MODE_PRIVATE)
+
+    fun getDeletedBookIds(): MutableSet<String> {
+        return prefs.getStringSet("deleted_book_ids", mutableSetOf()) ?: mutableSetOf()
+    }
+
+    fun markBookAsDeleted(bookId: String) {
+        val set = getDeletedBookIds().toMutableSet()
+        set.add(bookId)
+        prefs.edit().putStringSet("deleted_book_ids", set).apply()
+    }
+
     // Note Functions
     fun getAllNotesForUser(userId: String) = noteDao.getAllNotesForUser(userId)
     fun getNotesForGrade(gradeClass: String) = noteDao.getNotesForGrade(gradeClass)
@@ -93,6 +105,129 @@ class Repository(
             }
 
             ensureDefaultUser()
+            syncRemoteStudents("")
+        }
+    }
+
+    suspend fun syncRemoteStudents(baseUrl: String): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val candidateUrls = mutableListOf<String>()
+            val trimmedBase = baseUrl.trim()
+            if (trimmedBase.isNotBlank()) {
+                val normalized = when {
+                    trimmedBase.endsWith("/students.json") -> trimmedBase
+                    trimmedBase.endsWith("/") -> "${trimmedBase}students.json"
+                    else -> "$trimmedBase/students.json"
+                }
+                candidateUrls.add(normalized)
+            }
+            if (!candidateUrls.contains("https://ebook-mts-alkhairaat.pages.dev/students.json")) {
+                candidateUrls.add("https://ebook-mts-alkhairaat.pages.dev/students.json")
+            }
+
+            var jsonString: String? = null
+            var sourceUsed = ""
+
+            for (targetUrl in candidateUrls) {
+                try {
+                    Log.d("Repository", "Mencoba ambil data siswa dari: $targetUrl")
+                    val url = URL(targetUrl)
+                    val conn = (url.openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 4000
+                        readTimeout = 4000
+                        requestMethod = "GET"
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                        jsonString = conn.inputStream.bufferedReader().use { it.readText() }
+                        sourceUsed = targetUrl
+                        break
+                    }
+                } catch (netErr: Exception) {
+                    Log.d("Repository", "Koneksi ke $targetUrl gagal: ${netErr.message}")
+                }
+            }
+
+            if (jsonString.isNullOrBlank()) {
+                try {
+                    jsonString = context.assets.open("students.json").bufferedReader().use { it.readText() }
+                    sourceUsed = "assets/students.json"
+                    Log.d("Repository", "Menggunakan fallback student accounts dari assets/students.json")
+                } catch (assetErr: Exception) {
+                    Log.d("Repository", "Asset students.json tidak ditemukan via context.assets: ${assetErr.message}")
+                    val fileFallback = listOf(
+                        File("app/src/main/assets/students.json"),
+                        File("src/main/assets/students.json"),
+                        File("public/students.json")
+                    ).find { it.exists() }
+                    if (fileFallback != null) {
+                        jsonString = fileFallback.readText()
+                        sourceUsed = fileFallback.path
+                    }
+                }
+            }
+
+            if (jsonString.isNullOrBlank()) {
+                jsonString = """
+                [
+                  {"id":"stu_1","no":1,"nama":"AQEELA ZAHRATUSSYIFA","username":"AQEELA ZAHRATUSSYIFA","kelas":"Kelas VIII","password":"2026"},
+                  {"id":"stu_2","no":2,"nama":"BRAYN NUR","username":"BRAYN NUR","kelas":"Kelas VIII","password":"2026"},
+                  {"id":"stu_3","no":3,"nama":"EVAN SYAHPUTRA","username":"EVAN SYAHPUTRA","kelas":"Kelas VIII","password":"2026"},
+                  {"id":"stu_4","no":4,"nama":"HAZRAH NUR FATIYAH","username":"HAZRAH NUR FATIYAH","kelas":"Kelas VIII","password":"2026"},
+                  {"id":"stu_5","no":5,"nama":"MUHAMMAD FADHIL PRASETYA","username":"MUHAMMAD FADHIL PRASETYA","kelas":"Kelas VIII","password":"2026"},
+                  {"id":"stu_6","no":6,"nama":"ALGEZI ACHMAD GIFAHRI","username":"ALGEZI ACHMAD GIFAHRI","kelas":"Kelas IX","password":"2025"},
+                  {"id":"stu_7","no":7,"nama":"ASHILAH AZZARAH","username":"ASHILAH AZZARAH","kelas":"Kelas IX","password":"2025"},
+                  {"id":"stu_8","no":8,"nama":"M DARMA","username":"M DARMA","kelas":"Kelas IX","password":"2025"},
+                  {"id":"stu_9","no":9,"nama":"MUHAMAT SYAFRI","username":"MUHAMAT SYAFRI","kelas":"Kelas IX","password":"2025"},
+                  {"id":"stu_10","no":10,"nama":"WULAN PURNAMA SARI","username":"WULAN PURNAMA SARI","kelas":"Kelas IX","password":"2025"},
+                  {"id":"stu_11","no":11,"nama":"AHMAD FAUZI","username":"AHMAD FAUZI","kelas":"Kelas VII","password":"2027"},
+                  {"id":"stu_12","no":12,"nama":"SITI NURHALIZA","username":"SITI NURHALIZA","kelas":"Kelas VII","password":"2027"}
+                ]
+                """.trimIndent()
+                sourceUsed = "hardcoded fallback"
+            }
+
+            val jsonArray = JSONArray(jsonString)
+            var count = 0
+            val studentsList = mutableListOf<UserEntity>()
+
+            for (i in 0 until jsonArray.length()) {
+                val item = jsonArray.getJSONObject(i)
+                val nama = item.optString("nama", "").trim()
+                val username = item.optString("username", nama).trim()
+                val password = item.optString("password", "").trim()
+                val kelas = item.optString("kelas", "Kelas VII").trim()
+
+                if (nama.isNotBlank() && username.isNotBlank()) {
+                    val id = item.optString("id", "usr_student_${username.lowercase().replace(Regex("[^a-z0-9]"), "_")}")
+                    val existing = userDao.getUserByIdentifier(username)
+                    val isLoggedIn = existing?.isLoggedIn ?: false
+
+                    val studentUser = UserEntity(
+                        id = id,
+                        name = nama,
+                        email = username,
+                        role = "STUDENT",
+                        token = "jwt_student_token",
+                        password = password,
+                        gradeClass = kelas,
+                        isLoggedIn = isLoggedIn,
+                        lastActive = existing?.lastActive ?: System.currentTimeMillis()
+                    )
+                    studentsList.add(studentUser)
+                    count++
+                }
+            }
+
+            if (studentsList.isNotEmpty()) {
+                userDao.insertUsers(studentsList)
+            }
+
+            Log.i("Repository", "Sync $count akun siswa dari $sourceUsed")
+            Result.success(count)
+        } catch (e: Exception) {
+            Log.w("Repository", "Gagal sync akun siswa: ${e.message}")
+            Result.failure(e)
         }
     }
 
@@ -160,6 +295,7 @@ class Repository(
                 jsonObject.optJSONArray("books") ?: JSONArray()
             }
 
+            val deletedIds = getDeletedBookIds()
             val remoteBookIds = mutableSetOf<String>()
             var syncedCount = 0
 
@@ -167,6 +303,9 @@ class Repository(
                 val item = jsonArray.getJSONObject(i)
                 val bookId = item.optString("id", "").trim()
                 if (bookId.isNotBlank()) {
+                    if (deletedIds.contains(bookId)) {
+                        continue
+                    }
                     remoteBookIds.add(bookId)
                     val existing = bookDao.getBookByIdSync(bookId)
                     val book = BookEntity(
@@ -271,85 +410,93 @@ class Repository(
             val inputPassword = password.trim()
             
             if (identifier.isEmpty()) {
-                throw Exception("Nama tidak boleh kosong")
+                throw Exception("Nama pengguna tidak boleh kosong")
+            }
+            if (inputPassword.isEmpty()) {
+                throw Exception("Kata sandi wajib diisi")
             }
 
-            val role: String
-            val name: String
-            val id: String
-            var gradeClass = "Semua Kelas"
-
-            // Get existing user to check if registering a new user or logging in
-            val existingUser = userDao.getUserByName(identifier)
-            
-            if (existingUser != null) {
-                // Login Flow
-                if (existingUser.password != inputPassword) {
-                    throw Exception("Kata sandi salah!")
-                }
-                role = existingUser.role
-                name = existingUser.name
-                id = existingUser.id
-                gradeClass = existingUser.gradeClass
-            } else {
-                // Registration Flow
-                if (identifier.lowercase() == "admin") {
-                    role = "ADMIN"
-                    name = "Operator Admin Sekolah"
-                    id = "usr_admin"
-                    gradeClass = "Semua Kelas"
-                } else if (identifier.lowercase() == "guru") {
-                    if (inputPassword != "1926" && inputPassword.lowercase() != "guru") {
-                        throw Exception("Kata sandi guru salah! Gunakan PIN Guru '1926'")
-                    }
-                    role = "TEACHER"
-                    name = "Guru (Pengajar)"
-                    id = "usr_teacher"
-                    gradeClass = "Semua Kelas"
-                } else {
-                    role = "STUDENT"
-                    name = identifier
-                    id = "usr_student_${identifier.lowercase().replace(" ", "_")}"
-                    
-                    val normalizedPass = inputPassword.lowercase().trim().replace(" ", "").replace("-", "")
-                    if (normalizedPass == "2027" || normalizedPass == "kelas7" || normalizedPass == "kelasvii" || normalizedPass == "vii" || normalizedPass == "7") {
-                        gradeClass = "Kelas VII"
-                    } else if (normalizedPass == "2026" || normalizedPass == "kelas8" || normalizedPass == "kelasviii" || normalizedPass == "viii" || normalizedPass == "8") {
-                        gradeClass = "Kelas VIII"
-                    } else if (normalizedPass == "2025" || normalizedPass == "kelas9" || normalizedPass == "kelasix" || normalizedPass == "ix" || normalizedPass == "9") {
-                        gradeClass = "Kelas IX"
-                    } else {
-                        throw Exception("Siswa wajib menggunakan kata sandi sesuai kelas. Contoh: '2027' atau 'kelas7' untuk Kelas VII, '2026' atau 'kelas8' untuk Kelas VIII, '2025' atau 'kelas9' untuk Kelas IX.")
-                    }
-                }
-                
-                // 1 HP = 1 User, clear old users if creating a new one because the device is tied to one user now
-                val allExisting = userDao.getAllUsers().firstOrNull()
-                if (!allExisting.isNullOrEmpty()) {
-                     // Based on the requirement "1 hp hanya boleh 1 user", if a new user is trying to register 
-                     // while someone is already registered, we should reject it or replace it?
-                     // Usually we reject it or just replace. But the UI won't allow registering if there's already a user.
-                }
+            // ADMIN special login
+            if (identifier.lowercase() == "admin") {
+                val adminUser = UserEntity(
+                    id = "usr_admin",
+                    name = "Operator Admin Sekolah",
+                    email = "admin",
+                    role = "ADMIN",
+                    token = "jwt_token_sample",
+                    password = inputPassword,
+                    gradeClass = "Semua Kelas",
+                    isLoggedIn = true,
+                    lastActive = System.currentTimeMillis()
+                )
+                userDao.clearSession()
+                userDao.insertUser(adminUser)
+                logAudit(adminUser.id, adminUser.name, "LOGIN", "Berhasil masuk sebagai Admin Operator")
+                return@withContext Result.success(adminUser)
             }
 
-            val user = UserEntity(
-                id = id,
-                name = name,
-                email = identifier, // Using email field to store identifier
-                role = role,
-                token = "jwt_token_sample",
-                password = inputPassword,
-                gradeClass = gradeClass,
+            // TEACHER special login
+            if (identifier.lowercase() == "guru") {
+                val expectedPin = context.getSharedPreferences("school_ebook_prefs", Context.MODE_PRIVATE)
+                    .getString("teacher_pin", "1926") ?: "1926"
+                if (inputPassword != expectedPin && inputPassword != "1926" && inputPassword.lowercase() != "guru") {
+                    throw Exception("Kata sandi guru salah! Gunakan PIN Guru ($expectedPin)")
+                }
+                val teacherUser = UserEntity(
+                    id = "usr_teacher",
+                    name = "Guru (Pengajar)",
+                    email = "guru",
+                    role = "TEACHER",
+                    token = "jwt_token_sample",
+                    password = inputPassword,
+                    gradeClass = "Semua Kelas",
+                    isLoggedIn = true,
+                    lastActive = System.currentTimeMillis()
+                )
+                userDao.clearSession()
+                userDao.insertUser(teacherUser)
+                logAudit(teacherUser.id, teacherUser.name, "LOGIN", "Berhasil masuk sebagai Guru")
+                return@withContext Result.success(teacherUser)
+            }
+
+            // STUDENT LOGIN: Must match teacher-created account in database
+            val existingStudents = userDao.getAllStudents().firstOrNull() ?: emptyList()
+            if (existingStudents.isEmpty()) {
+                syncRemoteStudents("")
+            }
+
+            var studentUser = userDao.getUserByIdentifier(identifier)
+                ?: userDao.getAllUsers().firstOrNull()?.find {
+                    it.name.equals(identifier, ignoreCase = true) || it.email.equals(identifier, ignoreCase = true)
+                }
+
+            if (studentUser == null) {
+                syncRemoteStudents("")
+                studentUser = userDao.getUserByIdentifier(identifier)
+                    ?: userDao.getAllUsers().firstOrNull()?.find {
+                        it.name.equals(identifier, ignoreCase = true) || it.email.equals(identifier, ignoreCase = true)
+                    }
+            }
+
+            if (studentUser == null || studentUser.role != "STUDENT") {
+                throw Exception("Akun siswa '$identifier' tidak terdaftar! Nama pengguna dan kata sandi hanya dapat dibuat oleh Guru melalui Portal Admin.")
+            }
+
+            if (studentUser.password.trim() != inputPassword) {
+                throw Exception("Kata sandi salah untuk siswa '$identifier'! Silakan periksa Kartu Login Siswa dari Guru.")
+            }
+
+            // Login successful
+            val loggedInStudent = studentUser.copy(
                 isLoggedIn = true,
                 lastActive = System.currentTimeMillis()
             )
 
-            // Log out any previously logged-in user
             userDao.clearSession()
-            userDao.insertUser(user)
-            
-            logAudit(user.id, user.name, "LOGIN", "Berhasil masuk/daftar dengan peran ${user.role}")
-            Result.success(user)
+            userDao.insertUser(loggedInStudent)
+
+            logAudit(loggedInStudent.id, loggedInStudent.name, "LOGIN", "Berhasil masuk sebagai Siswa ${loggedInStudent.gradeClass}")
+            Result.success(loggedInStudent)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -366,6 +513,70 @@ class Repository(
     suspend fun deleteUser(userId: String, adminId: String, adminName: String) = withContext(Dispatchers.IO) {
         userDao.deleteUserById(userId)
         logAudit(adminId, adminName, "HAPUS_PENGGUNA", "Menghapus akun ID: $userId")
+    }
+
+    // Student Password Change (Ubah Password)
+    suspend fun changeStudentPassword(identifierOrId: String, oldPass: String, newPass: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val trimmedOld = oldPass.trim()
+            val trimmedNew = newPass.trim()
+
+            if (trimmedOld.isEmpty()) {
+                throw Exception("Kata sandi lama wajib diisi.")
+            }
+            if (trimmedNew.isEmpty()) {
+                throw Exception("Kata sandi baru tidak boleh kosong.")
+            }
+            if (trimmedNew.length < 3) {
+                throw Exception("Kata sandi baru minimal 3 karakter.")
+            }
+
+            var user = userDao.getUserByIdentifier(identifierOrId)
+                ?: userDao.getAllUsers().firstOrNull()?.find { it.id == identifierOrId || it.name.equals(identifierOrId, ignoreCase = true) }
+
+            if (user == null) {
+                val loggedIn = userDao.getLoggedInUserSync()
+                if (loggedIn != null && (loggedIn.id == identifierOrId || loggedIn.name.equals(identifierOrId, ignoreCase = true))) {
+                    user = loggedIn
+                }
+            }
+
+            if (user == null) {
+                throw Exception("Akun pengguna '$identifierOrId' tidak ditemukan.")
+            }
+
+            if (user.password.trim() != trimmedOld) {
+                throw Exception("Kata sandi lama yang Anda masukkan salah!")
+            }
+
+            val updatedUser = user.copy(password = trimmedNew)
+            userDao.insertUser(updatedUser)
+            logAudit(user.id, user.name, "UBAH_PASSWORD", "Siswa berhasil mengubah kata sandi akun.")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Admin Reset Student Password (Reset Password oleh Guru/Admin)
+    suspend fun resetStudentPassword(userIdOrName: String, newPass: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val trimmedNew = newPass.trim()
+            if (trimmedNew.isEmpty()) {
+                throw Exception("Kata sandi baru tidak boleh kosong.")
+            }
+
+            val user = userDao.getUserByIdentifier(userIdOrName)
+                ?: userDao.getAllUsers().firstOrNull()?.find { it.id == userIdOrName || it.name.equals(userIdOrName, ignoreCase = true) }
+                ?: throw Exception("Akun siswa '$userIdOrName' tidak ditemukan.")
+
+            val updatedUser = user.copy(password = trimmedNew)
+            userDao.insertUser(updatedUser)
+            logAudit("ADMIN", "Operator Admin", "RESET_PASSWORD_SISWA", "Mereset kata sandi siswa ${user.name}")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     // Book Search and filter Flow
@@ -1009,7 +1220,8 @@ class Repository(
 
     // Offline caching & delete file
     suspend fun deleteOfflineBook(bookId: String) = withContext(Dispatchers.IO) {
-        val book = bookDao.getBookByIdSync(bookId) ?: return@withContext
+        markBookAsDeleted(bookId)
+        val book = bookDao.getBookByIdSync(bookId)
         val file = File(context.filesDir, "$bookId.pdf")
         if (file.exists()) {
             file.delete()
@@ -1017,7 +1229,7 @@ class Repository(
 
         downloadTaskDao.deleteDownloadTask(bookId)
         bookDao.deleteBookById(bookId)
-        logAudit("system", "Sistem Penyimpanan", "HAPUS_BUKU", "Menghapus buku secara permanen dari aplikasi: ${book.title}")
+        logAudit("system", "Sistem Penyimpanan", "HAPUS_BUKU", "Menghapus buku secara permanen dari aplikasi: ${book?.title ?: bookId}")
     }
 
     // Upload & DOCX Conversion Flow

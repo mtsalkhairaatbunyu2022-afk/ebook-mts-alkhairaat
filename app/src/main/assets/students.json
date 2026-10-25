@@ -1,0 +1,98 @@
+[
+  {
+    "id": "stu_aqeela_zahratussyifa",
+    "no": 1,
+    "nama": "AQEELA ZAHRATUSSYIFA",
+    "username": "AQEELA ZAHRATUSSYIFA",
+    "kelas": "Kelas VIII",
+    "password": "2026"
+  },
+  {
+    "id": "stu_brayn_nur",
+    "no": 2,
+    "nama": "BRAYN NUR",
+    "username": "BRAYN NUR",
+    "kelas": "Kelas VIII",
+    "password": "2026"
+  },
+  {
+    "id": "stu_evan_syahputra",
+    "no": 3,
+    "nama": "EVAN SYAHPUTRA",
+    "username": "EVAN SYAHPUTRA",
+    "kelas": "Kelas VIII",
+    "password": "2026"
+  },
+  {
+    "id": "stu_hazrah_nur_fatiyah",
+    "no": 4,
+    "nama": "HAZRAH NUR FATIYAH",
+    "username": "HAZRAH NUR FATIYAH",
+    "kelas": "Kelas VIII",
+    "password": "2026"
+  },
+  {
+    "id": "stu_muhammad_fadhil_prasetya",
+    "no": 5,
+    "nama": "MUHAMMAD FADHIL PRASETYA",
+    "username": "MUHAMMAD FADHIL PRASETYA",
+    "kelas": "Kelas VIII",
+    "password": "2026"
+  },
+  {
+    "id": "stu_algezi_achmad_gifahri",
+    "no": 6,
+    "nama": "ALGEZI ACHMAD GIFAHRI",
+    "username": "ALGEZI ACHMAD GIFAHRI",
+    "kelas": "Kelas IX",
+    "password": "2025"
+  },
+  {
+    "id": "stu_ashilah_azzarah",
+    "no": 7,
+    "nama": "ASHILAH AZZARAH",
+    "username": "ASHILAH AZZARAH",
+    "kelas": "Kelas IX",
+    "password": "2025"
+  },
+  {
+    "id": "stu_m_darma",
+    "no": 8,
+    "nama": "M DARMA",
+    "username": "M DARMA",
+    "kelas": "Kelas IX",
+    "password": "2025"
+  },
+  {
+    "id": "stu_muhamat_syafri",
+    "no": 9,
+    "nama": "MUHAMAT SYAFRI",
+    "username": "MUHAMAT SYAFRI",
+    "kelas": "Kelas IX",
+    "password": "2025"
+  },
+  {
+    "id": "stu_wulan_purnama_sari",
+    "no": 10,
+    "nama": "WULAN PURNAMA SARI",
+    "username": "WULAN PURNAMA SARI",
+    "kelas": "Kelas IX",
+    "password": "2025"
+  },
+  {
+    "id": "stu_ahmad_fauzi",
+    "no": 11,
+    "nama": "AHMAD FAUZI",
+    "username": "AHMAD FAUZI",
+    "kelas": "Kelas VII",
+    "password": "2027"
+  },
+  {
+    "id": "stu_siti_nurhaliza",
+    "no": 12,
+    "nama": "SITI NURHALIZA",
+    "username": "SITI NURHALIZA",
+    "kelas": "Kelas VII",
+    "password": "2027"
+  }
+]

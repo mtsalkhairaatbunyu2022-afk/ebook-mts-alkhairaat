@@ -1510,6 +1510,7 @@ fun StudentListScreen(viewModel: AppViewModel) {
 
     var selectedTab by remember { mutableStateOf(0) } // 0: Siswa, 1: Guru, 2: Admin
     var userToDelete by remember { mutableStateOf<UserEntity?>(null) }
+    var userToResetPassword by remember { mutableStateOf<UserEntity?>(null) }
 
     val filteredUsers = when (selectedTab) {
         0 -> allUsers.filter { it.role == "STUDENT" }
@@ -1595,7 +1596,7 @@ fun StudentListScreen(viewModel: AppViewModel) {
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = if (user.role == "STUDENT") {
-                                        "Kelas: ${user.gradeClass.ifEmpty { "-" }}"
+                                        "Kelas: ${user.gradeClass.ifEmpty { "-" }} | Sandi: ${user.password}"
                                     } else {
                                         user.email
                                     },
@@ -1604,17 +1605,31 @@ fun StudentListScreen(viewModel: AppViewModel) {
                                 )
                             }
 
-                            // Only show delete button if currentUser is ADMIN and is not deleting own account
-                            if (currentUser?.role == "ADMIN" && currentUser?.id != user.id) {
-                                IconButton(
-                                    onClick = { userToDelete = user },
-                                    modifier = Modifier.testTag("delete_user_${user.id}")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Hapus Akun",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
+                            // Show Reset Password for students and Delete button for admin/teacher
+                            if (currentUser?.role == "ADMIN" || currentUser?.role == "TEACHER") {
+                                if (user.role == "STUDENT") {
+                                    IconButton(
+                                        onClick = { userToResetPassword = user },
+                                        modifier = Modifier.testTag("reset_password_user_${user.id}")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Key,
+                                            contentDescription = "Reset Password Siswa",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                if (currentUser?.id != user.id) {
+                                    IconButton(
+                                        onClick = { userToDelete = user },
+                                        modifier = Modifier.testTag("delete_user_${user.id}")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Hapus Akun",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1644,6 +1659,17 @@ fun StudentListScreen(viewModel: AppViewModel) {
                 TextButton(onClick = { userToDelete = null }) {
                     Text("Batal")
                 }
+            }
+        )
+    }
+
+    if (userToResetPassword != null) {
+        ResetStudentPasswordDialog(
+            studentUser = userToResetPassword!!,
+            viewModel = viewModel,
+            onDismiss = { userToResetPassword = null },
+            onSuccess = {
+                userToResetPassword = null
             }
         )
     }
@@ -2321,7 +2347,7 @@ fun StudentLoginDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Info card for Class Passwords
+                // Info card for Class Passwords & Admin Portal Assignment
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
@@ -2331,16 +2357,15 @@ fun StudentLoginDialog(
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
                         Text(
-                            text = "💡 Panduan Sandi Kelas (Kartu Login):",
+                            text = "🔒 Hak Akses Login Siswa:",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("• Kelas VII : sandi 2027 (atau 'kelas7')", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("• Kelas VIII : sandi 2026 (atau 'kelas8')", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("• Kelas IX : sandi 2025 (atau 'kelas9')", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("• Guru : user 'guru', sandi '1926'", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                        Text("• Username & Sandi hanya dibuat oleh Guru melalui Portal Admin.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("• Kelas VII: Sandi '2027' | Kelas VIII: Sandi '2026' | Kelas IX: Sandi '2025'", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("• Akun di luar data Guru/Portal Admin akan ditolak sistem.", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
                     }
                 }
 
@@ -2393,5 +2418,266 @@ fun StudentLoginDialog(
         }
     )
 }
+
+@Composable
+fun StudentChangePasswordDialog(
+    user: UserEntity,
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit,
+    onSuccess: () -> Unit = {}
+) {
+    var oldPassInput by remember { mutableStateOf("") }
+    var newPassInput by remember { mutableStateOf("") }
+    var confirmPassInput by remember { mutableStateOf("") }
+    var showPasswords by remember { mutableStateOf(false) }
+    var localErrorText by remember { mutableStateOf<String?>(null) }
+    var successToastMessage by remember { mutableStateOf<String?>(null) }
+
+    val isChanging = viewModel.isChangingPassword
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Key,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Ubah Kata Sandi Siswa", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = "Akun: ${user.name} (${user.gradeClass})",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Ubah kata sandi login Anda sesuai dengan yang diinginkan.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = oldPassInput,
+                    onValueChange = {
+                        oldPassInput = it
+                        localErrorText = null
+                    },
+                    label = { Text("Kata Sandi Saat Ini") },
+                    singleLine = true,
+                    visualTransformation = if (showPasswords) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = { showPasswords = !showPasswords }) {
+                            Icon(
+                                imageVector = if (showPasswords) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showPasswords) "Sembunyikan" else "Tampilkan"
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("input_student_old_password")
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = newPassInput,
+                    onValueChange = {
+                        newPassInput = it
+                        localErrorText = null
+                    },
+                    label = { Text("Kata Sandi Baru") },
+                    singleLine = true,
+                    visualTransformation = if (showPasswords) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    leadingIcon = { Icon(Icons.Default.Password, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth().testTag("input_student_new_password")
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = confirmPassInput,
+                    onValueChange = {
+                        confirmPassInput = it
+                        localErrorText = null
+                    },
+                    label = { Text("Konfirmasi Kata Sandi Baru") },
+                    singleLine = true,
+                    visualTransformation = if (showPasswords) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    leadingIcon = { Icon(Icons.Default.CheckCircle, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth().testTag("input_student_confirm_password")
+                )
+
+                val displayErr = localErrorText ?: viewModel.changePasswordError
+                if (displayErr != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = displayErr,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                if (successToastMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = successToastMessage!!,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (oldPassInput.isBlank()) {
+                        localErrorText = "Masukkan kata sandi Anda yang sekarang."
+                        return@Button
+                    }
+                    if (newPassInput.isBlank()) {
+                        localErrorText = "Masukkan kata sandi baru."
+                        return@Button
+                    }
+                    if (newPassInput.trim().length < 3) {
+                        localErrorText = "Kata sandi baru minimal 3 karakter."
+                        return@Button
+                    }
+                    if (newPassInput.trim() != confirmPassInput.trim()) {
+                        localErrorText = "Konfirmasi kata sandi baru tidak cocok!"
+                        return@Button
+                    }
+
+                    viewModel.changeStudentPassword(
+                        userId = user.id,
+                        oldPass = oldPassInput,
+                        newPass = newPassInput,
+                        onSuccess = {
+                            successToastMessage = "✅ Kata sandi berhasil diperbarui!"
+                            onSuccess()
+                            onDismiss()
+                        },
+                        onError = { err ->
+                            localErrorText = err
+                        }
+                    )
+                },
+                enabled = !isChanging,
+                modifier = Modifier.testTag("btn_save_student_password")
+            ) {
+                if (isChanging) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Menyimpan...")
+                } else {
+                    Text("Simpan Kata Sandi Baru")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
+@Composable
+fun ResetStudentPasswordDialog(
+    studentUser: UserEntity,
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit,
+    onSuccess: () -> Unit = {}
+) {
+    var newPassInput by remember { mutableStateOf(studentUser.password) }
+    var errorText by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Key,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Reset Password Siswa", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Siswa: ${studentUser.name} (${studentUser.gradeClass})",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Setel kata sandi baru jika siswa lupa kata sandinya sendiri.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = newPassInput,
+                    onValueChange = {
+                        newPassInput = it
+                        errorText = null
+                    },
+                    label = { Text("Kata Sandi Baru Siswa") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("input_reset_student_password")
+                )
+
+                if (errorText != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(errorText!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (newPassInput.isBlank()) {
+                        errorText = "Kata sandi tidak boleh kosong"
+                        return@Button
+                    }
+                    viewModel.resetStudentPassword(
+                        userId = studentUser.id,
+                        newPass = newPassInput,
+                        onSuccess = {
+                            onSuccess()
+                            onDismiss()
+                        },
+                        onError = { err ->
+                            errorText = err
+                        }
+                    )
+                },
+                modifier = Modifier.testTag("btn_confirm_reset_student_password")
+            ) {
+                Text("Simpan Reset Password")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
 
 

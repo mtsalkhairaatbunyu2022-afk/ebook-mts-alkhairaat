@@ -177,9 +177,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun syncStudentsFromCloudflare() {
+        viewModelScope.launch {
+            repository.syncRemoteStudents(appShareUrl)
+        }
+    }
+
     init {
         viewModelScope.launch {
             repository.seedDatabaseIfNeeded()
+            repository.syncRemoteStudents(appShareUrl)
             syncCatalogFromCloudflare()
         }
     }
@@ -233,6 +240,47 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val adminId = loggedInUser.value?.id ?: "ADMIN"
             val adminName = loggedInUser.value?.name ?: "System Admin"
             repository.deleteUser(userId, adminId, adminName)
+        }
+    }
+
+    var changePasswordError by mutableStateOf<String?>(null)
+    var isChangingPassword by mutableStateOf(false)
+
+    fun changeStudentPassword(
+        userId: String,
+        oldPass: String,
+        newPass: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        isChangingPassword = true
+        changePasswordError = null
+        viewModelScope.launch {
+            repository.changeStudentPassword(userId, oldPass, newPass)
+                .onSuccess {
+                    isChangingPassword = false
+                    changePasswordError = null
+                    onSuccess()
+                }
+                .onFailure { err ->
+                    isChangingPassword = false
+                    val msg = err.localizedMessage ?: "Gagal mengubah kata sandi"
+                    changePasswordError = msg
+                    onError(msg)
+                }
+        }
+    }
+
+    fun resetStudentPassword(
+        userId: String,
+        newPass: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            repository.resetStudentPassword(userId, newPass)
+                .onSuccess { onSuccess() }
+                .onFailure { err -> onError(err.localizedMessage ?: "Gagal mereset kata sandi") }
         }
     }
 
