@@ -291,6 +291,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun generateSamplePdf(bookId: String): File {
+        return repository.generateSamplePdf(bookId)
+    }
+
     // Delete Cache
     fun hapusOfflineCache(bookId: String) {
         viewModelScope.launch {

@@ -596,8 +596,29 @@ class Repository(
             ?: throw IllegalArgumentException("Buku tidak ditemukan di database metadata")
 
         val file = File(context.filesDir, "$bookId.pdf")
-        if (file.exists() && file.length() > 0) {
-            return@withContext file // Already prepared
+        if (file.exists()) {
+            var isValidPdf = false
+            try {
+                if (file.length() > 100) {
+                    file.inputStream().use { stream ->
+                        val header = ByteArray(5)
+                        val read = stream.read(header)
+                        if (read >= 4) {
+                            val text = String(header, 0, read, Charsets.US_ASCII)
+                            if (text.startsWith("%PDF")) {
+                                isValidPdf = true
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+
+            if (isValidPdf) {
+                return@withContext file
+            } else {
+                Log.w("Repository", "Ditemukan file PDF rusak/tidak valid untuk $bookId. Menghapus dan membuat ulang...")
+                file.delete()
+            }
         }
 
         // Try downloading actual PDF from remote URL (Cloudflare Pages or Google Drive) if provided
@@ -606,12 +627,13 @@ class Repository(
                 var downloadUrl = book.fileUrl
                 val driveMatch = Regex("/(?:file/d/|open\\?id=|uc\\?id=)([a-zA-Z0-9_-]+)").find(downloadUrl)
                 if (driveMatch != null) {
-                    downloadUrl = "https://drive.google.com/uc?export=download&id=${driveMatch.groupValues[1]}"
+                    val fileId = driveMatch.groupValues[1]
+                    downloadUrl = "https://drive.google.com/uc?export=download&confirm=t&id=$fileId"
                 }
                 val url = URL(downloadUrl)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 8000
-                    readTimeout = 12000
+                    readTimeout = 15000
                     instanceFollowRedirects = true
                     setRequestProperty("User-Agent", "Mozilla/5.0")
                 }
@@ -623,9 +645,28 @@ class Repository(
                         }
                     }
                     if (tempFile.exists() && tempFile.length() > 500) {
-                        tempFile.renameTo(file)
-                        Log.i("Repository", "Berhasil mengunduh berkas PDF asli dari: $downloadUrl (${file.length()} bytes)")
-                        return@withContext file
+                        var isValid = false
+                        try {
+                            tempFile.inputStream().use { stream ->
+                                val header = ByteArray(10)
+                                val read = stream.read(header)
+                                if (read >= 4) {
+                                    val headerText = String(header, 0, read, Charsets.US_ASCII)
+                                    if (headerText.startsWith("%PDF")) {
+                                        isValid = true
+                                    }
+                                }
+                            }
+                        } catch (_: Exception) {}
+
+                        if (isValid) {
+                            tempFile.renameTo(file)
+                            Log.i("Repository", "Berhasil mengunduh berkas PDF asli dari: $downloadUrl (${file.length()} bytes)")
+                            return@withContext file
+                        } else {
+                            Log.w("Repository", "File yang diunduh dari $downloadUrl bukan PDF valid (kemungkinan HTML preview Google Drive). Beralih ke generator PDF aman.")
+                            tempFile.delete()
+                        }
                     }
                 }
             } catch (dlErr: Exception) {

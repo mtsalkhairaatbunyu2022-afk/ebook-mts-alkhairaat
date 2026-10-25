@@ -89,34 +89,90 @@ fun PdfPageReader(
         }
     }
 
-    // Configure PdfRenderer safety
-    val renderer = remember(file) {
-        try {
-            val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-            PdfRenderer(pfd)
-        } catch (e: Exception) {
-            Log.e("PdfPageReader", "Error opening file: ${e.message}")
-            null
+    // Configure PdfRenderer safety with self-healing auto-regeneration
+    var renderer by remember { mutableStateOf<PdfRenderer?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(file, bookId) {
+        withContext(Dispatchers.IO) {
+            var workingFile = file
+            if (!workingFile.exists() || workingFile.length() < 100) {
+                try {
+                    workingFile = viewModel.generateSamplePdf(bookId)
+                } catch (e: Exception) {
+                    Log.e("PdfPageReader", "Failed to generate sample PDF: ${e.message}")
+                }
+            }
+
+            var success = false
+            for (attempt in 1..2) {
+                try {
+                    if (workingFile.exists() && workingFile.length() > 100) {
+                        var isPdf = false
+                        try {
+                            workingFile.inputStream().use { stream ->
+                                val header = ByteArray(5)
+                                val read = stream.read(header)
+                                if (read >= 4) {
+                                    val text = String(header, 0, read, Charsets.US_ASCII)
+                                    if (text.startsWith("%PDF")) isPdf = true
+                                }
+                            }
+                        } catch (_: Exception) {}
+
+                        if (!isPdf) {
+                            workingFile.delete()
+                            workingFile = viewModel.generateSamplePdf(bookId)
+                        }
+
+                        val pfd = ParcelFileDescriptor.open(workingFile, ParcelFileDescriptor.MODE_READ_ONLY)
+                        val r = PdfRenderer(pfd)
+                        withContext(Dispatchers.Main) {
+                            renderer = r
+                        }
+                        success = true
+                        break
+                    }
+                } catch (e: Exception) {
+                    Log.e("PdfPageReader", "Attempt $attempt error opening PDF: ${e.message}")
+                    try {
+                        workingFile.delete()
+                        workingFile = viewModel.generateSamplePdf(bookId)
+                    } catch (_: Exception) {}
+                }
+            }
+            if (!success) {
+                withContext(Dispatchers.Main) {
+                    errorMessage = "Gagal memuat dokumen PDF. Berkas tidak valid."
+                }
+            }
         }
     }
 
-    if (renderer == null) {
+    val currentRenderer = renderer
+    if (currentRenderer == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-                Icon(Icons.Default.ErrorOutline, contentDescription = "Error", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Gagal Membuka Berkas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("File PDF rusak atau tidak kompatibel.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = onBack) {
-                    Text("Kembali")
+                if (errorMessage == null) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Memuat Dokumen PDF...", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                } else {
+                    Icon(Icons.Default.ErrorOutline, contentDescription = "Error", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Gagal Membuka Berkas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(errorMessage ?: "File PDF rusak atau tidak kompatibel.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(onClick = onBack) {
+                        Text("Kembali")
+                    }
                 }
             }
         }
         return
     }
 
-    val pageCount = renderer.pageCount
+    val pageCount = currentRenderer.pageCount
     val listState = rememberLazyListState()
 
     // Listen to bookmarks and saved position
@@ -173,7 +229,7 @@ fun PdfPageReader(
 
     // On start, jump to last read page
     LaunchedEffect(savedPosition) {
-        if (!initializedPage && savedPosition != null && renderer.pageCount > 0) {
+        if (!initializedPage && savedPosition != null && currentRenderer.pageCount > 0) {
             val pageToScroll = savedPosition!!.lastReadPage
             if (pageToScroll in 0 until pageCount) {
                 listState.scrollToItem(pageToScroll)
@@ -629,7 +685,7 @@ fun PdfPageReader(
                 ) {
                     items(pageCount) { pageIndex ->
                         PdfPageItem(
-                            renderer = renderer,
+                            renderer = currentRenderer,
                             pageIndex = pageIndex,
                             colorFilter = pdfColorFilter,
                             isLandscapeMode = isLandscapeMode
