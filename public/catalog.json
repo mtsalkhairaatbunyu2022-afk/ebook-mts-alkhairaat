@@ -1,18 +1,18 @@
 [
   {
-    "id": "book_informatika_4277",
-    "title": "BUKU INFORMATIKA  KELAS IX",
+    "id": "book_bahasa_arab_0583",
+    "title": "Bahasa Arab Kelas VIII",
     "author": "MTs Alkhairaat Bunyu",
-    "subject": "Informatika",
-    "gradeClass": "Kelas IX",
+    "subject": "Bahasa Arab",
+    "gradeClass": "Kelas VIII",
     "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
     "year": "2026",
-    "fileUrl": "https://ebook-mts-alkhairaat.pages.dev/books/buku_informatika__kelas_ix.pdf",
-    "localBlobUrl": "blob:https://ebook-mts-alkhairaat.pages.dev/b48cba4d-0151-4ce1-92f3-5229884db02b",
+    "fileUrl": "https://drive.google.com/file/d/1u4pd7XRPW6T7DMphDCjo3e_0toH8aweH/preview",
+    "localBlobUrl": "",
     "isDownloaded": false,
-    "fileSize": 7450595,
-    "pageCount": 280,
+    "fileSize": 2500000,
+    "pageCount": 120,
     "category": "mp",
-    "description": "Buku Siwa"
+    "description": "Buku Siswa"
   }
 ]
