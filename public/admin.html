@@ -234,20 +234,7 @@
                   </div>
                 </div>
 
-                <div class="row g-2 mb-3">
-                  <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary small">Jumlah Halaman</label>
-                    <input type="number" id="pageCount" class="form-control" placeholder="120" value="120">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary small">Ukuran File (Bytes)</label>
-                    <input type="number" id="fileSize" class="form-control" placeholder="2500000" value="2500000">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary small">Tahun Terbit</label>
-                    <input type="text" id="year" class="form-control" value="2026">
-                  </div>
-                </div>
+
 
                 <div class="mb-3">
                   <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
@@ -272,20 +259,25 @@
                 </button>
               </form>
             </div>
-            
-            <!-- Tambahan: Bulk URL Section -->
-            <div class="card card-custom p-4 bg-white mt-3">
+
+            <!-- Tambahan: Multi-Buku Google Drive Batch Input -->
+            <div class="card card-custom p-4 bg-white mt-3 border border-success border-2">
               <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="bi bi-list-ol text-primary fs-4"></i>
-                <h5 class="fw-bold mb-0 text-dark">Tambah Banyak Buku Sekaligus</h5>
+                <i class="bi bi-folder-plus text-success fs-4"></i>
+                <h5 class="fw-bold mb-0 text-dark">Tambah Banyak Buku Sekaligus (Google Drive)</h5>
               </div>
-              <p class="text-muted small">Paste daftar URL langsung (format direct link, per baris):</p>
-              <textarea id="bulkUrls" class="form-control mb-3 fs-7" rows="4" placeholder="https://.../buku1.pdf&#10;https://.../buku2.pdf"></textarea>
-              <button id="processBulkBtn" class="btn btn-primary-custom text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                <i class="bi bi-cloud-plus-fill"></i>
-                <span>Proses Semua URL</span>
+              <p class="text-muted small">Masukkan beberapa buku sekaligus (beda mata pelajaran & kelas) dari Google Drive. Setiap baris menggunakan format pemisah pipa (<code>|</code>):</p>
+              <div class="alert alert-light border font-monospace fs-8 mb-2 py-2">
+                Judul Buku | Mata Pelajaran | Jenjang Kelas | Link Google Drive
+              </div>
+              <textarea id="multiBookInput" class="form-control mb-3 fs-7" rows="5" placeholder="Buku Fiqih Kelas VII | Fiqih | Kelas VII | https://drive.google.com/file/d/XYZ/preview&#10;Buku Akidah Kelas VIII | Akidah Akhlak | Kelas VIII | https://drive.google.com/file/d/ABC/preview"></textarea>
+              <button id="processMultiBookBtn" class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-cloud-arrow-up-fill fs-5"></i>
+                <span>⚡ Proses & Tambahkan Semua Buku ke Katalog</span>
               </button>
             </div>
+            
+
           </div>
 
           <!-- Daftar Buku & Output Kode catalog.json -->
@@ -1351,10 +1343,7 @@
       const subject = document.getElementById('subject').value.trim();
       const gradeClass = document.getElementById('gradeClass').value;
       const author = document.getElementById('author').value.trim() || 'MTs Al-Khairaat Bunyu';
-      const year = document.getElementById('year').value.trim() || '2026';
       const fileUrl = document.getElementById('fileUrl').value.trim();
-      const pageCount = parseInt(document.getElementById('pageCount').value) || 100;
-      const fileSize = parseInt(document.getElementById('fileSize').value) || 2500000;
       const description = document.getElementById('description').value.trim() || `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`;
 
       const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4);
@@ -1370,12 +1359,12 @@
         subject: subject,
         gradeClass: gradeClass,
         teacherOwner: "Guru MTs Al-Khairaat Bunyu",
-        year: year,
+        year: "2026",
         fileUrl: fileUrl,
         localBlobUrl: currentUploadedBlobUrl || "",
         isDownloaded: false,
-        fileSize: fileSize,
-        pageCount: pageCount,
+        fileSize: 2500000,
+        pageCount: 100,
         category: "mp",
         description: description
       };
@@ -1392,6 +1381,71 @@
       document.getElementById('uploadStatusDesc').textContent = 'Format PDF (Maksimal rekomendasi 50 MB)';
 
       alert(`✅ Berhasil! Buku "${title}" telah ditambahkan ke katalog dan langsung muncul di Ruang Baca Guru.`);
+    });
+
+    // Multi-Book Batch Process Function (Google Drive / URL multi-row)
+    document.getElementById('processMultiBookBtn').addEventListener('click', () => {
+      const text = document.getElementById('multiBookInput').value.trim();
+      if (!text) {
+        alert('Silakan masukkan daftar buku pada kotak teks terlebih dahulu.');
+        return;
+      }
+
+      const lines = text.split('\n');
+      let count = 0;
+
+      lines.forEach(line => {
+        const parts = line.split('|').map(p => p.trim());
+        if (parts.length >= 4) {
+          const title = parts[0];
+          const subject = parts[1];
+          let gradeClass = parts[2];
+          let fileUrl = parts[3];
+
+          // Normalize grade class
+          if (gradeClass.includes('7') || gradeClass.toLowerCase().includes('vii')) gradeClass = 'Kelas VII';
+          else if (gradeClass.includes('8') || gradeClass.toLowerCase().includes('viii')) gradeClass = 'Kelas VIII';
+          else if (gradeClass.includes('9') || gradeClass.toLowerCase().includes('ix')) gradeClass = 'Kelas IX';
+
+          // Auto convert Google Drive share links to preview format
+          if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
+            const fileIdMatch = fileUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+            if (fileIdMatch && fileIdMatch[1]) {
+              fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+            }
+          }
+
+          const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
+          
+          const newBook = {
+            id: id,
+            title: title,
+            author: "MTs Al-Khairaat Bunyu",
+            subject: subject,
+            gradeClass: gradeClass,
+            teacherOwner: "Guru MTs Al-Khairaat Bunyu",
+            year: "2026",
+            fileUrl: fileUrl,
+            localBlobUrl: "",
+            isDownloaded: false,
+            fileSize: 2500000,
+            pageCount: 100,
+            category: "mp",
+            description: `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
+          };
+
+          catalog.push(newBook);
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        updateView();
+        document.getElementById('multiBookInput').value = '';
+        alert(`✅ Berhasil! ${count} buku dengan mata pelajaran/kelas berbeda telah ditambahkan sekaligus ke katalog.`);
+      } else {
+        alert('Format tidak valid. Pastikan setiap baris menggunakan pemisah | (pipe), contoh:\nBuku Fiqih | Fiqih | Kelas VII | https://drive.google.com/...');
+      }
     });
 
     // Explicit Button: Refresh JSON
@@ -1705,35 +1759,7 @@
       });
     });
 
-    // Bulk Process Function
-    document.getElementById('processBulkBtn').addEventListener('click', async () => {
-      const textArea = document.getElementById('bulkUrls');
-      const lines = textArea.value.split('\n');
-      
-      let count = 0;
-      for (const line of lines) {
-        const trimmedUrl = line.trim();
-        if (trimmedUrl) {
-          const newBook = {
-            id: 'book_' + Math.random().toString(36).substr(2, 9),
-            title: trimmedUrl.split('/').pop().replace('.pdf', '') || 'Buku Baru ' + (catalog.length + 1),
-            fileUrl: trimmedUrl,
-            subject: 'Buku',
-            gradeClass: 'Kelas VII',
-            pageCount: 0,
-            fileSize: 0,
-            author: 'MTs Al-Khairaat Bunyu',
-            description: 'Ditambahkan via Bulk'
-          };
-          catalog.push(newBook);
-          count++;
-        }
-      }
-      
-      updateCatalogUI();
-      alert('Berhasil menambah ' + count + ' buku ke katalog.');
-      textArea.value = '';
-    });
+
 
     // Auto load live catalog & student data or local saved data on initial start
     (async function init() {

@@ -366,6 +366,34 @@ class Repository(
         }
     }
 
+    suspend fun checkAppUpdate(currentVersionCode: Int = 1): Result<AppUpdateInfo> = withContext(Dispatchers.IO) {
+        try {
+            val updateUrl = "https://ebook-mts-alkhairaat.pages.dev/version.json"
+            val url = URL(updateUrl)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 3000
+                readTimeout = 3000
+                requestMethod = "GET"
+                setRequestProperty("Accept", "application/json")
+            }
+            if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val obj = JSONObject(jsonStr)
+                val versionCode = obj.optInt("versionCode", 1)
+                val versionName = obj.optString("versionName", "1.0.0")
+                val apkUrl = obj.optString("apkUrl", "https://ebook-mts-alkhairaat.pages.dev/app-release.apk")
+                val releaseNotes = obj.optString("releaseNotes", "")
+
+                val hasUpdate = versionCode > currentVersionCode
+                Result.success(AppUpdateInfo(hasUpdate, versionCode, versionName, apkUrl, releaseNotes))
+            } else {
+                Result.success(AppUpdateInfo(hasUpdate = false))
+            }
+        } catch (e: Exception) {
+            Result.success(AppUpdateInfo(hasUpdate = false))
+        }
+    }
+
     private fun extractBundledBookIfNeeded(bookId: String, assetPath: String) {
         try {
             val destFile = File(context.filesDir, "$bookId.pdf")
@@ -1782,3 +1810,11 @@ class Repository(
         return auditLogDao.getAllLogs()
     }
 }
+
+data class AppUpdateInfo(
+    val hasUpdate: Boolean = false,
+    val latestVersionCode: Int = 1,
+    val latestVersionName: String = "1.0.0",
+    val apkUrl: String = "https://ebook-mts-alkhairaat.pages.dev/app-release.apk",
+    val releaseNotes: String = ""
+)

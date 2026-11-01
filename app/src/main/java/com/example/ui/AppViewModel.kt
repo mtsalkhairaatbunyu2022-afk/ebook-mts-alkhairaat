@@ -207,11 +207,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // App Remote Update State
+    var appUpdateInfo by mutableStateOf<com.example.data.AppUpdateInfo?>(null)
+
+    fun checkForAppUpdates() {
+        viewModelScope.launch {
+            repository.checkAppUpdate(currentVersionCode = 1)
+                .onSuccess { info ->
+                    if (info.hasUpdate) {
+                        appUpdateInfo = info
+                    }
+                }
+        }
+    }
+
     init {
         viewModelScope.launch {
             repository.seedDatabaseIfNeeded()
             repository.syncRemoteStudents(appShareUrl)
             syncCatalogFromCloudflare()
+            checkForAppUpdates()
         }
     }
 
