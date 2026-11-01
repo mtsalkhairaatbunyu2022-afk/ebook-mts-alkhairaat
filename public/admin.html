@@ -202,10 +202,18 @@
                 <small class="text-muted fw-normal">Contoh: bahasa arab kelas VII | bahasa arab | VII | MTs Alkhairaat Bunyu | https://drive.google.com/file/d/15pI3yi.../view?usp=sharing</small>
               </div>
 
+              <!-- Download Template Button -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold text-secondary small">1. Unduh Format Template:</span>
+                <button type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadBookTemplateExcel()">
+                  <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Unduh Template Excel Buku (.xlsx)
+                </button>
+              </div>
+
               <!-- Upload Excel for Books -->
               <div class="upload-excel-box mb-3 py-3" onclick="document.getElementById('excelBookFileInput').click()">
                 <i class="bi bi-file-earmark-excel-fill text-success fs-2"></i>
-                <h6 class="fw-bold text-dark mt-2 mb-1" id="excelBookUploadTitle">Unggah File Excel Buku (.xlsx / .csv)</h6>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="excelBookUploadTitle">2. Unggah File Excel Buku (.xlsx / .csv)</h6>
                 <p class="text-muted fs-8 mb-0" id="excelBookUploadDesc">Kolom: Judul | Mata Pelajaran | Jenjang | Penulis | Link Google Drive</p>
                 <input type="file" id="excelBookFileInput" accept=".xlsx, .xls, .csv" class="d-none">
               </div>
@@ -1220,6 +1228,30 @@
         pdfProcessingAlert.classList.add('d-none');
         pdfProcessingAlert.classList.remove('d-flex');
       }
+    }
+
+    function downloadBookTemplateExcel() {
+      const templateData = [
+        {
+          "Judul Buku Pelajaran": "bahasa arab kelas VII",
+          "Mata Pelajaran": "bahasa arab",
+          "Jenjang Kelas": "VII",
+          "Penulis / Penyusun": "MTs Alkhairaat Bunyu",
+          "Link URL Publik File PDF / Google Drive": "https://drive.google.com/file/d/15pI3yiAWMqXIU9taXDUBdg8aiMo9p109/view?usp=sharing"
+        },
+        {
+          "Judul Buku Pelajaran": "informatika kelas VIII",
+          "Mata Pelajaran": "informatika",
+          "Jenjang Kelas": "VIII",
+          "Penulis / Penyusun": "MTs Alkhairaat Bunyu",
+          "Link URL Publik File PDF / Google Drive": "https://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/view?usp=drive_link"
+        }
+      ];
+
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Buku");
+      XLSX.writeFile(workbook, "Template_Impor_Buku_MTs_AlKhairaat.xlsx");
     }
 
     function loadSampleBookData() {
