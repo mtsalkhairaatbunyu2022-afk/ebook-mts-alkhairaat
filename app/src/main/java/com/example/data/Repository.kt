@@ -198,24 +198,39 @@ class Repository(
                 val username = item.optString("username", nama).trim()
                 val password = item.optString("password", "").trim()
                 val kelas = item.optString("kelas", "Kelas VII").trim()
+                val roleStr = item.optString("role", "STUDENT").uppercase().trim()
+                val subjectStr = item.optString("subject", item.optString("mapel", "")).trim()
+
+                val effectiveRole = if (roleStr == "TEACHER" || roleStr == "GURU" || kelas.startsWith("Mapel:")) "TEACHER" else if (roleStr == "ADMIN") "ADMIN" else "STUDENT"
+                val effectiveGradeClass = if (effectiveRole == "TEACHER") {
+                    if (kelas.startsWith("Mapel:")) {
+                        kelas
+                    } else if (subjectStr.isNotBlank()) {
+                        "Mapel: $subjectStr"
+                    } else {
+                        kelas
+                    }
+                } else {
+                    kelas
+                }
 
                 if (nama.isNotBlank() && username.isNotBlank()) {
-                    val id = item.optString("id", "usr_student_${username.lowercase().replace(Regex("[^a-z0-9]"), "_")}")
+                    val id = item.optString("id", "usr_${effectiveRole.lowercase()}_${username.lowercase().replace(Regex("[^a-z0-9]"), "_")}")
                     val existing = userDao.getUserByIdentifier(username)
                     val isLoggedIn = existing?.isLoggedIn ?: false
 
-                    val studentUser = UserEntity(
+                    val userObj = UserEntity(
                         id = id,
                         name = nama,
                         email = username,
-                        role = "STUDENT",
-                        token = "jwt_student_token",
+                        role = effectiveRole,
+                        token = "jwt_user_token",
                         password = password,
-                        gradeClass = kelas,
+                        gradeClass = effectiveGradeClass,
                         isLoggedIn = isLoggedIn,
                         lastActive = existing?.lastActive ?: System.currentTimeMillis()
                     )
-                    studentsList.add(studentUser)
+                    studentsList.add(userObj)
                     count++
                 }
             }
@@ -585,10 +600,176 @@ class Repository(
         }
     }
 
+    // Import Batch Akun Guru dari file Excel (.xlsx) atau data Excel (Format: nomor, nama guru)
+    suspend fun importTeacherBatchFromXlsx(inputStream: java.io.InputStream): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val sharedStrings = mutableListOf<String>()
+            var sheetXmlContent: String? = null
+            var sharedStringsXmlContent: String? = null
+
+            java.util.zip.ZipInputStream(inputStream).use { zip ->
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    if (entry.name.equals("xl/sharedStrings.xml", ignoreCase = true)) {
+                        sharedStringsXmlContent = zip.bufferedReader().use { it.readText() }
+                    } else if (entry.name.equals("xl/worksheets/sheet1.xml", ignoreCase = true) || entry.name.endsWith("sheet1.xml")) {
+                        sheetXmlContent = zip.bufferedReader().use { it.readText() }
+                    }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
+            }
+
+            if (!sharedStringsXmlContent.isNullOrBlank()) {
+                val matcher = java.util.regex.Pattern.compile("<t[^>]*>(.*?)</t>", java.util.regex.Pattern.DOTALL).matcher(sharedStringsXmlContent!!)
+                while (matcher.find()) {
+                    sharedStrings.add(matcher.group(1) ?: "")
+                }
+            }
+
+            val teacherNames = mutableListOf<String>()
+
+            if (!sheetXmlContent.isNullOrBlank()) {
+                val rowMatcher = java.util.regex.Pattern.compile("<row[^>]*>(.*?)</row>", java.util.regex.Pattern.DOTALL).matcher(sheetXmlContent!!)
+                while (rowMatcher.find()) {
+                    val rowInner = rowMatcher.group(1) ?: ""
+                    val cellValues = mutableListOf<String>()
+                    val cellMatcher = java.util.regex.Pattern.compile("<c[^>]*?(?:t=\"([^\"]*)\")?[^>]*>(.*?)</c>", java.util.regex.Pattern.DOTALL).matcher(rowInner)
+                    while (cellMatcher.find()) {
+                        val cellType = cellMatcher.group(1)
+                        val cellInner = cellMatcher.group(2) ?: ""
+                        val valMatcher = java.util.regex.Pattern.compile("<v>(.*?)</v>", java.util.regex.Pattern.DOTALL).matcher(cellInner)
+                        if (valMatcher.find()) {
+                            val rawVal = valMatcher.group(1) ?: ""
+                            if (cellType == "s") {
+                                val idx = rawVal.toIntOrNull()
+                                if (idx != null && idx in 0 until sharedStrings.size) {
+                                    cellValues.add(sharedStrings[idx])
+                                } else {
+                                    cellValues.add(rawVal)
+                                }
+                            } else {
+                                cellValues.add(rawVal)
+                            }
+                        } else {
+                            val inlineMatcher = java.util.regex.Pattern.compile("<t[^>]*>(.*?)</t>", java.util.regex.Pattern.DOTALL).matcher(cellInner)
+                            if (inlineMatcher.find()) {
+                                cellValues.add(inlineMatcher.group(1) ?: "")
+                            }
+                        }
+                    }
+
+                    if (cellValues.isNotEmpty()) {
+                        val firstVal = cellValues.getOrNull(0)?.trim() ?: ""
+                        val secondVal = cellValues.getOrNull(1)?.trim() ?: ""
+
+                        if (firstVal.lowercase().contains("nomor") || firstVal.lowercase().contains("no") || secondVal.lowercase().contains("nama guru")) {
+                            continue
+                        }
+
+                        val nameToUse = if (secondVal.isNotBlank()) secondVal else firstVal
+                        if (nameToUse.isNotBlank() && !nameToUse.lowercase().contains("nomor")) {
+                            teacherNames.add(nameToUse)
+                        }
+                    }
+                }
+            }
+
+            var count = 0
+            val newUsers = mutableListOf<UserEntity>()
+            for (teacherName in teacherNames) {
+                val sanitizedId = "tch_" + teacherName.lowercase().replace(Regex("[^a-z0-9]"), "_")
+                val subjectName = if (teacherName.uppercase().startsWith("GURU ")) {
+                    teacherName.substring(5).trim()
+                } else if (teacherName.contains("(")) {
+                    teacherName.substringAfter("(").substringBefore(")").trim()
+                } else {
+                    teacherName
+                }
+                val teacherUser = UserEntity(
+                    id = sanitizedId,
+                    name = teacherName.uppercase(),
+                    email = sanitizedId,
+                    role = "TEACHER",
+                    token = "jwt_token_sample",
+                    password = "2026",
+                    gradeClass = "Mapel: $subjectName"
+                )
+                newUsers.add(teacherUser)
+                count++
+            }
+
+            if (newUsers.isNotEmpty()) {
+                userDao.insertUsers(newUsers)
+                logAudit("ADMIN", "Operator Admin", "IMPORT_GURU_XLSX", "Mengimpor $count akun guru dari file Excel (.xlsx)")
+            }
+
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun importTeacherBatch(csvContent: String): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val lines = csvContent.lines()
+            var count = 0
+            val newUsers = mutableListOf<UserEntity>()
+
+            for (rawLine in lines) {
+                val line = rawLine.trim()
+                if (line.isBlank()) continue
+
+                if (line.lowercase().startsWith("nomor") || line.lowercase().startsWith("no\t") || line.lowercase().startsWith("no,")) {
+                    continue
+                }
+
+                val parts = line.split(Regex("[,\\t]")).map { it.trim() }
+                if (parts.size >= 2) {
+                    val teacherName = parts[1]
+                    if (teacherName.isNotBlank()) {
+                        val sanitizedId = "tch_" + teacherName.lowercase().replace(Regex("[^a-z0-9]"), "_")
+                        val subjectName = if (teacherName.uppercase().startsWith("GURU ")) {
+                            teacherName.substring(5).trim()
+                        } else if (teacherName.contains("(")) {
+                            teacherName.substringAfter("(").substringBefore(")").trim()
+                        } else {
+                            teacherName
+                        }
+                        val teacherUser = UserEntity(
+                            id = sanitizedId,
+                            name = teacherName.uppercase(),
+                            email = sanitizedId,
+                            role = "TEACHER",
+                            token = "jwt_token_sample",
+                            password = "2026",
+                            gradeClass = "Mapel: $subjectName"
+                        )
+                        newUsers.add(teacherUser)
+                        count++
+                    }
+                }
+            }
+
+            if (newUsers.isNotEmpty()) {
+                userDao.insertUsers(newUsers)
+                logAudit("ADMIN", "Operator Admin", "IMPORT_GURU_EXCEL", "Mengimpor $count akun guru dari data Excel (Format: nomor, nama guru)")
+            }
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Book Search and filter Flow
     fun searchAndFilter(query: String, gradeClass: String, category: String): Flow<List<BookEntity>> {
         val formattedQuery = "%$query%"
         return bookDao.searchAndFilterBooks(formattedQuery, gradeClass, category)
+    }
+
+    fun searchAndFilterWithSubject(query: String, gradeClass: String, category: String, subject: String): Flow<List<BookEntity>> {
+        val formattedQuery = "%$query%"
+        return bookDao.searchAndFilterBooksWithSubject(formattedQuery, gradeClass, category, subject)
     }
 
     fun getBookDetail(id: String): Flow<BookEntity?> {

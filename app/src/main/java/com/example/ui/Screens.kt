@@ -93,8 +93,8 @@ fun WelcomeDashboardScreen(
             // School Logo Header
             Surface(
                 modifier = Modifier
-                    .size(100.dp)
-                    .shadow(8.dp, CircleShape),
+                    .size(90.dp)
+                    .shadow(6.dp, CircleShape),
                 color = MaterialTheme.colorScheme.surface,
                 shape = CircleShape
             ) {
@@ -108,28 +108,28 @@ fun WelcomeDashboardScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Title & Subtitle
             Text(
                 text = "E-Book MTs Al-Khairaat Bunyu",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = "Perpustakaan Digital Terintegrasi Sekolah",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Official Account Badge
             Surface(
@@ -158,7 +158,20 @@ fun WelcomeDashboardScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Main Hero Card with MASUK AKUN SISWA Button
+            // Prompt Title
+            Text(
+                text = "Pilih Peran Login Anda",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ==========================================
+            // KARTU 1: ROLE SISWA
+            // ==========================================
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,40 +180,70 @@ fun WelcomeDashboardScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.padding(18.dp)
                 ) {
-                    Text(
-                        text = "Selamat Datang di Aplikasi E-Book",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = CircleShape,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "SISWA KELAS VII, VIII, IX",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Kartu Akses Siswa",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "Silakan masuk menggunakan Nama dan Kata Sandi resmi dari Kartu Siswa yang diberikan oleh Sekolah / Guru untuk mengakses buku pelajaran.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Masuk menggunakan Nama Siswa dan Sandi Kelas dari Kartu Login madrasah untuk mengakses buku pelajaran kelas Anda.",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 20.sp
+                        lineHeight = 18.sp
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // PROMINENT "MASUK AKUN SISWA" BUTTON
                     Button(
                         onClick = onStartApp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
+                            .height(48.dp)
                             .testTag("btn_mulai_aplikasi"),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
@@ -213,48 +256,132 @@ fun WelcomeDashboardScreen(
                             Icon(
                                 imageVector = Icons.Default.Login,
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "MASUK AKUN SISWA",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ==========================================
+            // KARTU 2: ROLE GURU & PENGAJAR
+            // ==========================================
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(20.dp)),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = CircleShape,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "GURU & MAJELIS PENGAJAR",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Kartu Akses Guru & Pengajar",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 1.sp
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Secondary Option: Login using Student Card
-                    OutlinedButton(
+                    Text(
+                        text = "Masuk menggunakan Akun Guru / Pengajar untuk membuka koleksi pegangan guru & modul pengajaran mata pelajaran Anda.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
                         onClick = onLoginWithCard,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
+                            .height(48.dp)
                             .testTag("btn_masuk_kartu_siswa"),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        )
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Person,
+                                imageVector = Icons.Default.Badge,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "MASUK DENGAN KARTU SISWA",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
+                                text = "MASUK AKUN GURU",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
                             )
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "MTs Al-Khairaat Bunyu • Sistem E-Book Resmi",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -475,24 +602,53 @@ fun BookDashboard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val grades = listOf("Semua Kelas", "Kelas VII", "Kelas VIII", "Kelas IX")
-                    grades.forEach { grade ->
-                        val isSelected = if (grade == "Semua Kelas") {
-                            viewModel.selectedGradeFilter.isEmpty() || viewModel.selectedGradeFilter == "Semua Kelas"
-                        } else {
-                            viewModel.selectedGradeFilter == grade
+                    val isSubjectLockedTeacher = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:")
+                    val isStudentLocked = !isTeacher && user.gradeClass.isNotBlank() && user.gradeClass != "Semua Kelas"
+
+                    if (isStudentLocked || isSubjectLockedTeacher) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (isSubjectLockedTeacher) "Katalog Dikunci Khusus ${user.gradeClass}" else "Katalog Dikunci Khusus ${user.gradeClass}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                viewModel.selectedGradeFilter = if (grade == "Semua Kelas") "" else grade
-                            },
-                            label = { Text(grade, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        val grades = listOf("Semua Kelas", "Kelas VII", "Kelas VIII", "Kelas IX")
+                        grades.forEach { grade ->
+                            val isSelected = if (grade == "Semua Kelas") {
+                                viewModel.selectedGradeFilter.isEmpty() || viewModel.selectedGradeFilter == "Semua Kelas"
+                            } else {
+                                viewModel.selectedGradeFilter == grade
+                            }
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    viewModel.selectedGradeFilter = if (grade == "Semua Kelas") "" else grade
+                                },
+                                label = { Text(grade, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                )
                             )
-                        )
+                        }
                     }
 
                     // Kategori Filter chip picker
@@ -1511,6 +1667,7 @@ fun StudentListScreen(viewModel: AppViewModel) {
     var selectedTab by remember { mutableStateOf(0) } // 0: Siswa, 1: Guru, 2: Admin
     var userToDelete by remember { mutableStateOf<UserEntity?>(null) }
     var userToResetPassword by remember { mutableStateOf<UserEntity?>(null) }
+    var showTeacherTemplateDialog by remember { mutableStateOf(false) }
 
     val filteredUsers = when (selectedTab) {
         0 -> allUsers.filter { it.role == "STUDENT" }
@@ -1551,6 +1708,25 @@ fun StudentListScreen(viewModel: AppViewModel) {
                 onClick = { selectedTab = 2 },
                 text = { Text("Admin (${allUsers.count { it.role == "ADMIN" }})", fontSize = 12.sp) }
             )
+        }
+
+        // Action row for Teacher Template Generator
+        if (selectedTab == 1 && (currentUser?.role == "ADMIN" || currentUser?.role == "TEACHER")) {
+            OutlinedButton(
+                onClick = { showTeacherTemplateDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "📄 Template & Import Guru (Format: nomor,nama guru)",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         if (filteredUsers.isEmpty()) {
@@ -1598,7 +1774,7 @@ fun StudentListScreen(viewModel: AppViewModel) {
                                     text = if (user.role == "STUDENT") {
                                         "Kelas: ${user.gradeClass.ifEmpty { "-" }} | Sandi: ${user.password}"
                                     } else {
-                                        user.email
+                                        "${user.email} | ${user.gradeClass}"
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1673,6 +1849,241 @@ fun StudentListScreen(viewModel: AppViewModel) {
             }
         )
     }
+
+    if (showTeacherTemplateDialog) {
+        TeacherBatchTemplateDialog(
+            viewModel = viewModel,
+            onDismiss = { showTeacherTemplateDialog = false }
+        )
+    }
+}
+
+@Composable
+fun TeacherBatchTemplateDialog(
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var inputExcelText by remember {
+        mutableStateOf(
+            "nomor\tnama guru\n" +
+            "1\tGURU BAHASA ARAB\n" +
+            "2\tGURU INFORMATIKA\n" +
+            "3\tGURU AL-QURAN HADIS\n" +
+            "4\tGURU AKIDAH AKHLAK\n" +
+            "5\tGURU FIQIH\n" +
+            "6\tGURU SKI"
+        )
+    }
+    var selectedXlsxFileName by remember { mutableStateOf<String?>(null) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isImporting by remember { mutableStateOf(false) }
+
+    val xlsxPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        selectedXlsxFileName = cursor.getString(nameIndex)
+                    }
+                }
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    isImporting = true
+                    viewModel.importTeacherBatchFromXlsx(
+                        inputStream = inputStream,
+                        onSuccess = { count ->
+                            isImporting = false
+                            statusMessage = "🎉 Berhasil mengimpor $count akun guru dari file Excel '${selectedXlsxFileName ?: "XLSX"}'!"
+                            errorMessage = null
+                        },
+                        onError = { err ->
+                            isImporting = false
+                            errorMessage = err
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                isImporting = false
+                errorMessage = "Gagal membaca file Excel: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Badge,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Template Excel (.xlsx) Akun Guru", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "📊 Format Kolom File Excel (.xlsx):",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Kolom A: nomor",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Kolom B: nama guru",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "• Baris 1: Header 'nomor' (Kolom A) dan 'nama guru' (Kolom B).\n• Baris 2 dst: Data nomor & nama guru.\n• Password awal otomatis disetel ke '2026'.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Button 1: File picker for real .xlsx file
+                Button(
+                    onClick = { xlsxPickerLauncher.launch("*/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📂 Unggah File Excel (.xlsx)", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Button 2: Copy Excel format
+                OutlinedButton(
+                    onClick = {
+                        val excelFormat = "nomor\tnama guru\n1\tGURU BAHASA ARAB\n2\tGURU INFORMATIKA\n3\tGURU AL-QURAN HADIS\n4\tGURU AKIDAH AKHLAK\n5\tGURU FIQIH\n6\tGURU SKI"
+                        clipboardManager.setText(AnnotatedString(excelFormat))
+                        statusMessage = "✅ Format Tabel Excel 'nomor | nama guru' berhasil disalin!"
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Salin Format Tabel Excel (nomor, nama guru)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = "Atau Tempel (Paste) Sel dari Microsoft Excel:",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    value = inputExcelText,
+                    onValueChange = {
+                        inputExcelText = it
+                        statusMessage = null
+                        errorMessage = null
+                    },
+                    minLines = 5,
+                    maxLines = 8,
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (statusMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(statusMessage!!, color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(errorMessage!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (inputExcelText.isBlank()) {
+                        errorMessage = "Data teks Excel tidak boleh kosong!"
+                        return@Button
+                    }
+                    isImporting = true
+                    viewModel.importTeacherBatch(
+                        csvText = inputExcelText,
+                        onSuccess = { count ->
+                            isImporting = false
+                            statusMessage = "🎉 Berhasil mengimpor $count akun guru dari data Excel!"
+                        },
+                        onError = { err ->
+                            isImporting = false
+                            errorMessage = err
+                        }
+                    )
+                },
+                enabled = !isImporting
+            ) {
+                if (isImporting) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Mengimpor...")
+                } else {
+                    Text("Import Teks Excel")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Tutup")
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -127,6 +127,7 @@ fun MainAppContent(
     onResetOpenLogin: () -> Unit = {},
     onBackToWelcome: () -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var activeLayoutState by rememberSaveable { mutableStateOf(LayoutState.MAIN_SHELL) }
     var currentTabSelected by rememberSaveable { mutableStateOf(SchoolAppNavigator.DASHBOARD) }
     var selectedBookDetail by remember { mutableStateOf<BookEntity?>(null) }
@@ -347,8 +348,26 @@ fun MainAppContent(
                                     viewModel = viewModel,
                                     user = user,
                                     onBookSelected = { book ->
-                                        selectedBookDetail = book
-                                        activeLayoutState = LayoutState.BOOK_DETAIL
+                                        val isStudentLocked = !isTeacher && book.gradeClass.startsWith("Kelas") && user.gradeClass.startsWith("Kelas") && book.gradeClass != user.gradeClass
+                                        val isTeacherSubjectLocked = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:") && !book.subject.equals(user.gradeClass.removePrefix("Mapel:").trim(), ignoreCase = true)
+
+                                        if (isStudentLocked) {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Akses Ditolak: Buku '${book.title}' khusus untuk ${book.gradeClass}. Akses Anda dikunci untuk ${user.gradeClass}.",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        } else if (isTeacherSubjectLocked) {
+                                            val teacherSubject = user.gradeClass.removePrefix("Mapel:").trim()
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Akses Ditolak: Buku '${book.title}' (Mapel: ${book.subject}) bukan mata pelajaran ampu Anda. Akun Anda dikunci khusus untuk Mata Pelajaran ${teacherSubject}.",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        } else {
+                                            selectedBookDetail = book
+                                            activeLayoutState = LayoutState.BOOK_DETAIL
+                                        }
                                     },
                                     onOpenLogin = {
                                         showStudentLoginDialog = true
@@ -360,8 +379,26 @@ fun MainAppContent(
                                     viewModel = viewModel,
                                     user = user,
                                     onBookSelected = { book ->
-                                        selectedBookDetail = book
-                                        activeLayoutState = LayoutState.BOOK_DETAIL
+                                        val isStudentLocked = !isTeacher && book.gradeClass.startsWith("Kelas") && user.gradeClass.startsWith("Kelas") && book.gradeClass != user.gradeClass
+                                        val isTeacherSubjectLocked = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:") && !book.subject.equals(user.gradeClass.removePrefix("Mapel:").trim(), ignoreCase = true)
+
+                                        if (isStudentLocked) {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Akses Ditolak: Buku '${book.title}' khusus untuk ${book.gradeClass}.",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        } else if (isTeacherSubjectLocked) {
+                                            val teacherSubject = user.gradeClass.removePrefix("Mapel:").trim()
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Akses Ditolak: Buku '${book.title}' bukan mata pelajaran ampu Anda (${teacherSubject}).",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        } else {
+                                            selectedBookDetail = book
+                                            activeLayoutState = LayoutState.BOOK_DETAIL
+                                        }
                                     }
                                 )
                             }

@@ -131,17 +131,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         selectedCategoryFilterState,
         loggedInUser
     ) { query, grade, category, user ->
-        val effectiveGrade = if (grade.isNotEmpty() && grade != "Semua Kelas") {
-            grade
-        } else if (grade == "Semua Kelas") {
-            ""
-        } else if (user?.role == "STUDENT" && user.gradeClass.isNotBlank() && user.gradeClass != "Semua Kelas") {
+        val isTeacherSubjectLocked = user?.role == "TEACHER" && user.gradeClass.startsWith("Mapel:")
+        val effectiveGrade = if (user?.role == "STUDENT" && user.gradeClass.isNotBlank() && user.gradeClass != "Semua Kelas") {
             user.gradeClass
+        } else if (isTeacherSubjectLocked) {
+            if (grade.isNotEmpty() && grade != "Semua Kelas") grade else ""
+        } else if (grade.isNotEmpty() && grade != "Semua Kelas") {
+            grade
         } else {
             ""
         }
-        android.util.Log.d("AppViewModel", "Filtering books: query='$query', effectiveGrade='$effectiveGrade', category='$category', userRole='${user?.role}', userName='${user?.name}'")
-        repository.searchAndFilter(query, effectiveGrade, category)
+        val effectiveSubject = if (isTeacherSubjectLocked) {
+            user.gradeClass.removePrefix("Mapel:").trim()
+        } else {
+            ""
+        }
+        android.util.Log.d("AppViewModel", "Filtering books: query='$query', effectiveGrade='$effectiveGrade', effectiveSubject='$effectiveSubject', category='$category', userRole='${user?.role}', userName='${user?.name}'")
+        repository.searchAndFilterWithSubject(query, effectiveGrade, category, effectiveSubject)
     }.flatMapLatest { flow ->
         flow.onEach { list ->
             android.util.Log.d("AppViewModel", "Filtered books emission size: ${list.size}")
@@ -298,6 +304,30 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             repository.resetStudentPassword(userId, newPass)
                 .onSuccess { onSuccess() }
                 .onFailure { err -> onError(err.localizedMessage ?: "Gagal mereset kata sandi") }
+        }
+    }
+
+    fun importTeacherBatch(
+        csvText: String,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            repository.importTeacherBatch(csvText)
+                .onSuccess { count -> onSuccess(count) }
+                .onFailure { err -> onError(err.localizedMessage ?: "Gagal mengimpor akun guru") }
+        }
+    }
+
+    fun importTeacherBatchFromXlsx(
+        inputStream: java.io.InputStream,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            repository.importTeacherBatchFromXlsx(inputStream)
+                .onSuccess { count -> onSuccess(count) }
+                .onFailure { err -> onError(err.localizedMessage ?: "Gagal membaca file Excel (.xlsx)") }
         }
     }
 

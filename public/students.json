@@ -1,98 +1,130 @@
 [
   {
-    "id": "stu_aqeela_zahratussyifa",
+    "id": "tch_bahasa_arab",
     "no": 1,
+    "nama": "Ustadz Ahmad, S.Pd.I",
+    "username": "GURU BAHASA ARAB",
+    "kelas": "Mapel: Bahasa Arab",
+    "role": "TEACHER",
+    "subject": "Bahasa Arab",
+    "password": "2026"
+  },
+  {
+    "id": "tch_informatika",
+    "no": 2,
+    "nama": "Guru Informatika, S.Kom",
+    "username": "GURU INFORMATIKA",
+    "kelas": "Mapel: Informatika",
+    "role": "TEACHER",
+    "subject": "Informatika",
+    "password": "2026"
+  },
+  {
+    "id": "stu_aqeela_zahratussyifa",
+    "no": 3,
     "nama": "AQEELA ZAHRATUSSYIFA",
     "username": "AQEELA ZAHRATUSSYIFA",
     "kelas": "Kelas VIII",
+    "role": "STUDENT",
     "password": "2026"
   },
   {
     "id": "stu_brayn_nur",
-    "no": 2,
+    "no": 4,
     "nama": "BRAYN NUR",
     "username": "BRAYN NUR",
     "kelas": "Kelas VIII",
+    "role": "STUDENT",
     "password": "2026"
   },
   {
     "id": "stu_evan_syahputra",
-    "no": 3,
+    "no": 5,
     "nama": "EVAN SYAHPUTRA",
     "username": "EVAN SYAHPUTRA",
     "kelas": "Kelas VIII",
+    "role": "STUDENT",
     "password": "2026"
   },
   {
     "id": "stu_hazrah_nur_fatiyah",
-    "no": 4,
+    "no": 6,
     "nama": "HAZRAH NUR FATIYAH",
     "username": "HAZRAH NUR FATIYAH",
     "kelas": "Kelas VIII",
+    "role": "STUDENT",
     "password": "2026"
   },
   {
     "id": "stu_muhammad_fadhil_prasetya",
-    "no": 5,
+    "no": 7,
     "nama": "MUHAMMAD FADHIL PRASETYA",
     "username": "MUHAMMAD FADHIL PRASETYA",
     "kelas": "Kelas VIII",
+    "role": "STUDENT",
     "password": "2026"
   },
   {
     "id": "stu_algezi_achmad_gifahri",
-    "no": 6,
+    "no": 8,
     "nama": "ALGEZI ACHMAD GIFAHRI",
     "username": "ALGEZI ACHMAD GIFAHRI",
     "kelas": "Kelas IX",
+    "role": "STUDENT",
     "password": "2025"
   },
   {
     "id": "stu_ashilah_azzarah",
-    "no": 7,
+    "no": 9,
     "nama": "ASHILAH AZZARAH",
     "username": "ASHILAH AZZARAH",
     "kelas": "Kelas IX",
+    "role": "STUDENT",
     "password": "2025"
   },
   {
     "id": "stu_m_darma",
-    "no": 8,
+    "no": 10,
     "nama": "M DARMA",
     "username": "M DARMA",
     "kelas": "Kelas IX",
+    "role": "STUDENT",
     "password": "2025"
   },
   {
     "id": "stu_muhamat_syafri",
-    "no": 9,
+    "no": 11,
     "nama": "MUHAMAT SYAFRI",
     "username": "MUHAMAT SYAFRI",
     "kelas": "Kelas IX",
+    "role": "STUDENT",
     "password": "2025"
   },
   {
     "id": "stu_wulan_purnama_sari",
-    "no": 10,
+    "no": 12,
     "nama": "WULAN PURNAMA SARI",
     "username": "WULAN PURNAMA SARI",
     "kelas": "Kelas IX",
+    "role": "STUDENT",
     "password": "2025"
   },
   {
     "id": "stu_ahmad_fauzi",
-    "no": 11,
+    "no": 13,
     "nama": "AHMAD FAUZI",
     "username": "AHMAD FAUZI",
     "kelas": "Kelas VII",
+    "role": "STUDENT",
     "password": "2027"
   },
   {
     "id": "stu_siti_nurhaliza",
-    "no": 12,
+    "no": 14,
     "nama": "SITI NURHALIZA",
     "username": "SITI NURHALIZA",
     "kelas": "Kelas VII",
+    "role": "STUDENT",
     "password": "2027"
   }
 ]

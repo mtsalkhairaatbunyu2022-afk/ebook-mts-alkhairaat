@@ -47,6 +47,9 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE id = :id")
     suspend fun getBookByIdSync(id: String): BookEntity?
 
+    @Query("SELECT * FROM books WHERE (title LIKE :query OR author LIKE :query OR subject LIKE :query) AND (:gradeClass = '' OR :gradeClass = 'Semua Kelas' OR gradeClass = :gradeClass OR gradeClass = 'Semua Kelas') AND (:category = '' OR category = :category) AND (:subject = '' OR LOWER(subject) = LOWER(:subject)) ORDER BY title ASC")
+    fun searchAndFilterBooksWithSubject(query: String, gradeClass: String, category: String, subject: String): Flow<List<BookEntity>>
+
     @Query("SELECT * FROM books WHERE (title LIKE :query OR author LIKE :query OR subject LIKE :query) AND (:gradeClass = '' OR :gradeClass = 'Semua Kelas' OR gradeClass = :gradeClass OR gradeClass = 'Semua Kelas') AND (:category = '' OR category = :category) ORDER BY title ASC")
     fun searchAndFilterBooks(query: String, gradeClass: String, category: String): Flow<List<BookEntity>>
 
