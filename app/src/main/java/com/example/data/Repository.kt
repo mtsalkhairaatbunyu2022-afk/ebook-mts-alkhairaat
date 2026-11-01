@@ -744,6 +744,15 @@ class Repository(
             var count = 0
             val newUsers = mutableListOf<UserEntity>()
 
+            fun isAcademicDegreeToken(str: String): Boolean {
+                val s = str.trim().lowercase()
+                return s.startsWith("s.") || s.startsWith("m.") || s.startsWith("dr") ||
+                        s.startsWith("drs") || s.startsWith("dra") || s.startsWith("lc") ||
+                        s.startsWith("h.") || s.startsWith("hj.") ||
+                        s.contains(".pd") || s.contains(".ag") || s.contains(".kom") ||
+                        s.contains(".si") || s.contains(".t") || s.contains(".e")
+            }
+
             for (rawLine in lines) {
                 val line = rawLine.trim()
                 if (line.isBlank()) continue
@@ -752,36 +761,42 @@ class Repository(
                     continue
                 }
 
-                val parts = line.split(Regex("[,\\t]")).map { it.trim() }
-                if (parts.size >= 2) {
-                    val teacherName = parts[1]
-                    if (teacherName.isNotBlank()) {
-                        val sanitizedId = "tch_" + teacherName.lowercase().replace(Regex("[^a-z0-9]"), "_")
-                        val subjectName = if (teacherName.uppercase().startsWith("GURU ")) {
-                            teacherName.substring(5).trim()
-                        } else if (teacherName.contains("(")) {
-                            teacherName.substringAfter("(").substringBefore(")").trim()
-                        } else {
-                            teacherName
-                        }
-                        val teacherUser = UserEntity(
-                            id = sanitizedId,
-                            name = teacherName.uppercase(),
-                            email = sanitizedId,
-                            role = "TEACHER",
-                            token = "jwt_token_sample",
-                            password = "2026",
-                            gradeClass = "Mapel: $subjectName"
-                        )
-                        newUsers.add(teacherUser)
-                        count++
-                    }
+                val parts = line.split(Regex("[,\\t]")).map { it.trim() }.filter { it.isNotEmpty() }
+                if (parts.isEmpty()) continue
+
+                val remaining = parts.toMutableList()
+                if (remaining[0].matches(Regex("^\\d+\\.?$"))) {
+                    remaining.removeAt(0)
                 }
+                if (remaining.isEmpty()) continue
+
+                var teacherName = remaining[0]
+                remaining.removeAt(0)
+
+                if (remaining.isNotEmpty() && isAcademicDegreeToken(remaining[0])) {
+                    teacherName += ", ${remaining[0]}"
+                    remaining.removeAt(0)
+                }
+
+                val subjectName = if (remaining.isNotEmpty()) remaining.joinToString(", ") else "Semua Mapel"
+                val sanitizedId = "tch_" + teacherName.lowercase().replace(Regex("[^a-z0-9]"), "_")
+
+                val teacherUser = UserEntity(
+                    id = sanitizedId,
+                    name = teacherName.uppercase(),
+                    email = sanitizedId,
+                    role = "TEACHER",
+                    token = "jwt_token_sample",
+                    password = "2026",
+                    gradeClass = "Mapel: $subjectName"
+                )
+                newUsers.add(teacherUser)
+                count++
             }
 
             if (newUsers.isNotEmpty()) {
                 userDao.insertUsers(newUsers)
-                logAudit("ADMIN", "Operator Admin", "IMPORT_GURU_EXCEL", "Mengimpor $count akun guru dari data Excel (Format: nomor, nama guru)")
+                logAudit("ADMIN", "Operator Admin", "IMPORT_GURU_EXCEL", "Mengimpor $count akun guru dari data Excel (Gelar opsional)")
             }
             Result.success(count)
         } catch (e: Exception) {

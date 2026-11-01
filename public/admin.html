@@ -151,6 +151,11 @@
         </button>
       </li>
       <li class="nav-item" role="presentation">
+        <button class="nav-link fs-6" id="teachers-tab" data-bs-toggle="tab" data-bs-target="#teachersImportSection" type="button" role="tab">
+          <i class="bi bi-person-badge-fill text-info me-2 fs-5"></i>Impor Massal Guru (Excel)
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
         <button class="nav-link fs-6" id="teacher-tab" data-bs-toggle="tab" data-bs-target="#teacherSection" type="button" role="tab">
           <i class="bi bi-book-half text-warning me-2 fs-5"></i>Ruang Baca Guru (Web Reader)
         </button>
@@ -306,26 +311,21 @@
       <div class="tab-pane fade" id="studentsSection" role="tabpanel">
         <div class="row g-4">
 
-          <!-- Left Column: Upload Excel / Input Manual -->
+          <!-- Left Column: Upload Excel / Input Manual Siswa -->
           <div class="col-lg-5">
             <div class="card card-custom p-4 bg-white">
               <div class="d-flex align-items-center gap-2 mb-2">
                 <i class="bi bi-file-earmark-excel-fill text-success fs-3"></i>
                 <h5 class="fw-bold mb-0 text-dark">Unggah File Excel / CSV Siswa</h5>
               </div>
-              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama</strong>, dan <strong>Kelas</strong> (VII, VIII, IX).</p>
+              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama Siswa</strong>, dan <strong>Kelas</strong> (VII, VIII, IX).</p>
 
-              <!-- Download Template Buttons -->
+              <!-- Download Template Button -->
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-semibold text-secondary small">Unduh Format Template:</span>
-                <div class="d-flex gap-1">
-                  <button type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadStudentTemplateExcel()">
-                    <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Template Siswa
-                  </button>
-                  <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm" onclick="downloadTeacherTemplateExcel()">
-                    <i class="bi bi-file-earmark-person-fill me-1"></i> Template Guru
-                  </button>
-                </div>
+                <button type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadStudentTemplateExcel()">
+                  <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Template Excel Siswa (.xlsx)
+                </button>
               </div>
 
               <!-- Upload Dropzone for Excel -->
@@ -350,7 +350,7 @@
             </div>
           </div>
 
-          <!-- Right Column: Results & Export Table -->
+          <!-- Right Column: Results & Export Table for Students -->
           <div class="col-lg-7">
             <div class="card card-custom p-4 bg-white">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
@@ -370,11 +370,12 @@
                       <th>Jenjang Kelas</th>
                       <th>Username Login</th>
                       <th>Kata Sandi / Pass</th>
+                      <th class="text-end">Aksi</th>
                     </tr>
                   </thead>
                   <tbody id="studentTableBody">
                     <tr>
-                      <td colspan="5" class="text-center text-muted py-4">Belum ada data siswa diimpor. Silakan unggah file Excel di sebelah kiri.</td>
+                      <td colspan="6" class="text-center text-muted py-4">Belum ada data siswa diimpor. Silakan unggah file Excel di sebelah kiri.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -383,7 +384,7 @@
               <div class="d-flex flex-wrap gap-2 mb-2">
                 <button id="downloadExcelStudentBtn" class="btn btn-success flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
-                  <span>Unduh Kartu Login (Excel)</span>
+                  <span>Unduh Kartu Login Siswa (Excel)</span>
                 </button>
                 <button id="downloadStudentsJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-download fs-5"></i>
@@ -407,7 +408,7 @@
 
             <!-- Lock Password Guidance -->
             <div class="card card-custom p-3 bg-light border-0 mt-3">
-              <h6 class="fw-bold text-dark fs-7 mb-1"><i class="bi bi-shield-lock-fill text-warning me-1"></i>Aturan Kata Sandi Akses Otomatis:</h6>
+              <h6 class="fw-bold text-dark fs-7 mb-1"><i class="bi bi-shield-lock-fill text-warning me-1"></i>Aturan Kata Sandi Akses Otomatis Siswa:</h6>
               <ul class="small text-secondary mb-0 ps-3 fs-7">
                 <li><strong>Kelas VII:</strong> Password <code>2027</code> (Mengakses buku Kelas VII)</li>
                 <li><strong>Kelas VIII:</strong> Password <code>2026</code> (Mengakses buku Kelas VIII)</li>
@@ -420,7 +421,122 @@
       </div>
 
       <!-- ========================================== -->
-      <!-- TAB 3: RUANG BACA GURU (WEB READER LAPTOP) -->
+      <!-- TAB 3: IMPOR MASSAL GURU VIA EXCEL (.XLSX) -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="teachersImportSection" role="tabpanel">
+        <div class="row g-4">
+
+          <!-- Left Column: Upload Excel / Input Manual Guru -->
+          <div class="col-lg-5">
+            <div class="card card-custom p-4 bg-white border border-info border-2">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-person-badge-fill text-info fs-3"></i>
+                <h5 class="fw-bold mb-0 text-dark">Unggah File Excel / CSV Guru</h5>
+              </div>
+              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) dengan kolom: <strong>No</strong>, <strong>Nama Guru (Gelar Opsional)</strong>, <strong>Mata Pelajaran</strong>, <strong>Username Login</strong>, dan <strong>Kata Sandi</strong>.<br><span class="text-info fw-semibold">*Gelar guru bersifat <strong>OPSIONAL</strong> (boleh diisi atau dikosongkan). Jika mengampu >1 mapel atau semua mapel, gunakan salah satu format: <code>Bahasa Arab & Fiqih</code>, <code>Informatika, IPA</code>, <code>Fiqih / Akidah Akhlak / SKI</code>, atau <code>Semua Mapel</code>.</span></p>
+
+              <!-- Download Template Button -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold text-secondary small">Unduh Format Template:</span>
+                <button type="button" class="btn btn-outline-info btn-sm fw-bold shadow-sm" onclick="downloadTeacherTemplateExcel()">
+                  <i class="bi bi-file-earmark-person-fill me-1"></i> Template Excel Guru (.xlsx)
+                </button>
+              </div>
+
+              <!-- Upload Dropzone for Teacher Excel -->
+              <div class="upload-excel-box mb-3 border-info" onclick="document.getElementById('excelTeacherFileInput').click()">
+                <i class="bi bi-cloud-arrow-up-fill text-info fs-1"></i>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="excelTeacherUploadTitle">Pilih / Tarik File Excel Guru (.xlsx / .csv)</h6>
+                <p class="text-muted fs-7 mb-0" id="excelTeacherUploadDesc">Format file Excel khusus akun Guru & Pengajar</p>
+                <input type="file" id="excelTeacherFileInput" accept=".xlsx, .xls, .csv" class="d-none">
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-dark small">Atau Paste / Ketik Manual:</span>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-info fw-bold" onclick="loadSampleTeacherData()">Isi Contoh Data Guru</button>
+              </div>
+
+              <textarea id="manualTeacherInput" class="form-control mb-3 fs-7" rows="6" placeholder="1, Ust. Ahmad Fauzi S.Pd., Bahasa Arab & Fiqih, ahmad_fauzi, guru2026&#10;2, Darmansyah, Informatika, IPA, darmansyah, guru2026&#10;3, Ustadzah Siti Aminah S.Ag., Fiqih / Akidah Akhlak / SKI, siti_aminah, guru2026&#10;4, Budi Santoso, Semua Mapel, budi_santoso, guru2026"></textarea>
+
+              <button id="processTeacherDataBtn" class="btn btn-info text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-person-plus-fill fs-5"></i>
+                <span>Proses & Buat Akun Guru Massal</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Results & Export Table for Teachers -->
+          <div class="col-lg-7">
+            <div class="card card-custom p-4 bg-white">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                  <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-check-fill text-info me-2"></i>Daftar Akun Guru Hasil Impor</h5>
+                  <p class="text-muted small mb-0">Akun guru memiliki hak akses khusus untuk membaca semua buku pelajaran.</p>
+                </div>
+                <span id="teacherCountBadge" class="badge bg-info fs-6 px-3 py-2 rounded-pill">0 Guru</span>
+              </div>
+
+              <div class="table-responsive mb-3" style="max-height: 320px; overflow-y: auto;">
+                <table class="table table-striped table-hover align-middle fs-7 mb-0">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>#</th>
+                      <th>Nama Guru</th>
+                      <th>Mata Pelajaran</th>
+                      <th>Username Login</th>
+                      <th>Kata Sandi</th>
+                      <th class="text-end">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teacherTableBody">
+                    <tr>
+                      <td colspan="6" class="text-center text-muted py-4">Belum ada data guru diimpor. Silakan unggah file Excel Guru di sebelah kiri.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 mb-2">
+                <button id="downloadExcelTeacherBtn" class="btn btn-info text-white flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
+                  <span>Unduh Kartu Login Guru (Excel)</span>
+                </button>
+                <button id="downloadTeachersJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-download fs-5"></i>
+                  <span>Unduh students.json (Siswa & Guru)</span>
+                </button>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button id="copyTeachersJsonBtn" class="btn btn-outline-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-clipboard-code fs-5"></i>
+                  <span>Salin Kode JSON</span>
+                </button>
+                <button id="copyTeacherTextBtn" class="btn btn-outline-secondary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-clipboard-check fs-5"></i>
+                  <span>Salin Teks Akun Guru (WA)</span>
+                </button>
+                <button id="resetTeachersBtn" class="btn btn-outline-danger py-2 fw-bold d-flex align-items-center justify-content-center gap-2" title="Kosongkan Akun Guru">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Teacher Account Guidance -->
+            <div class="card card-custom p-3 bg-light border-0 mt-3">
+              <h6 class="fw-bold text-dark fs-7 mb-1"><i class="bi bi-info-circle-fill text-info me-1"></i>Petunjuk & Format Akun Guru:</h6>
+              <ul class="small text-secondary mb-0 ps-3 fs-7">
+                <li><strong>Gelar Guru (OPSIONAL):</strong> Guru dengan gelar (contoh: <code>Ust. Ahmad Fauzi, S.Pd.</code>) maupun tanpa gelar (contoh: <code>Darmansyah</code>, <code>Budi Santoso</code>) dapat langsung dibuatkan akun oleh sistem.</li>
+                <li><strong>Format Mata Pelajaran:</strong> Dapat menggunakan <code>&</code> (contoh: <code>Bahasa Arab & Fiqih</code>), koma (contoh: <code>Informatika, IPA</code>), garing (contoh: <code>Fiqih / Akidah Akhlak / SKI</code>), atau <code>Semua Mapel</code>.</li>
+                <li class="mt-1 text-info font-weight-bold">Akun guru ditandai dengan role <code>TEACHER</code> dan kelas <code>Mapel: [Mata Pelajaran]</code>. Guru memiliki akses penuh membaca buku pelajaran untuk seluruh kelas (VII, VIII, IX).</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 4: RUANG BACA GURU (WEB READER LAPTOP) -->
       <!-- ========================================== -->
       <div class="tab-pane fade" id="teacherSection" role="tabpanel">
 
@@ -1505,6 +1621,39 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       }
     });
 
+    let importedStudents = [];
+    let importedTeachers = [];
+
+    function separateAccounts(allAccounts) {
+      importedStudents = [];
+      importedTeachers = [];
+      if (Array.isArray(allAccounts)) {
+        allAccounts.forEach(acc => {
+          if (acc.role === 'TEACHER' || (acc.kelas && acc.kelas.startsWith('Mapel:')) || (acc.subject && acc.subject.length > 0)) {
+            importedTeachers.push(acc);
+          } else {
+            importedStudents.push(acc);
+          }
+        });
+      }
+      importedStudents.forEach((s, idx) => s.no = idx + 1);
+      importedTeachers.forEach((t, idx) => t.no = idx + 1);
+    }
+
+    function saveAllUserAccountsToStorage() {
+      const combined = [...importedTeachers, ...importedStudents];
+      combined.forEach((item, idx) => {
+        item.no = idx + 1;
+      });
+      try {
+        localStorage.setItem('admin_students_override', JSON.stringify(combined));
+        localStorage.setItem('admin_students_has_saved', 'true');
+      } catch (e) {
+        console.warn('Gagal menyimpan data akun ke localStorage:', e);
+      }
+      return combined;
+    }
+
     function downloadStudentTemplateExcel() {
       const templateData = [
         { "No": 1, "Nama Siswa": "AQEELA ZAHRATUSSYIFA", "Jenjang Kelas": "Kelas VIII" },
@@ -1520,8 +1669,10 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 
     function downloadTeacherTemplateExcel() {
       const templateData = [
-        { "No": 1, "Nama Guru & Gelar": "Ust. Ahmad Fauzi, S.Pd.", "Mata Pelajaran": "Bahasa Arab", "Username Login": "ahmad_fauzi", "Kata Sandi": "guru2026" },
-        { "No": 2, "Nama Guru & Gelar": "Ustadzah Siti Aminah, S.Ag.", "Mata Pelajaran": "Fiqih / Akidah", "Username Login": "siti_aminah", "Kata Sandi": "guru2026" }
+        { "No": 1, "Nama Guru (Gelar Opsional)": "Ust. Ahmad Fauzi, S.Pd.", "Mata Pelajaran": "Bahasa Arab & Fiqih", "Username Login": "ahmad_fauzi", "Kata Sandi": "guru2026" },
+        { "No": 2, "Nama Guru (Gelar Opsional)": "Darmansyah", "Mata Pelajaran": "Informatika, IPA", "Username Login": "darmansyah", "Kata Sandi": "guru2026" },
+        { "No": 3, "Nama Guru (Gelar Opsional)": "Ustadzah Siti Aminah, S.Ag.", "Mata Pelajaran": "Fiqih / Akidah Akhlak / SKI", "Username Login": "siti_aminah", "Kata Sandi": "guru2026" },
+        { "No": 4, "Nama Guru (Gelar Opsional)": "Budi Santoso", "Mata Pelajaran": "Semua Mapel", "Username Login": "budi_santoso", "Kata Sandi": "guru2026" }
       ];
 
       const worksheet = XLSX.utils.json_to_sheet(templateData);
@@ -1583,9 +1734,11 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
           const username = cleanName;
 
           importedStudents.push({
+            id: "stu_" + cleanName.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + Math.floor(Math.random() * 1000),
             no: importedStudents.length + 1,
             nama: cleanName,
             kelas: cleanGrade,
+            role: "STUDENT",
             username: username,
             password: password
           });
@@ -1593,14 +1746,15 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       });
 
       renderStudentTable();
+      saveAllUserAccountsToStorage();
     }
 
     function deleteStudent(index) {
       if (confirm(`Hapus akun siswa "${importedStudents[index].nama}"?`)) {
         importedStudents.splice(index, 1);
-        // Reindex numbers
         importedStudents.forEach((s, idx) => s.no = idx + 1);
         renderStudentTable();
+        saveAllUserAccountsToStorage();
       }
     }
 
@@ -1608,14 +1762,11 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       const studentTableBody = document.getElementById('studentTableBody');
       const studentCountBadge = document.getElementById('studentCountBadge');
 
-      try {
-        localStorage.setItem('admin_students_override', JSON.stringify(importedStudents));
-        localStorage.setItem('admin_students_has_saved', 'true');
-      } catch (e) {
-        console.warn('Gagal menyimpan data siswa ke localStorage:', e);
+      if (studentCountBadge) {
+        studentCountBadge.textContent = `${importedStudents.length} Siswa Terdaftar`;
       }
 
-      studentCountBadge.textContent = `${importedStudents.length} Siswa Terdaftar`;
+      if (!studentTableBody) return;
       studentTableBody.innerHTML = '';
 
       if (importedStudents.length === 0) {
@@ -1641,48 +1792,54 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       });
     }
 
-    // Excel File Upload Handler
-    document.getElementById('excelFileInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    // Student Excel File Upload Handler
+    const excelFileInput = document.getElementById('excelFileInput');
+    if (excelFileInput) {
+      excelFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-      document.getElementById('excelUploadTitle').textContent = file.name;
-      document.getElementById('excelUploadDesc').textContent = `Membaca data Excel...`;
+        document.getElementById('excelUploadTitle').textContent = file.name;
+        document.getElementById('excelUploadDesc').textContent = `Membaca data Excel...`;
 
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        try {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-          processStudentList(jsonRows);
-          document.getElementById('excelUploadDesc').textContent = `Berhasil membaca ${importedStudents.length} data siswa!`;
-          alert(`✅ Berhasil mengimpor ${importedStudents.length} siswa dari file Excel "${file.name}"!`);
-        } catch (err) {
-          alert('Gagal membaca file Excel: ' + err.message);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
+            processStudentList(jsonRows);
+            document.getElementById('excelUploadDesc').textContent = `Berhasil membaca ${importedStudents.length} data siswa!`;
+            alert(`✅ Berhasil mengimpor ${importedStudents.length} siswa dari file Excel "${file.name}"!`);
+          } catch (err) {
+            alert('Gagal membaca file Excel: ' + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
 
     // Manual Textarea Student Input Handler
-    document.getElementById('processStudentDataBtn').addEventListener('click', function() {
-      const rawText = document.getElementById('manualStudentInput').value.trim();
-      if (!rawText && importedStudents.length === 0) {
-        alert('Silakan pilih file Excel atau ketik data siswa pada kotak di atas.');
-        return;
-      }
+    const processStudentDataBtn = document.getElementById('processStudentDataBtn');
+    if (processStudentDataBtn) {
+      processStudentDataBtn.addEventListener('click', function() {
+        const rawText = document.getElementById('manualStudentInput').value.trim();
+        if (!rawText && importedStudents.length === 0) {
+          alert('Silakan pilih file Excel atau ketik data siswa pada kotak di atas.');
+          return;
+        }
 
-      if (rawText) {
-        const lines = rawText.split('\n');
-        const rows = lines.map(line => line.split(','));
-        processStudentList(rows);
-        alert(`✅ Berhasil memproses ${importedStudents.length} akun siswa!`);
-      }
-    });
+        if (rawText) {
+          const lines = rawText.split('\n');
+          const rows = lines.map(line => line.split(','));
+          processStudentList(rows);
+          alert(`✅ Berhasil memproses ${importedStudents.length} akun siswa!`);
+        }
+      });
+    }
 
     function loadSampleStudentData() {
       document.getElementById('manualStudentInput').value = 
@@ -1698,31 +1855,212 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 10, WULAN PURNAMA SARI, IX`;
     }
 
-    // Download Excel Student Credentials Button
-    document.getElementById('downloadExcelStudentBtn').addEventListener('click', function() {
-      if (importedStudents.length === 0) {
-        alert('Belum ada data siswa untuk diunduh. Silakan impor file Excel siswa terlebih dahulu.');
+    // =====================================
+    // TEACHER BULK IMPORT LOGIC (EXCEL/CSV)
+    // =====================================
+    function isAcademicDegreeToken(str) {
+      if (!str) return false;
+      const s = str.trim().toLowerCase();
+      return (
+        s.startsWith('s.') || s.startsWith('m.') || s.startsWith('dr') ||
+        s.startsWith('drs') || s.startsWith('dra') || s.startsWith('lc') ||
+        s.startsWith('h.') || s.startsWith('hj.') ||
+        s.includes('.pd') || s.includes('.ag') || s.includes('.kom') ||
+        s.includes('.si') || s.includes('.t') || s.includes('.e') ||
+        s.includes('.sos') || s.includes('.hum')
+      );
+    }
+
+    function processTeacherList(rows) {
+      importedTeachers = [];
+      rows.forEach((row) => {
+        let name = '';
+        let subject = '';
+        let username = '';
+        let password = '';
+
+        if (Array.isArray(row)) {
+          const cleanRow = row.map(c => (c || '').toString().trim()).filter(c => c !== '');
+          if (cleanRow.length === 0) return;
+
+          const firstCol = cleanRow[0] || '';
+          if (firstCol.toLowerCase() === 'no' || firstCol.toLowerCase().includes('nama') || firstCol.toLowerCase() === 'nomor') {
+            return; // Skip Header
+          }
+
+          let rem = [...cleanRow];
+          if (/^\d+\.?$/.test(rem[0])) {
+            rem.shift(); // Remove row number
+          }
+          if (rem.length === 0) return;
+
+          let teacherName = rem[0];
+          rem.shift();
+
+          if (rem.length > 0 && isAcademicDegreeToken(rem[0])) {
+            teacherName += ', ' + rem[0];
+            rem.shift();
+          }
+
+          if (rem.length >= 3) {
+            password = rem.pop();
+            username = rem.pop();
+            subject = rem.join(', ');
+          } else if (rem.length === 2) {
+            subject = rem[0];
+            username = rem[1];
+            password = 'guru2026';
+          } else if (rem.length === 1) {
+            subject = rem[0];
+            username = teacherName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            password = 'guru2026';
+          } else {
+            subject = 'Semua Mapel';
+            username = teacherName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            password = 'guru2026';
+          }
+
+          name = teacherName;
+        } else if (typeof row === 'object') {
+          name = row['Nama Guru (Gelar Opsional)'] || row['Nama Guru & Gelar'] || row['Nama Guru'] || row['Nama'] || row['NAMA'] || Object.values(row)[1] || Object.values(row)[0] || '';
+          subject = row['Mata Pelajaran'] || row['Mapel'] || row['Pelajaran'] || Object.values(row)[2] || 'Semua Mapel';
+          username = row['Username Login'] || row['Username'] || row['Nama Login'] || name;
+          password = row['Kata Sandi'] || row['Password'] || row['Pass'] || 'guru2026';
+        }
+
+        if (name && name.toString().trim() !== '' && !name.toString().toLowerCase().includes('nama guru')) {
+          const cleanName = name.toString().trim();
+          const cleanSubject = subject.toString().trim() || 'Semua Mapel';
+          const cleanUsername = (username.toString().trim() || cleanName.toLowerCase().replace(/[^a-z0-9]/g, '_')).toLowerCase().replace(/\s+/g, '_');
+          const cleanPassword = password.toString().trim() || 'guru2026';
+
+          importedTeachers.push({
+            id: "tch_" + cleanUsername + "_" + Math.floor(Math.random() * 1000),
+            no: importedTeachers.length + 1,
+            nama: cleanName,
+            username: cleanUsername,
+            kelas: "Mapel: " + cleanSubject,
+            role: "TEACHER",
+            subject: cleanSubject,
+            password: cleanPassword
+          });
+        }
+      });
+
+      renderTeacherTable();
+      saveAllUserAccountsToStorage();
+    }
+
+    function deleteTeacher(index) {
+      if (confirm(`Hapus akun guru "${importedTeachers[index].nama}"?`)) {
+        importedTeachers.splice(index, 1);
+        importedTeachers.forEach((t, idx) => t.no = idx + 1);
+        renderTeacherTable();
+        saveAllUserAccountsToStorage();
+      }
+    }
+
+    function renderTeacherTable() {
+      const teacherTableBody = document.getElementById('teacherTableBody');
+      const teacherCountBadge = document.getElementById('teacherCountBadge');
+
+      if (teacherCountBadge) {
+        teacherCountBadge.textContent = `${importedTeachers.length} Guru Terdaftar`;
+      }
+
+      if (!teacherTableBody) return;
+      teacherTableBody.innerHTML = '';
+
+      if (importedTeachers.length === 0) {
+        teacherTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Belum ada data guru diimpor. Silakan unggah file Excel Guru di sebelah kiri.</td></tr>`;
         return;
       }
 
-      const excelData = importedStudents.map(s => ({
-        'No': s.no,
-        'Nama Siswa': s.nama,
-        'Jenjang Kelas': s.kelas,
-        'Nama Login': s.username,
-        'Kata Sandi / Pass': s.password
-      }));
+      importedTeachers.forEach((tch, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${tch.no}</td>
+          <td class="fw-semibold text-dark">${tch.nama}</td>
+          <td><span class="badge bg-info-subtle text-info-emphasis fw-bold">${tch.subject || tch.kelas}</span></td>
+          <td><code>${tch.username}</code></td>
+          <td><span class="badge bg-success font-monospace fs-7">${tch.password}</span></td>
+          <td class="text-end">
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteTeacher(${index})" title="Hapus Akun Guru">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        `;
+        teacherTableBody.appendChild(tr);
+      });
+    }
 
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Kartu Login Siswa');
+    // Teacher Excel File Upload Handler
+    const excelTeacherFileInput = document.getElementById('excelTeacherFileInput');
+    if (excelTeacherFileInput) {
+      excelTeacherFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-      XLSX.writeFile(workbook, 'Kartu_Login_Siswa_MTs_AlKhairaat.xlsx');
-    });
+        document.getElementById('excelTeacherUploadTitle').textContent = file.name;
+        document.getElementById('excelTeacherUploadDesc').textContent = `Membaca data Excel Guru...`;
 
-    // Download students.json File
-    document.getElementById('downloadStudentsJsonBtn').addEventListener('click', function() {
-      const jsonText = JSON.stringify(importedStudents, null, 2);
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            processTeacherList(jsonRows);
+            document.getElementById('excelTeacherUploadDesc').textContent = `Berhasil membaca ${importedTeachers.length} data guru!`;
+            alert(`✅ Berhasil mengimpor ${importedTeachers.length} akun guru dari file Excel "${file.name}"!`);
+          } catch (err) {
+            alert('Gagal membaca file Excel Guru: ' + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    // Manual Teacher Textarea Handler
+    const processTeacherDataBtn = document.getElementById('processTeacherDataBtn');
+    if (processTeacherDataBtn) {
+      processTeacherDataBtn.addEventListener('click', function() {
+        const rawText = document.getElementById('manualTeacherInput').value.trim();
+        if (!rawText && importedTeachers.length === 0) {
+          alert('Silakan pilih file Excel Guru atau ketik data guru pada kotak di atas.');
+          return;
+        }
+
+        if (rawText) {
+          const lines = rawText.split('\n');
+          const rows = lines.map(line => {
+            if (line.includes('\t')) return line.split('\t');
+            if (line.includes('|')) return line.split('|');
+            return line.split(',');
+          });
+          processTeacherList(rows);
+          alert(`✅ Berhasil memproses ${importedTeachers.length} akun guru!`);
+        }
+      });
+    }
+
+    function loadSampleTeacherData() {
+      document.getElementById('manualTeacherInput').value = 
+`1, Ust. Ahmad Fauzi S.Pd., Bahasa Arab & Fiqih, ahmad_fauzi, guru2026
+2, Darmansyah, Informatika, IPA, darmansyah, guru2026
+3, Ustadzah Siti Aminah S.Ag., Fiqih / Akidah Akhlak / SKI, siti_aminah, guru2026
+4, Budi Santoso, Semua Mapel, budi_santoso, guru2026`;
+    }
+
+    // =====================================
+    // EXPORT & DOWNLOAD HANDLERS
+    // =====================================
+    function downloadCombinedStudentsJson() {
+      const combined = saveAllUserAccountsToStorage();
+      const jsonText = JSON.stringify(combined, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1732,44 +2070,133 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    function copyCombinedStudentsJson() {
+      const combined = saveAllUserAccountsToStorage();
+      const jsonText = JSON.stringify(combined, null, 2);
+      navigator.clipboard.writeText(jsonText).then(() => {
+        alert('📋 Kode students.json (Siswa & Guru) berhasil disalin ke clipboard!');
+      });
+    }
+
+    // Download Excel Student Credentials Button
+    const downloadExcelStudentBtn = document.getElementById('downloadExcelStudentBtn');
+    if (downloadExcelStudentBtn) {
+      downloadExcelStudentBtn.addEventListener('click', function() {
+        if (importedStudents.length === 0) {
+          alert('Belum ada data siswa untuk diunduh.');
+          return;
+        }
+        const excelData = importedStudents.map(s => ({
+          'No': s.no,
+          'Nama Siswa': s.nama,
+          'Jenjang Kelas': s.kelas,
+          'Nama Login': s.username,
+          'Kata Sandi / Pass': s.password
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Kartu Login Siswa');
+        XLSX.writeFile(workbook, 'Kartu_Login_Siswa_MTs_AlKhairaat.xlsx');
+      });
+    }
+
+    // Download Excel Teacher Credentials Button
+    const downloadExcelTeacherBtn = document.getElementById('downloadExcelTeacherBtn');
+    if (downloadExcelTeacherBtn) {
+      downloadExcelTeacherBtn.addEventListener('click', function() {
+        if (importedTeachers.length === 0) {
+          alert('Belum ada data guru untuk diunduh.');
+          return;
+        }
+        const excelData = importedTeachers.map(t => ({
+          'No': t.no,
+          'Nama Guru': t.nama,
+          'Mata Pelajaran': t.subject || t.kelas,
+          'Username Login': t.username,
+          'Kata Sandi': t.password
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Kartu Login Guru');
+        XLSX.writeFile(workbook, 'Kartu_Login_Guru_MTs_AlKhairaat.xlsx');
+      });
+    }
+
+    // Download students.json File
+    ['downloadStudentsJsonBtn', 'downloadTeachersJsonBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', downloadCombinedStudentsJson);
     });
 
-    // Copy JSON Code for students.json
-    document.getElementById('copyStudentsJsonBtn').addEventListener('click', function() {
-      const jsonText = JSON.stringify(importedStudents, null, 2);
-      navigator.clipboard.writeText(jsonText).then(() => {
-        alert('📋 Kode students.json berhasil disalin ke clipboard!');
-      });
+    // Copy JSON Code
+    ['copyStudentsJsonBtn', 'copyTeachersJsonBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', copyCombinedStudentsJson);
     });
 
     // Reset Students Data
-    document.getElementById('resetStudentsBtn').addEventListener('click', function() {
-      if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun siswa?')) {
-        importedStudents = [];
-        renderStudentTable();
-      }
-    });
-
-    // Copy Student Credentials Text
-    document.getElementById('copyStudentTextBtn').addEventListener('click', function() {
-      if (importedStudents.length === 0) {
-        alert('Belum ada data siswa untuk disalin.');
-        return;
-      }
-
-      let text = "📋 *DAFTAR AKUN LOGIN SISWA MTS AL-KHAIRAAT BUNYU*\n\n";
-      importedStudents.forEach(s => {
-        text += `${s.no}. *${s.nama}* (${s.kelas})\n   👉 Username: ${s.username}\n   🔑 Password: ${s.password}\n\n`;
+    const resetStudentsBtn = document.getElementById('resetStudentsBtn');
+    if (resetStudentsBtn) {
+      resetStudentsBtn.addEventListener('click', function() {
+        if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun siswa?')) {
+          importedStudents = [];
+          renderStudentTable();
+          saveAllUserAccountsToStorage();
+        }
       });
+    }
 
-      navigator.clipboard.writeText(text).then(() => {
-        alert('📋 Daftar akun login siswa berhasil disalin! Bisa langsung dibagikan ke WhatsApp Wali Kelas.');
+    // Reset Teachers Data
+    const resetTeachersBtn = document.getElementById('resetTeachersBtn');
+    if (resetTeachersBtn) {
+      resetTeachersBtn.addEventListener('click', function() {
+        if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun guru?')) {
+          importedTeachers = [];
+          renderTeacherTable();
+          saveAllUserAccountsToStorage();
+        }
       });
-    });
+    }
 
+    // Copy Student Credentials Text (WA)
+    const copyStudentTextBtn = document.getElementById('copyStudentTextBtn');
+    if (copyStudentTextBtn) {
+      copyStudentTextBtn.addEventListener('click', function() {
+        if (importedStudents.length === 0) {
+          alert('Belum ada data siswa untuk disalin.');
+          return;
+        }
+        let text = "📋 *DAFTAR AKUN LOGIN SISWA MTS AL-KHAIRAAT BUNYU*\n\n";
+        importedStudents.forEach(s => {
+          text += `${s.no}. *${s.nama}* (${s.kelas})\n   👉 Username: ${s.username}\n   🔑 Password: ${s.password}\n\n`;
+        });
+        navigator.clipboard.writeText(text).then(() => {
+          alert('📋 Daftar akun login siswa berhasil disalin! Bisa langsung dibagikan ke WhatsApp Wali Kelas.');
+        });
+      });
+    }
 
+    // Copy Teacher Credentials Text (WA)
+    const copyTeacherTextBtn = document.getElementById('copyTeacherTextBtn');
+    if (copyTeacherTextBtn) {
+      copyTeacherTextBtn.addEventListener('click', function() {
+        if (importedTeachers.length === 0) {
+          alert('Belum ada data guru untuk disalin.');
+          return;
+        }
+        let text = "👨‍🏫 *DAFTAR AKUN LOGIN GURU MTS AL-KHAIRAAT BUNYU*\n\n";
+        importedTeachers.forEach(t => {
+          text += `${t.no}. *${t.nama}* (${t.subject || t.kelas})\n   👉 Username: ${t.username}\n   🔑 Password: ${t.password}\n\n`;
+        });
+        navigator.clipboard.writeText(text).then(() => {
+          alert('📋 Daftar akun login guru berhasil disalin! Bisa langsung dibagikan ke WhatsApp Dewan Guru.');
+        });
+      });
+    }
 
-    // Auto load live catalog & student data or local saved data on initial start
+    // Auto load live catalog & student/teacher data on initial start
     (async function init() {
       // 1. Load Catalog
       const hasSavedCatalog = localStorage.getItem('admin_catalog_has_saved');
@@ -1798,16 +2225,16 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         }
       }
 
-      // 2. Load Students
+      // 2. Load User Accounts (Students & Teachers)
       const hasSavedStudents = localStorage.getItem('admin_students_has_saved');
       if (hasSavedStudents === 'true') {
         try {
           const storedStu = localStorage.getItem('admin_students_override');
           if (storedStu) {
-            importedStudents = JSON.parse(storedStu);
+            separateAccounts(JSON.parse(storedStu));
           }
         } catch (e) {
-          console.warn('Gagal membaca students dari localStorage:', e);
+          console.warn('Gagal membaca akun dari localStorage:', e);
         }
       } else {
         try {
@@ -1815,18 +2242,18 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
           if (resStu.ok) {
             const liveStu = await resStu.json();
             if (Array.isArray(liveStu)) {
-              importedStudents = liveStu;
-              localStorage.setItem('admin_students_override', JSON.stringify(importedStudents));
-              localStorage.setItem('admin_students_has_saved', 'true');
+              separateAccounts(liveStu);
+              saveAllUserAccountsToStorage();
             }
           }
         } catch (e) {
-          console.log('Menggunakan data siswa lokal.');
+          console.log('Menggunakan data akun lokal.');
         }
       }
 
       updateView();
       renderStudentTable();
+      renderTeacherTable();
     })();
   </script>
 </body>

@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import com.example.R
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -382,6 +383,341 @@ fun WelcomeDashboardScreen(
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(12.dp))
+
+            DashboardNotificationsFooter(
+                viewModel = viewModel,
+                booksCount = viewModel.filteredBooks.collectAsStateWithLifecycle().value.size
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+fun DashboardNotificationsHeader(
+    viewModel: AppViewModel,
+    booksCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val updateInfo = viewModel.appUpdateInfo
+    val isCheckingUpdate = viewModel.isCheckingUpdate
+    val isSyncing = viewModel.isSyncingCatalog
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // 1. Notifikasi Pembaharuan Aplikasi (Awal Dashboard)
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.95f)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+            modifier = Modifier.fillMaxWidth().testTag("top_app_update_card")
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SystemUpdate,
+                        contentDescription = "Update App",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = if (updateInfo?.hasUpdate == true) 
+                                "🎉 Versi Baru Aplikasi Sekolah (v${updateInfo.latestVersionName})" 
+                            else 
+                                "⚡ Notifikasi Pembaharuan Aplikasi",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = if (updateInfo?.hasUpdate == true)
+                                updateInfo.releaseNotes.ifBlank { "Tersedia pembaruan sistem aplikasi sekolah." }
+                            else
+                                "Sistem v1.0.0 siap & terhubung dengan Cloudflare.",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = {
+                        if (updateInfo?.hasUpdate == true && updateInfo.apkUrl.isNotBlank()) {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.apkUrl))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                android.widget.Toast.makeText(context, "Membuka halaman unduh update...", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            viewModel.checkAppUpdate()
+                            android.widget.Toast.makeText(context, "Memeriksa pembaruan aplikasi ke Cloudflare...", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(34.dp).testTag("btn_top_app_update")
+                ) {
+                    if (isCheckingUpdate) {
+                        CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                    Text(
+                        text = if (updateInfo?.hasUpdate == true) "Perbarui" else "Cek Update",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // 2. Notifikasi Buku & Katalog Terbaru (Awal Dashboard)
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.95f)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
+            modifier = Modifier.fillMaxWidth().testTag("top_latest_books_card")
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MenuBook,
+                        contentDescription = "Buku Terbaru",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "📚 Notifikasi Buku & Katalog Terbaru",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Text(
+                            text = if (isSyncing) "Menyinkronkan buku dari Portal Admin..." else "$booksCount buku pelajaran siap dibaca.",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.syncCatalogFromCloudflare()
+                        android.widget.Toast.makeText(context, "Menyinkronkan katalog buku terbaru...", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(34.dp).testTag("btn_top_sync_books")
+                ) {
+                    if (isSyncing) {
+                        CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
+                    } else {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                    Text("Muat Buku", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DashboardNotificationsFooter(
+    viewModel: AppViewModel,
+    booksCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val updateInfo = viewModel.appUpdateInfo
+    val isCheckingUpdate = viewModel.isCheckingUpdate
+    val isSyncing = viewModel.isSyncingCatalog
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Notifikasi Pembaharuan Aplikasi (Bagian Paling Bawah)
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth().testTag("bottom_app_update_card")
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SystemUpdate,
+                        contentDescription = "Update App Bottom",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "⚡ Notifikasi Pembaharuan Aplikasi",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = if (updateInfo?.hasUpdate == true)
+                                "Versi ${updateInfo.latestVersionName} tersedia untuk diunduh."
+                            else
+                                "Status: Versi aplikasi v1.0.0 aktif & terhubung ke server.",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = {
+                        if (updateInfo?.hasUpdate == true && updateInfo.apkUrl.isNotBlank()) {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.apkUrl))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                android.widget.Toast.makeText(context, "Membuka link download APK...", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            viewModel.checkAppUpdate()
+                            android.widget.Toast.makeText(context, "Pemeriksaan pembaruan aplikasi dijalankan.", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(34.dp).testTag("btn_bottom_check_update")
+                ) {
+                    if (isCheckingUpdate) {
+                        CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                    Text(
+                        text = if (updateInfo?.hasUpdate == true) "Unduh Update" else "Cek Update",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Notifikasi Buku & Katalog Terbaru (Bagian Paling Bawah)
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.85f)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth().testTag("bottom_latest_books_card")
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MenuBook,
+                        contentDescription = "Latest Books Bottom",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "📚 Notifikasi Buku & Katalog Terbaru",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Text(
+                            text = "Katalog saat ini: $booksCount buku terdaftar di Cloudflare.",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.syncCatalogFromCloudflare()
+                        android.widget.Toast.makeText(context, "Sinkronisasi buku terbaru diproses...", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(34.dp).testTag("btn_bottom_sync_books")
+                ) {
+                    if (isSyncing) {
+                        CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
+                    } else {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                    Text("Refresh Buku", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
@@ -525,121 +861,12 @@ fun BookDashboard(
                 }
             }
 
-            // In-App Update Notice Banner
-            val updateInfo = viewModel.appUpdateInfo
-            if (updateInfo?.hasUpdate == true) {
-                val context = LocalContext.current
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.SystemUpdate,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "🎉 Versi Baru Aplikasi Sekolah (v${updateInfo.latestVersionName})",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                            if (updateInfo.releaseNotes.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = updateInfo.releaseNotes,
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.apkUrl))
-                                    context.startActivity(intent)
-                                } catch (_: Exception) {}
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Text("Perbarui", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-
-            // Cloudflare Online Sync Status Banner
-            if (viewModel.syncStatusMessage != null || viewModel.isSyncingCatalog) {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (viewModel.isSyncingCatalog) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.CloudSync,
-                                    contentDescription = "Sync Icon",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (viewModel.isSyncingCatalog) "Menyinkronkan katalog dari Cloudflare..." else (viewModel.syncStatusMessage ?: ""),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-
-                        IconButton(
-                            onClick = { viewModel.syncCatalogFromCloudflare() },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Perbarui Katalog",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
-            }
+            // Notifikasi pada awal dashboard aplikasi
+            DashboardNotificationsHeader(
+                viewModel = viewModel,
+                booksCount = books.size,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
 
             // Filters selector header row (matching Ruang Baca Guru in Admin Portal)
             Column(
@@ -813,6 +1040,20 @@ fun BookDashboard(
                                 Text("Sinkronkan Katalog")
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "MTs Al-Khairaat Bunyu • Sistem E-Book Resmi",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        DashboardNotificationsFooter(
+                            viewModel = viewModel,
+                            booksCount = books.size
+                        )
                     }
                 }
             } else {
@@ -831,6 +1072,29 @@ fun BookDashboard(
                             onUnduh = { viewModel.unduhBuku(book.id) },
                             onDelete = if (isTeacher) { { bookToDelete = book } } else null
                         )
+                    }
+
+                    // Notifikasi & Footer pada bagian paling bawah dashboard
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp, bottom = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "MTs Al-Khairaat Bunyu • Sistem E-Book Resmi",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            DashboardNotificationsFooter(
+                                viewModel = viewModel,
+                                booksCount = books.size
+                            )
+                        }
                     }
                 }
             }
@@ -2060,7 +2324,7 @@ fun TeacherBatchTemplateDialog(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "• Baris 1: Header 'nomor' (Kolom A) dan 'nama guru' (Kolom B).\n• Baris 2 dst: Data nomor & nama guru.\n• Password awal otomatis disetel ke '2026'.",
+                            text = "• Baris 1: Header 'nomor' (Kolom A) dan 'nama guru' (Kolom B).\n• Baris 2 dst: Data nomor & nama guru (gelar bersifat opsional).\n• Password awal otomatis disetel ke '2026'.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp

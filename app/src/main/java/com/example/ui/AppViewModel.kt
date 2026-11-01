@@ -209,16 +209,21 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // App Remote Update State
     var appUpdateInfo by mutableStateOf<com.example.data.AppUpdateInfo?>(null)
+    var isCheckingUpdate by mutableStateOf(false)
 
-    fun checkForAppUpdates() {
+    fun checkAppUpdate() {
         viewModelScope.launch {
+            isCheckingUpdate = true
             repository.checkAppUpdate(currentVersionCode = 1)
                 .onSuccess { info ->
-                    if (info.hasUpdate) {
-                        appUpdateInfo = info
-                    }
+                    appUpdateInfo = info
                 }
+            isCheckingUpdate = false
         }
+    }
+
+    fun checkForAppUpdates() {
+        checkAppUpdate()
     }
 
     init {

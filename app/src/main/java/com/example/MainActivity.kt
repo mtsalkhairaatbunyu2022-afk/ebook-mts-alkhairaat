@@ -349,7 +349,13 @@ fun MainAppContent(
                                     user = user,
                                     onBookSelected = { book ->
                                         val isStudentLocked = !isTeacher && book.gradeClass.startsWith("Kelas") && user.gradeClass.startsWith("Kelas") && book.gradeClass != user.gradeClass
-                                        val isTeacherSubjectLocked = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:") && !book.subject.equals(user.gradeClass.removePrefix("Mapel:").trim(), ignoreCase = true)
+                                        val teacherMapel = user.gradeClass.removePrefix("Mapel:").trim()
+                                        val isTeacherSubjectLocked = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:") &&
+                                            !teacherMapel.equals("Semua", ignoreCase = true) &&
+                                            !teacherMapel.equals("Semua Mapel", ignoreCase = true) &&
+                                            !teacherMapel.contains(book.subject, ignoreCase = true) &&
+                                            !book.subject.contains(teacherMapel, ignoreCase = true) &&
+                                            teacherMapel.split(",", "&", "/", ";").map { it.trim().lowercase() }.none { ts -> ts.isNotEmpty() && (book.subject.lowercase().contains(ts) || ts.contains(book.subject.lowercase())) }
 
                                         if (isStudentLocked) {
                                             android.widget.Toast.makeText(
@@ -380,7 +386,13 @@ fun MainAppContent(
                                     user = user,
                                     onBookSelected = { book ->
                                         val isStudentLocked = !isTeacher && book.gradeClass.startsWith("Kelas") && user.gradeClass.startsWith("Kelas") && book.gradeClass != user.gradeClass
-                                        val isTeacherSubjectLocked = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:") && !book.subject.equals(user.gradeClass.removePrefix("Mapel:").trim(), ignoreCase = true)
+                                        val teacherMapel2 = user.gradeClass.removePrefix("Mapel:").trim()
+                                        val isTeacherSubjectLocked = user.role == "TEACHER" && user.gradeClass.startsWith("Mapel:") &&
+                                            !teacherMapel2.equals("Semua", ignoreCase = true) &&
+                                            !teacherMapel2.equals("Semua Mapel", ignoreCase = true) &&
+                                            !teacherMapel2.contains(book.subject, ignoreCase = true) &&
+                                            !book.subject.contains(teacherMapel2, ignoreCase = true) &&
+                                            teacherMapel2.split(",", "&", "/", ";").map { it.trim().lowercase() }.none { ts -> ts.isNotEmpty() && (book.subject.lowercase().contains(ts) || ts.contains(book.subject.lowercase())) }
 
                                         if (isStudentLocked) {
                                             android.widget.Toast.makeText(
