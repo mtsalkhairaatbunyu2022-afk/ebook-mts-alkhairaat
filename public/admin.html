@@ -188,78 +188,41 @@
 
         <div class="row g-4">
           
-          <!-- Form Input Buku Baru & Unggah Dokumen -->
+          <!-- Form Tambah Buku Massal (Google Drive / Excel Paste) -->
           <div class="col-lg-6">
-            <div class="card card-custom p-4 bg-white">
-              <div class="d-flex align-items-center gap-2 mb-3">
-                <i class="bi bi-file-earmark-arrow-up-fill text-primary fs-4"></i>
-                <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
+            <div class="card card-custom p-4 bg-white border border-success border-2">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-folder-plus text-success fs-3"></i>
+                <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Massal (Google Drive)</h5>
+              </div>
+              <p class="text-muted small">Unggah file Excel Buku (.xlsx) atau <strong>paste langsung dari Excel / format teks (Tab / Pipa <code>|</code>)</strong> dengan urutan format:</p>
+              
+              <div class="alert alert-light border font-monospace fs-8 mb-3 py-2 bg-light">
+                Judul Buku Pelajaran | Mata Pelajaran | Jenjang Kelas | Penulis / Penyusun | Link URL Google Drive<br>
+                <small class="text-muted fw-normal">Contoh: bahasa arab kelas VII | bahasa arab | VII | MTs Alkhairaat Bunyu | https://drive.google.com/file/d/15pI3yi.../view?usp=sharing</small>
               </div>
 
-              <div id="singleBookModeContainer">
-                <p class="text-muted small">Pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
-                
-                <!-- Unggah / Dropper File PDF -->
-                <div class="upload-box mb-3" id="pdfDropZone">
-                  <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
-                  <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik (Drag & Drop) File PDF Buku ke Sini</h6>
-                  <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Tarik file dari laptop atau klik untuk memilih file)</p>
-                  <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
-                </div>
-
-                <div id="pdfProcessingAlert" class="alert alert-info d-none align-items-center gap-2 py-2 fs-7" role="alert">
-                  <div class="spinner-border spinner-border-sm text-info" role="status"></div>
-                  <span>Sedang membaca metadata PDF & menghitung total halaman...</span>
-                </div>
-
-                <hr class="my-3">
-
-                <form id="bookForm">
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
-                    <input type="text" id="title" class="form-control" placeholder="Contoh: Bahasa Arab Kelas VIII" required>
-                  </div>
-
-                  <div class="row g-2 mb-3">
-                    <div class="col-md-6">
-                      <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
-                      <input type="text" id="subject" class="form-control" placeholder="Contoh: Bahasa Arab" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
-                      <select id="gradeClass" class="form-select" required>
-                        <option value="Kelas VII">Kelas VII</option>
-                        <option value="Kelas VIII">Kelas VIII</option>
-                        <option value="Kelas IX">Kelas IX</option>
-                        <option value="Semua Kelas">Semua Kelas</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
-                    <input type="text" id="author" class="form-control" placeholder="Contoh: MTs Al-Khairaat Bunyu">
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF / Google Drive <span class="text-danger">*</span></label>
-                    <input type="url" id="fileUrl" class="form-control" placeholder="https://drive.google.com/file/d/.../preview" required>
-                    <div class="form-text fs-7">Link Google Drive otomatis dikonversi ke format <code>/preview</code>.</div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small">Deskripsi Singkat Buku</label>
-                    <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
-                  </div>
-
-                  <!-- Tombol Utama Buat Kode catalog.json -->
-                  <button type="submit" class="btn btn-primary-custom text-white w-100 py-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                    <i class="bi bi-cpu-fill text-warning fs-5"></i>
-                    <span>⚡ Buat Kode catalog.json & Tambahkan Buku</span>
-                  </button>
-                </form>
+              <!-- Upload Excel for Books -->
+              <div class="upload-excel-box mb-3 py-3" onclick="document.getElementById('excelBookFileInput').click()">
+                <i class="bi bi-file-earmark-excel-fill text-success fs-2"></i>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="excelBookUploadTitle">Unggah File Excel Buku (.xlsx / .csv)</h6>
+                <p class="text-muted fs-8 mb-0" id="excelBookUploadDesc">Kolom: Judul | Mata Pelajaran | Jenjang | Penulis | Link Google Drive</p>
+                <input type="file" id="excelBookFileInput" accept=".xlsx, .xls, .csv" class="d-none">
               </div>
 
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-semibold text-secondary small">Atau Paste Daftar Buku (Multi-Baris):</span>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="loadSampleBookData()">Isi Contoh Format</button>
+              </div>
+
+              <div class="mb-3">
+                <textarea id="multiBookInput" class="form-control fs-7 font-monospace" rows="7" placeholder="bahasa arab kelas VII&#9;bahasa arab&#9;VII&#9;MTs Alkhairaat Bunyu&#9;https://drive.google.com/file/d/15pI3yiAWMqXIU9taXDUBdg8aiMo9p109/view?usp=sharing&#10;informatika kelas VIII&#9;informatika&#9;VIII&#9;MTs Alkhairaat Bunyu&#9;https://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/view?usp=drive_link"></textarea>
+              </div>
+
+              <button id="processMultiBookBtn" class="btn btn-success w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-cloud-arrow-up-fill fs-5"></i>
+                <span>⚡ Proses & Tambahkan Semua Buku ke catalog.json</span>
+              </button>
             </div>
           </div>
 
@@ -1259,111 +1222,168 @@
       }
     }
 
-    // Bind Drag and Drop and File Input events
-    document.addEventListener('DOMContentLoaded', function() {
-      const pdfDropZone = document.getElementById('pdfDropZone');
-      const pdfFileInput = document.getElementById('pdfFileInput');
+    function loadSampleBookData() {
+      document.getElementById('multiBookInput').value = 
+`bahasa arab kelas VII\tbahasa arab\tVII\tMTs Alkhairaat Bunyu\thttps://drive.google.com/file/d/15pI3yiAWMqXIU9taXDUBdg8aiMo9p109/view?usp=sharing
+informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/view?usp=drive_link`;
+    }
 
-      if (pdfDropZone) {
-        pdfDropZone.addEventListener('click', function() {
-          if (pdfFileInput) pdfFileInput.click();
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-          pdfDropZone.addEventListener(eventName, function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            pdfDropZone.style.backgroundColor = '#dbeafe';
-            pdfDropZone.style.borderColor = '#2563eb';
-          }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-          pdfDropZone.addEventListener(eventName, function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            pdfDropZone.style.backgroundColor = '';
-            pdfDropZone.style.borderColor = '';
-          }, false);
-        });
-
-        pdfDropZone.addEventListener('drop', function(e) {
-          const dt = e.dataTransfer;
-          if (dt && dt.files && dt.files.length > 0) {
-            const file = dt.files[0];
-            processPdfFile(file);
-          }
-        });
+    // Multi-Book Batch Process Function (Excel copy-paste Tab / Pipe / Google Drive URLs)
+    document.getElementById('processMultiBookBtn').addEventListener('click', () => {
+      const text = document.getElementById('multiBookInput').value.trim();
+      if (!text) {
+        alert('Silakan masukkan daftar buku atau upload file Excel buku terlebih dahulu.');
+        return;
       }
 
-      if (pdfFileInput) {
-        pdfFileInput.addEventListener('change', function(e) {
-          if (e.target.files && e.target.files[0]) {
-            processPdfFile(e.target.files[0]);
-          }
-        });
-      }
+      const lines = text.split('\n');
+      let count = 0;
 
-      const fileUrlInput = document.getElementById('fileUrl');
-      if (fileUrlInput) {
-        fileUrlInput.addEventListener('change', function() {
-          const val = this.value.trim();
-          if (val.includes('drive.google.com') || val.includes('docs.google.com')) {
-            const fileIdMatch = val.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        let parts = [];
+        if (line.includes('\t')) {
+          parts = line.split('\t').map(p => p.trim());
+        } else if (line.includes('|')) {
+          parts = line.split('|').map(p => p.trim());
+        } else {
+          parts = line.split(',').map(p => p.trim());
+        }
+
+        if (parts.length >= 2) {
+          const title = parts[0] || 'Buku Pelajaran';
+          const subject = parts[1] || title;
+          let gradeRaw = parts[2] || 'Kelas VII';
+          let author = parts[3] || 'MTs Alkhairaat Bunyu';
+          let fileUrl = parts[4] || parts[parts.length - 1] || '';
+
+          if (!fileUrl.includes('http') && author.includes('http')) {
+            fileUrl = author;
+            author = 'MTs Alkhairaat Bunyu';
+          }
+
+          let gradeClass = 'Kelas VII';
+          const gStr = gradeRaw.toString().toLowerCase();
+          if (gStr.includes('7') || gStr.includes('vii')) gradeClass = 'Kelas VII';
+          else if (gStr.includes('8') || gStr.includes('viii')) gradeClass = 'Kelas VIII';
+          else if (gStr.includes('9') || gStr.includes('ix')) gradeClass = 'Kelas IX';
+
+          if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
+            const fileIdMatch = fileUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
             if (fileIdMatch && fileIdMatch[1]) {
-              this.value = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+              fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
             }
           }
-        });
+
+          const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
+          
+          const newBook = {
+            id: id,
+            title: title,
+            author: author || 'MTs Alkhairaat Bunyu',
+            subject: subject,
+            gradeClass: gradeClass,
+            teacherOwner: "Guru MTs Al-Khairaat Bunyu",
+            year: "2026",
+            fileUrl: fileUrl,
+            localBlobUrl: "",
+            isDownloaded: false,
+            fileSize: 2500000,
+            pageCount: 100,
+            category: "mp",
+            description: `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
+          };
+
+          catalog.push(newBook);
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        updateView();
+        document.getElementById('multiBookInput').value = '';
+        alert(`✅ Berhasil! ${count} buku telah ditambahkan sekaligus ke katalog.`);
+      } else {
+        alert('Format tidak valid. Pastikan menggunakan format copy-paste dari Excel (Tab) atau pemisah | (pipe).');
       }
     });
 
-    // Form Submit Handler
-    document.getElementById('bookForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const title = document.getElementById('title').value.trim();
-      const subject = document.getElementById('subject').value.trim();
-      const gradeClass = document.getElementById('gradeClass').value;
-      const author = document.getElementById('author').value.trim() || 'MTs Al-Khairaat Bunyu';
-      const fileUrl = document.getElementById('fileUrl').value.trim();
-      const description = document.getElementById('description').value.trim() || `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`;
+    // Excel File Upload for Books Handler
+    document.getElementById('excelBookFileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
 
-      const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4);
+      document.getElementById('excelBookUploadTitle').textContent = file.name;
+      document.getElementById('excelBookUploadDesc').textContent = `Membaca file Excel buku...`;
 
-      if (currentFileObject) {
-        await savePdfToIDB(id, currentFileObject);
-      }
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      const newBook = {
-        id: id,
-        title: title,
-        author: author,
-        subject: subject,
-        gradeClass: gradeClass,
-        teacherOwner: "Guru MTs Al-Khairaat Bunyu",
-        year: "2026",
-        fileUrl: fileUrl,
-        localBlobUrl: currentUploadedBlobUrl || "",
-        isDownloaded: false,
-        fileSize: 2500000,
-        pageCount: 100,
-        category: "mp",
-        description: description
+          let count = 0;
+          jsonRows.forEach((row, idx) => {
+            if (idx === 0) return; // skip header
+            if (!Array.isArray(row) || row.length < 2) return;
+
+            const title = (row[0] || 'Buku Pelajaran').toString().trim();
+            const subject = (row[1] || title).toString().trim();
+            const gradeRaw = (row[2] || 'Kelas VII').toString().trim();
+            const author = (row[3] || 'MTs Alkhairaat Bunyu').toString().trim();
+            let fileUrl = (row[4] || row[row.length - 1] || '').toString().trim();
+
+            if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
+              const fileIdMatch = fileUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+              if (fileIdMatch && fileIdMatch[1]) {
+                fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+              }
+            }
+
+            let gradeClass = 'Kelas VII';
+            const gStr = gradeRaw.toLowerCase();
+            if (gStr.includes('7') || gStr.includes('vii')) gradeClass = 'Kelas VII';
+            else if (gStr.includes('8') || gStr.includes('viii')) gradeClass = 'Kelas VIII';
+            else if (gStr.includes('9') || gStr.includes('ix')) gradeClass = 'Kelas IX';
+
+            const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
+
+            const newBook = {
+              id: id,
+              title: title,
+              author: author || 'MTs Alkhairaat Bunyu',
+              subject: subject,
+              gradeClass: gradeClass,
+              teacherOwner: "Guru MTs Al-Khairaat Bunyu",
+              year: "2026",
+              fileUrl: fileUrl,
+              localBlobUrl: "",
+              isDownloaded: false,
+              fileSize: 2500000,
+              pageCount: 100,
+              category: "mp",
+              description: `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
+            };
+
+            catalog.push(newBook);
+            count++;
+          });
+
+          if (count > 0) {
+            updateView();
+            document.getElementById('excelBookUploadDesc').textContent = `Berhasil membaca ${count} buku dari Excel!`;
+            alert(`✅ Berhasil mengimpor ${count} buku dari file Excel "${file.name}"!`);
+          } else {
+            alert('Tidak ditemukan data buku yang valid di file Excel.');
+          }
+        } catch (err) {
+          alert('Gagal membaca file Excel buku: ' + err.message);
+        }
       };
-
-      currentUploadedBlobUrl = "";
-      currentFileObject = null;
-
-      catalog.push(newBook);
-      updateView();
-
-      // Reset Form
-      document.getElementById('bookForm').reset();
-      document.getElementById('uploadStatusTitle').textContent = 'Klik atau Tarik File PDF Buku ke Sini';
-      document.getElementById('uploadStatusDesc').textContent = 'Format PDF (Maksimal rekomendasi 50 MB)';
-
-      alert(`✅ Berhasil! Buku "${title}" telah ditambahkan ke katalog dan langsung muncul di Ruang Baca Guru.`);
+      reader.readAsArrayBuffer(file);
     });
 
     // Explicit Button: Refresh JSON
