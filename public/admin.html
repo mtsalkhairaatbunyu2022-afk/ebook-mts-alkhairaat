@@ -191,93 +191,76 @@
           <!-- Form Input Buku Baru & Unggah Dokumen -->
           <div class="col-lg-6">
             <div class="card card-custom p-4 bg-white">
-              <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-file-earmark-arrow-up-fill text-primary fs-4"></i>
                 <h5 class="fw-bold mb-0 text-dark">Tambah Buku Pelajaran Baru</h5>
               </div>
-              <p class="text-muted small">Pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
-              
-              <!-- Unggah / Dropper File PDF -->
-              <div class="upload-box mb-3" id="pdfDropZone">
-                <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
-                <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik (Drag & Drop) File PDF Buku ke Sini</h6>
-                <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Tarik file dari laptop atau klik untuk memilih file)</p>
-                <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
-              </div>
 
-              <div id="pdfProcessingAlert" class="alert alert-info d-none align-items-center gap-2 py-2 fs-7" role="alert">
-                <div class="spinner-border spinner-border-sm text-info" role="status"></div>
-                <span>Sedang membaca metadata PDF & menghitung total halaman...</span>
-              </div>
-
-              <hr class="my-3">
-
-              <form id="bookForm">
-                <div class="mb-3">
-                  <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
-                  <input type="text" id="title" class="form-control" placeholder="Contoh: Bahasa Arab Kelas VIII" required>
+              <div id="singleBookModeContainer">
+                <p class="text-muted small">Pilih file PDF buku dari laptop. Sistem akan <strong>otomatis mendeteksi judul, halaman, dan ukuran file</strong>!</p>
+                
+                <!-- Unggah / Dropper File PDF -->
+                <div class="upload-box mb-3" id="pdfDropZone">
+                  <i class="bi bi-file-earmark-pdf-fill text-danger fs-1"></i>
+                  <h6 class="fw-bold text-dark mt-2 mb-1" id="uploadStatusTitle">Klik atau Tarik (Drag & Drop) File PDF Buku ke Sini</h6>
+                  <p class="text-muted fs-7 mb-0" id="uploadStatusDesc">Format PDF (Tarik file dari laptop atau klik untuk memilih file)</p>
+                  <input type="file" id="pdfFileInput" accept="application/pdf" class="d-none">
                 </div>
 
-                <div class="row g-2 mb-3">
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
-                    <input type="text" id="subject" class="form-control" placeholder="Contoh: Bahasa Arab" required>
+                <div id="pdfProcessingAlert" class="alert alert-info d-none align-items-center gap-2 py-2 fs-7" role="alert">
+                  <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+                  <span>Sedang membaca metadata PDF & menghitung total halaman...</span>
+                </div>
+
+                <hr class="my-3">
+
+                <form id="bookForm">
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small">Judul Buku Pelajaran <span class="text-danger">*</span></label>
+                    <input type="text" id="title" class="form-control" placeholder="Contoh: Bahasa Arab Kelas VIII" required>
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
-                    <select id="gradeClass" class="form-select" required>
-                      <option value="Kelas VII">Kelas VII</option>
-                      <option value="Kelas VIII">Kelas VIII</option>
-                      <option value="Kelas IX">Kelas IX</option>
-                      <option value="Semua Kelas">Semua Kelas</option>
-                    </select>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-secondary small">Mata Pelajaran <span class="text-danger">*</span></label>
+                      <input type="text" id="subject" class="form-control" placeholder="Contoh: Bahasa Arab" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-secondary small">Jenjang Kelas <span class="text-danger">*</span></label>
+                      <select id="gradeClass" class="form-select" required>
+                        <option value="Kelas VII">Kelas VII</option>
+                        <option value="Kelas VIII">Kelas VIII</option>
+                        <option value="Kelas IX">Kelas IX</option>
+                        <option value="Semua Kelas">Semua Kelas</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
 
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
+                    <input type="text" id="author" class="form-control" placeholder="Contoh: MTs Al-Khairaat Bunyu">
+                  </div>
 
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF / Google Drive <span class="text-danger">*</span></label>
+                    <input type="url" id="fileUrl" class="form-control" placeholder="https://drive.google.com/file/d/.../preview" required>
+                    <div class="form-text fs-7">Link Google Drive otomatis dikonversi ke format <code>/preview</code>.</div>
+                  </div>
 
-                <div class="mb-3">
-                  <label class="form-label fw-semibold text-secondary small">Penulis / Penyusun</label>
-                  <input type="text" id="author" class="form-control" placeholder="Contoh: MTs Al-Khairaat Bunyu">
-                </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small">Deskripsi Singkat Buku</label>
+                    <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
+                  </div>
 
-                <div class="mb-3">
-                  <label class="form-label fw-semibold text-secondary small">Link URL Publik File PDF / Google Drive <span class="text-danger">*</span></label>
-                  <input type="url" id="fileUrl" class="form-control" placeholder="https://ebook-mts-alkhairaat.pages.dev/books/bahasa_arab_8.pdf" required>
-                  <div class="form-text fs-7">Masukkan URL publik tempat file disimpan di Cloudflare Pages atau Google Drive.</div>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label fw-semibold text-secondary small">Deskripsi Singkat Buku</label>
-                  <textarea id="description" class="form-control" rows="2" placeholder="Buku Teks Utama Kurikulum Baru Madrasah..."></textarea>
-                </div>
-
-                <!-- Tombol Utama Buat Kode catalog.json -->
-                <button type="submit" class="btn btn-primary-custom text-white w-100 py-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                  <i class="bi bi-cpu-fill text-warning fs-5"></i>
-                  <span>⚡ Buat Kode catalog.json & Tambahkan Buku</span>
-                </button>
-              </form>
-            </div>
-
-            <!-- Tambahan: Multi-Buku Google Drive Batch Input -->
-            <div class="card card-custom p-4 bg-white mt-3 border border-success border-2">
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="bi bi-folder-plus text-success fs-4"></i>
-                <h5 class="fw-bold mb-0 text-dark">Tambah Banyak Buku Sekaligus (Google Drive)</h5>
+                  <!-- Tombol Utama Buat Kode catalog.json -->
+                  <button type="submit" class="btn btn-primary-custom text-white w-100 py-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                    <i class="bi bi-cpu-fill text-warning fs-5"></i>
+                    <span>⚡ Buat Kode catalog.json & Tambahkan Buku</span>
+                  </button>
+                </form>
               </div>
-              <p class="text-muted small">Masukkan beberapa buku sekaligus (beda mata pelajaran & kelas) dari Google Drive. Setiap baris menggunakan format pemisah pipa (<code>|</code>):</p>
-              <div class="alert alert-light border font-monospace fs-8 mb-2 py-2">
-                Judul Buku | Mata Pelajaran | Jenjang Kelas | Link Google Drive
-              </div>
-              <textarea id="multiBookInput" class="form-control mb-3 fs-7" rows="5" placeholder="Buku Fiqih Kelas VII | Fiqih | Kelas VII | https://drive.google.com/file/d/XYZ/preview&#10;Buku Akidah Kelas VIII | Akidah Akhlak | Kelas VIII | https://drive.google.com/file/d/ABC/preview"></textarea>
-              <button id="processMultiBookBtn" class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                <i class="bi bi-cloud-arrow-up-fill fs-5"></i>
-                <span>⚡ Proses & Tambahkan Semua Buku ke Katalog</span>
-              </button>
-            </div>
-            
 
+            </div>
           </div>
 
           <!-- Daftar Buku & Output Kode catalog.json -->
@@ -1381,71 +1364,6 @@
       document.getElementById('uploadStatusDesc').textContent = 'Format PDF (Maksimal rekomendasi 50 MB)';
 
       alert(`✅ Berhasil! Buku "${title}" telah ditambahkan ke katalog dan langsung muncul di Ruang Baca Guru.`);
-    });
-
-    // Multi-Book Batch Process Function (Google Drive / URL multi-row)
-    document.getElementById('processMultiBookBtn').addEventListener('click', () => {
-      const text = document.getElementById('multiBookInput').value.trim();
-      if (!text) {
-        alert('Silakan masukkan daftar buku pada kotak teks terlebih dahulu.');
-        return;
-      }
-
-      const lines = text.split('\n');
-      let count = 0;
-
-      lines.forEach(line => {
-        const parts = line.split('|').map(p => p.trim());
-        if (parts.length >= 4) {
-          const title = parts[0];
-          const subject = parts[1];
-          let gradeClass = parts[2];
-          let fileUrl = parts[3];
-
-          // Normalize grade class
-          if (gradeClass.includes('7') || gradeClass.toLowerCase().includes('vii')) gradeClass = 'Kelas VII';
-          else if (gradeClass.includes('8') || gradeClass.toLowerCase().includes('viii')) gradeClass = 'Kelas VIII';
-          else if (gradeClass.includes('9') || gradeClass.toLowerCase().includes('ix')) gradeClass = 'Kelas IX';
-
-          // Auto convert Google Drive share links to preview format
-          if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
-            const fileIdMatch = fileUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
-            if (fileIdMatch && fileIdMatch[1]) {
-              fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
-            }
-          }
-
-          const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
-          
-          const newBook = {
-            id: id,
-            title: title,
-            author: "MTs Al-Khairaat Bunyu",
-            subject: subject,
-            gradeClass: gradeClass,
-            teacherOwner: "Guru MTs Al-Khairaat Bunyu",
-            year: "2026",
-            fileUrl: fileUrl,
-            localBlobUrl: "",
-            isDownloaded: false,
-            fileSize: 2500000,
-            pageCount: 100,
-            category: "mp",
-            description: `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
-          };
-
-          catalog.push(newBook);
-          count++;
-        }
-      });
-
-      if (count > 0) {
-        updateView();
-        document.getElementById('multiBookInput').value = '';
-        alert(`✅ Berhasil! ${count} buku dengan mata pelajaran/kelas berbeda telah ditambahkan sekaligus ke katalog.`);
-      } else {
-        alert('Format tidak valid. Pastikan setiap baris menggunakan pemisah | (pipe), contoh:\nBuku Fiqih | Fiqih | Kelas VII | https://drive.google.com/...');
-      }
     });
 
     // Explicit Button: Refresh JSON
