@@ -1359,6 +1359,31 @@
       }
     }
 
+    function downloadExcelWorkbook(workbook, filename) {
+      try {
+        XLSX.writeFile(workbook, filename);
+      } catch (err) {
+        console.warn("XLSX.writeFile failed, falling back to Blob download:", err);
+        try {
+          const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+        } catch (e2) {
+          console.error("Blob download fallback failed:", e2);
+          alert("Gagal mengunduh file template. Silakan gunakan browser Chrome / Edge terkini.");
+        }
+      }
+    }
+
     function downloadBookTemplateExcel() {
       const templateData = [
         {
@@ -1380,7 +1405,7 @@
       const worksheet = XLSX.utils.json_to_sheet(templateData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Template Buku");
-      XLSX.writeFile(workbook, "Template_Impor_Buku_MTs_AlKhairaat.xlsx");
+      downloadExcelWorkbook(workbook, "Template_Impor_Buku_MTs_AlKhairaat.xlsx");
     }
 
     function loadSampleBookData() {
@@ -1664,7 +1689,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       const worksheet = XLSX.utils.json_to_sheet(templateData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
-      XLSX.writeFile(workbook, "Template_Impor_Siswa_MTs_AlKhairaat.xlsx");
+      downloadExcelWorkbook(workbook, "Template_Impor_Siswa_MTs_AlKhairaat.xlsx");
     }
 
     function downloadTeacherTemplateExcel() {
@@ -1678,7 +1703,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       const worksheet = XLSX.utils.json_to_sheet(templateData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Template Guru");
-      XLSX.writeFile(workbook, "Template_Impor_Guru_MTs_AlKhairaat.xlsx");
+      downloadExcelWorkbook(workbook, "Template_Impor_Guru_MTs_AlKhairaat.xlsx");
     }
 
     // =====================================
@@ -2098,7 +2123,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Kartu Login Siswa');
-        XLSX.writeFile(workbook, 'Kartu_Login_Siswa_MTs_AlKhairaat.xlsx');
+        downloadExcelWorkbook(workbook, 'Kartu_Login_Siswa_MTs_AlKhairaat.xlsx');
       });
     }
 
@@ -2120,7 +2145,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Kartu Login Guru');
-        XLSX.writeFile(workbook, 'Kartu_Login_Guru_MTs_AlKhairaat.xlsx');
+        downloadExcelWorkbook(workbook, 'Kartu_Login_Guru_MTs_AlKhairaat.xlsx');
       });
     }
 
