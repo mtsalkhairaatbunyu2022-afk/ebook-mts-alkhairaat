@@ -315,6 +315,19 @@
               </div>
               <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama</strong>, dan <strong>Kelas</strong> (VII, VIII, IX).</p>
 
+              <!-- Download Template Buttons -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold text-secondary small">Unduh Format Template:</span>
+                <div class="d-flex gap-1">
+                  <button type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadStudentTemplateExcel()">
+                    <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Template Siswa
+                  </button>
+                  <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm" onclick="downloadTeacherTemplateExcel()">
+                    <i class="bi bi-file-earmark-person-fill me-1"></i> Template Guru
+                  </button>
+                </div>
+              </div>
+
               <!-- Upload Dropzone for Excel -->
               <div class="upload-excel-box mb-3" onclick="document.getElementById('excelFileInput').click()">
                 <i class="bi bi-cloud-arrow-up-fill text-success fs-1"></i>
@@ -1491,6 +1504,31 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         alert('Gagal mengambil catalog.json live: ' + err.message);
       }
     });
+
+    function downloadStudentTemplateExcel() {
+      const templateData = [
+        { "No": 1, "Nama Siswa": "AQEELA ZAHRATUSSYIFA", "Jenjang Kelas": "Kelas VIII" },
+        { "No": 2, "Nama Siswa": "BRAYN NUR", "Jenjang Kelas": "Kelas VIII" },
+        { "No": 3, "Nama Siswa": "ALGEZI ACHMAD GIFAHRI", "Jenjang Kelas": "Kelas IX" }
+      ];
+
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
+      XLSX.writeFile(workbook, "Template_Impor_Siswa_MTs_AlKhairaat.xlsx");
+    }
+
+    function downloadTeacherTemplateExcel() {
+      const templateData = [
+        { "No": 1, "Nama Guru & Gelar": "Ust. Ahmad Fauzi, S.Pd.", "Mata Pelajaran": "Bahasa Arab", "Username Login": "ahmad_fauzi", "Kata Sandi": "guru2026" },
+        { "No": 2, "Nama Guru & Gelar": "Ustadzah Siti Aminah, S.Ag.", "Mata Pelajaran": "Fiqih / Akidah", "Username Login": "siti_aminah", "Kata Sandi": "guru2026" }
+      ];
+
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Guru");
+      XLSX.writeFile(workbook, "Template_Impor_Guru_MTs_AlKhairaat.xlsx");
+    }
 
     // =====================================
     // STUDENT BULK IMPORT LOGIC (EXCEL/CSV)
