@@ -2232,6 +2232,23 @@ fun TeacherBatchTemplateDialog(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isImporting by remember { mutableStateOf(false) }
 
+    val createTeacherTemplateLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val csvContent = "nomor,nama guru\n1,GURU BAHASA ARAB\n2,GURU INFORMATIKA\n3,GURU AL-QURAN HADIS\n4,GURU AKIDAH AKHLAK\n5,GURU FIQIH\n6,GURU SKI\n"
+                    outputStream.write(csvContent.toByteArray(Charsets.UTF_8))
+                }
+                statusMessage = "🎉 File Template Excel Guru berhasil disimpan ke HP Anda!"
+                errorMessage = null
+            } catch (e: Exception) {
+                errorMessage = "Gagal menyimpan file template: ${e.localizedMessage}"
+            }
+        }
+    }
+
     val xlsxPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -2333,6 +2350,19 @@ fun TeacherBatchTemplateDialog(
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
+
+                // Button 0: Download Excel/CSV Template File
+                OutlinedButton(
+                    onClick = { createTeacherTemplateLauncher.launch("Template_Guru_MTs_AlKhairaat.csv") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📥 Unduh Template Excel Guru (.xlsx / .csv)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Button 1: File picker for real .xlsx file
                 Button(
@@ -2457,6 +2487,23 @@ fun StudentBatchTemplateDialog(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isImporting by remember { mutableStateOf(false) }
 
+    val createStudentTemplateLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val csvContent = "nomor,nama siswa,kelas\n1,AHMAD FAUZI,Kelas VII\n2,AQEELA ZAHRATUSSYIFA,Kelas VIII\n3,ALGEZI ACHMAD GIFAHRI,Kelas IX\n"
+                    outputStream.write(csvContent.toByteArray(Charsets.UTF_8))
+                }
+                statusMessage = "🎉 File Template Excel Siswa berhasil disimpan ke HP Anda!"
+                errorMessage = null
+            } catch (e: Exception) {
+                errorMessage = "Gagal menyimpan file template: ${e.localizedMessage}"
+            }
+        }
+    }
+
     val xlsxPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -2566,6 +2613,20 @@ fun StudentBatchTemplateDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
+                // Button 0: Download Excel/CSV Template File
+                OutlinedButton(
+                    onClick = { createStudentTemplateLauncher.launch("Template_Siswa_MTs_AlKhairaat.csv") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📥 Unduh Template Excel Siswa (.xlsx / .csv)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Button 1: Upload Excel file
                 Button(
                     onClick = { xlsxPickerLauncher.launch("*/*") },
                     modifier = Modifier.fillMaxWidth(),

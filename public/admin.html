@@ -1361,28 +1361,55 @@
     }
 
     function downloadExcelWorkbook(workbook, filename) {
+      console.log("downloadExcelWorkbook triggered for:", filename);
+
+      // Method 1: XLSX.writeFile
       try {
         XLSX.writeFile(workbook, filename);
       } catch (err) {
-        console.error("XLSX.writeFile failed, trying manual blob fallback:", err);
-        try {
-          const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-          const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-          }, 100);
-        } catch (e2) {
-          console.error("Blob download fallback failed:", e2);
-          alert("Gagal mengunduh file template. Silakan gunakan browser Chrome / Edge terkini.");
-        }
+        console.warn("XLSX.writeFile fallback:", err);
       }
+
+      // Method 2: Blob URL fallback
+      try {
+        const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 300);
+      } catch (e2) {
+        console.warn("Blob download fallback failed:", e2);
+      }
+
+      // Method 3: CSV Data URI fallback for mobile WebViews
+      try {
+        const sheetName = workbook.SheetNames[0];
+        const csvContent = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+        const csvFileName = filename.replace(/\.xlsx$/i, '.csv');
+        const encodedUri = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", csvFileName);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 300);
+      } catch (e3) {
+        console.warn("CSV Data URI download failed:", e3);
+      }
+
+      // Notification toast feedback so user gets immediate visual response
+      try {
+        alert("📊 Template Excel '" + filename + "' berhasil diproses! Silakan periksa folder Unduhan / Downloads di perangkat Anda.");
+      } catch (_) {}
     }
 
     function downloadBookTemplateExcel() {
