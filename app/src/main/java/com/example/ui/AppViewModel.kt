@@ -12,6 +12,12 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.io.File
 
+sealed interface AuthState {
+    object Loading : AuthState
+    data class Authenticated(val user: UserEntity) : AuthState
+    object Unauthenticated : AuthState
+}
+
 class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
@@ -67,8 +73,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Auth State
+    // Explicit Authentication States: Loading -> Authenticated or Unauthenticated
+    val authState: StateFlow<AuthState> = repository.loggedInUser
+        .map { user ->
+            if (user != null && user.id != "usr_student_default") {
+                AuthState.Authenticated(user)
+            } else {
+                AuthState.Unauthenticated
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthState.Loading)
+
+    // Auth State User
     val loggedInUser: StateFlow<UserEntity?> = repository.loggedInUser
+        .map { user -> if (user != null && user.id != "usr_student_default") user else null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // User State
@@ -230,7 +248,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             searchQueryState.value = ""
             selectedGradeFilterState.value = ""
             selectedCategoryFilterState.value = ""
-            repository.ensureDefaultUser()
             onComplete()
         }
     }

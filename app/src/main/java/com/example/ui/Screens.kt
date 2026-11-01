@@ -131,7 +131,7 @@ fun WelcomeDashboardScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Full Access Badge
+            // Official Account Badge
             Surface(
                 color = MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(20.dp)
@@ -148,7 +148,7 @@ fun WelcomeDashboardScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Akses Penuh Tanpa Login",
+                        text = "Akses Resmi Akun Sekolah",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -158,7 +158,7 @@ fun WelcomeDashboardScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Main Hero Card with START APPLICATION Button
+            // Main Hero Card with MASUK AKUN SISWA Button
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -184,7 +184,7 @@ fun WelcomeDashboardScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Nikmati akses lengkap tanpa pembatasan ke seluruh buku pelajaran (Kelas VII, VIII, IX), modul pembelajaran, pembaca PDF offline, dan fitur catatan.",
+                        text = "Silakan masuk menggunakan Nama dan Kata Sandi resmi dari Kartu Siswa yang diberikan oleh Sekolah / Guru untuk mengakses buku pelajaran.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -193,7 +193,7 @@ fun WelcomeDashboardScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // PROMINENT "MULAI APLIKASI" BUTTON
+                    // PROMINENT "MASUK AKUN SISWA" BUTTON
                     Button(
                         onClick = onStartApp,
                         modifier = Modifier
@@ -211,13 +211,13 @@ fun WelcomeDashboardScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.PlayArrow,
+                                imageVector = Icons.Default.Login,
                                 contentDescription = null,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "MULAI APLIKASI",
+                                text = "MASUK AKUN SISWA",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 1.sp
@@ -327,7 +327,7 @@ fun BookDashboard(
                                     modifier = Modifier.testTag("user_role_tag")
                                 ) {
                                     Text(
-                                        text = if (isTeacher) "PENGELOLA KURIKULUM & MATERI" else if (isNamedStudent) "SISWA ${user.gradeClass.uppercase()}" else "MODE BACA SISWA (SIAP PAKAI)",
+                                        text = if (isTeacher) "PENGELOLA KURIKULUM & MATERI" else "SISWA ${user.gradeClass.uppercase()}",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = if (isTeacher) MaterialTheme.colorScheme.onSecondary else Color.White,

@@ -49,57 +49,57 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Bind system theme & VM dark mode states
             MyApplicationTheme(darkTheme = viewModel.isAppDarkMode) {
-                var hasStartedApp by remember { mutableStateOf(true) }
-                var requestOpenLogin by remember { mutableStateOf(false) }
-                val userState by viewModel.loggedInUser.collectAsState()
-                val fallbackUser = remember {
-                    com.example.data.UserEntity(
-                        id = "usr_student_default",
-                        name = "Siswa MTs Al-Khairaat",
-                        email = "siswa@mtsalkhairaat.sch.id",
-                        role = "STUDENT",
-                        token = "jwt_student_token",
-                        password = "",
-                        gradeClass = "Semua Kelas",
-                        isLoggedIn = true
-                    )
-                }
-                val currentUser = userState ?: fallbackUser
-
-                // Ensure full access user exists on launch
-                LaunchedEffect(Unit) {
-                    viewModel.ensureFullAccessUser()
-                }
+                val authState by viewModel.authState.collectAsState()
+                var showLoginModalFromWelcome by remember { mutableStateOf(false) }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    if (!hasStartedApp) {
-                        // Opening Welcome Dashboard Screen with "Mulai Aplikasi" button
-                        com.example.ui.WelcomeDashboardScreen(
-                            viewModel = viewModel,
-                            onStartApp = {
-                                viewModel.ensureFullAccessUser()
-                                hasStartedApp = true
-                            },
-                            onLoginWithCard = {
-                                viewModel.ensureFullAccessUser()
-                                hasStartedApp = true
-                                requestOpenLogin = true
+                    when (val state = authState) {
+                        is AuthState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    CircularProgressIndicator()
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "Memuat Sesi Aplikasi...",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
-                        )
-                    } else {
-                        // Central E-Book App Layout with full access
-                        MainAppContent(
-                            viewModel = viewModel,
-                            user = currentUser,
-                            requestOpenLogin = requestOpenLogin,
-                            onResetOpenLogin = { requestOpenLogin = false },
-                            onBackToWelcome = {
-                                hasStartedApp = false
+                        }
+                        is AuthState.Unauthenticated -> {
+                            com.example.ui.WelcomeDashboardScreen(
+                                viewModel = viewModel,
+                                onStartApp = {
+                                    showLoginModalFromWelcome = true
+                                },
+                                onLoginWithCard = {
+                                    showLoginModalFromWelcome = true
+                                }
+                            )
+                            if (showLoginModalFromWelcome) {
+                                com.example.ui.StudentLoginDialog(
+                                    viewModel = viewModel,
+                                    onDismiss = { showLoginModalFromWelcome = false },
+                                    onLoginSuccess = { showLoginModalFromWelcome = false }
+                                )
                             }
-                        )
+                        }
+                        is AuthState.Authenticated -> {
+                            MainAppContent(
+                                viewModel = viewModel,
+                                user = state.user,
+                                onBackToWelcome = {
+                                    viewModel.performLogout()
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -135,7 +135,7 @@ fun MainAppContent(
     var showStudentLoginDialog by remember { mutableStateOf(false) }
     var showStudentChangePasswordDialog by remember { mutableStateOf(false) }
     val isTeacher = user.role == "TEACHER" || user.role == "ADMIN"
-    val isNamedStudent = !isTeacher && user.id != "usr_student_default"
+    val isNamedStudent = !isTeacher
 
     LaunchedEffect(requestOpenLogin) {
         if (requestOpenLogin) {
@@ -263,7 +263,7 @@ fun MainAppContent(
                                     }
 
                                     DropdownMenuItem(
-                                        text = { Text(if (isNamedStudent) "Ganti Akun (${user.name})" else "Masuk Kartu Siswa") },
+                                        text = { Text("Ganti Akun (${user.name})") },
                                         onClick = {
                                             userMenuExpanded = false
                                             showStudentLoginDialog = true
@@ -275,7 +275,7 @@ fun MainAppContent(
 
                                     if (isNamedStudent) {
                                         DropdownMenuItem(
-                                            text = { Text("Keluar Akun (Akses Bebas)") },
+                                            text = { Text("Keluar Akun") },
                                             onClick = {
                                                 userMenuExpanded = false
                                                 viewModel.performLogout()

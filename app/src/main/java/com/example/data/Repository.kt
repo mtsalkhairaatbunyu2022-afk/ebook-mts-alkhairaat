@@ -104,7 +104,8 @@ class Repository(
                 categoryDao.insertCategories(defaultCategories)
             }
 
-            ensureDefaultUser()
+            // Clean up legacy guest user session from past installations
+            userDao.deleteUserById("usr_student_default")
             syncRemoteStudents("")
         }
     }
@@ -366,38 +367,43 @@ class Repository(
         }
     }
 
-    suspend fun ensureDefaultUser(): UserEntity = withContext(Dispatchers.IO) {
+    suspend fun ensureDefaultUser(): UserEntity? = withContext(Dispatchers.IO) {
         val existing = userDao.getLoggedInUserSync()
-        if (existing != null) {
+        if (existing != null && existing.id != "usr_student_default") {
             return@withContext existing
         }
-        val defaultStudent = UserEntity(
-            id = "usr_student_default",
-            name = "Siswa MTs Al-Khairaat",
-            email = "siswa@mtsalkhairaat.sch.id",
-            role = "STUDENT",
-            token = "jwt_student_token",
-            password = "",
-            gradeClass = "Semua Kelas",
-            isLoggedIn = true,
-            lastActive = System.currentTimeMillis()
-        )
-        userDao.insertUser(defaultStudent)
-        return@withContext defaultStudent
+        userDao.deleteUserById("usr_student_default")
+        return@withContext null
     }
 
-    suspend fun ensureFullAccessUser(): UserEntity = withContext(Dispatchers.IO) {
+    suspend fun ensureFullAccessUser(): UserEntity? = withContext(Dispatchers.IO) {
         return@withContext ensureDefaultUser()
     }
 
     suspend fun switchUserRole(role: String, name: String): UserEntity = withContext(Dispatchers.IO) {
-        val current = userDao.getLoggedInUserSync() ?: ensureDefaultUser()
-        val updated = current.copy(
+        val existing = userDao.getLoggedInUserSync()
+        val baseUser = if (existing != null && existing.id != "usr_student_default") {
+            existing
+        } else {
+            UserEntity(
+                id = "usr_teacher",
+                name = name,
+                email = "guru",
+                role = role,
+                token = "jwt_token_sample",
+                password = "",
+                gradeClass = "Semua Kelas",
+                isLoggedIn = true,
+                lastActive = System.currentTimeMillis()
+            )
+        }
+        val updated = baseUser.copy(
             role = role,
             name = name,
             isLoggedIn = true,
             lastActive = System.currentTimeMillis()
         )
+        userDao.clearSession()
         userDao.insertUser(updated)
         logAudit("user_role", name, "GANTI_MODE", "Beralih peran menjadi $role ($name)")
         return@withContext updated
