@@ -761,6 +761,183 @@ class Repository(
         }
     }
 
+    // Import Batch Akun Siswa dari file Excel (.xlsx) (Format: nomor, nama siswa, kelas)
+    suspend fun importStudentBatchFromXlsx(inputStream: java.io.InputStream): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val sharedStrings = mutableListOf<String>()
+            var sheetXmlContent: String? = null
+            var sharedStringsXmlContent: String? = null
+
+            java.util.zip.ZipInputStream(inputStream).use { zip ->
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    if (entry.name.equals("xl/sharedStrings.xml", ignoreCase = true)) {
+                        sharedStringsXmlContent = zip.bufferedReader().use { it.readText() }
+                    } else if (entry.name.equals("xl/worksheets/sheet1.xml", ignoreCase = true) || entry.name.endsWith("sheet1.xml")) {
+                        sheetXmlContent = zip.bufferedReader().use { it.readText() }
+                    }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
+            }
+
+            if (!sharedStringsXmlContent.isNullOrBlank()) {
+                val matcher = java.util.regex.Pattern.compile("<t[^>]*>(.*?)</t>", java.util.regex.Pattern.DOTALL).matcher(sharedStringsXmlContent!!)
+                while (matcher.find()) {
+                    sharedStrings.add(matcher.group(1) ?: "")
+                }
+            }
+
+            val studentRecords = mutableListOf<Pair<String, String>>()
+
+            if (!sheetXmlContent.isNullOrBlank()) {
+                val rowMatcher = java.util.regex.Pattern.compile("<row[^>]*>(.*?)</row>", java.util.regex.Pattern.DOTALL).matcher(sheetXmlContent!!)
+                while (rowMatcher.find()) {
+                    val rowInner = rowMatcher.group(1) ?: ""
+                    val cellValues = mutableListOf<String>()
+                    val cellMatcher = java.util.regex.Pattern.compile("<c[^>]*?(?:t=\"([^\"]*)\")?[^>]*>(.*?)</c>", java.util.regex.Pattern.DOTALL).matcher(rowInner)
+                    while (cellMatcher.find()) {
+                        val cellType = cellMatcher.group(1)
+                        val cellInner = cellMatcher.group(2) ?: ""
+                        val valMatcher = java.util.regex.Pattern.compile("<v>(.*?)</v>", java.util.regex.Pattern.DOTALL).matcher(cellInner)
+                        if (valMatcher.find()) {
+                            val rawVal = valMatcher.group(1) ?: ""
+                            if (cellType == "s") {
+                                val idx = rawVal.toIntOrNull()
+                                if (idx != null && idx in 0 until sharedStrings.size) {
+                                    cellValues.add(sharedStrings[idx])
+                                } else {
+                                    cellValues.add(rawVal)
+                                }
+                            } else {
+                                cellValues.add(rawVal)
+                            }
+                        } else {
+                            val inlineMatcher = java.util.regex.Pattern.compile("<t[^>]*>(.*?)</t>", java.util.regex.Pattern.DOTALL).matcher(cellInner)
+                            if (inlineMatcher.find()) {
+                                cellValues.add(inlineMatcher.group(1) ?: "")
+                            }
+                        }
+                    }
+
+                    if (cellValues.isNotEmpty()) {
+                        val firstVal = cellValues.getOrNull(0)?.trim() ?: ""
+                        val secondVal = cellValues.getOrNull(1)?.trim() ?: ""
+                        val thirdVal = cellValues.getOrNull(2)?.trim() ?: ""
+
+                        if (firstVal.lowercase().contains("nomor") || firstVal.lowercase().contains("no") || secondVal.lowercase().contains("nama siswa") || secondVal.lowercase().contains("nama")) {
+                            continue
+                        }
+
+                        val nameToUse = if (secondVal.isNotBlank()) secondVal else firstVal
+                        var gradeToUse = if (thirdVal.isNotBlank()) thirdVal else "Kelas VII"
+                        if (!gradeToUse.lowercase().startsWith("kelas")) {
+                            if (gradeToUse.lowercase().contains("vii") || gradeToUse.contains("7")) gradeToUse = "Kelas VII"
+                            else if (gradeToUse.lowercase().contains("viii") || gradeToUse.contains("8")) gradeToUse = "Kelas VIII"
+                            else if (gradeToUse.lowercase().contains("ix") || gradeToUse.contains("9")) gradeToUse = "Kelas IX"
+                            else gradeToUse = "Kelas VII"
+                        }
+
+                        if (nameToUse.isNotBlank() && !nameToUse.lowercase().contains("nomor") && !nameToUse.lowercase().contains("nama siswa")) {
+                            studentRecords.add(Pair(nameToUse, gradeToUse))
+                        }
+                    }
+                }
+            }
+
+            var count = 0
+            val newUsers = mutableListOf<UserEntity>()
+            for ((studentName, gradeClass) in studentRecords) {
+                val sanitizedId = "stu_" + studentName.lowercase().replace(Regex("[^a-z0-9]"), "_")
+                val passToUse = when {
+                    gradeClass.lowercase().contains("vii") -> "2027"
+                    gradeClass.lowercase().contains("viii") -> "2026"
+                    gradeClass.lowercase().contains("ix") -> "2025"
+                    else -> "2026"
+                }
+                val studentUser = UserEntity(
+                    id = sanitizedId,
+                    name = studentName.uppercase(),
+                    email = studentName.uppercase(),
+                    role = "STUDENT",
+                    token = "jwt_student_token",
+                    password = passToUse,
+                    gradeClass = gradeClass
+                )
+                newUsers.add(studentUser)
+                count++
+            }
+
+            if (newUsers.isNotEmpty()) {
+                userDao.insertUsers(newUsers)
+                logAudit("ADMIN", "Operator Admin", "IMPORT_SISWA_XLSX", "Mengimpor $count akun siswa dari file Excel (.xlsx)")
+            }
+
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Import Batch Akun Siswa dari Teks Excel (Format: nomor, nama siswa, kelas)
+    suspend fun importStudentBatch(csvContent: String): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val lines = csvContent.lines()
+            var count = 0
+            val newUsers = mutableListOf<UserEntity>()
+
+            for (rawLine in lines) {
+                val line = rawLine.trim()
+                if (line.isBlank()) continue
+
+                if (line.lowercase().startsWith("nomor") || line.lowercase().startsWith("no\t") || line.lowercase().startsWith("no,")) {
+                    continue
+                }
+
+                val parts = line.split(Regex("[,\\t]")).map { it.trim() }
+                if (parts.size >= 2) {
+                    val studentName = parts[1]
+                    var gradeClass = parts.getOrNull(2) ?: "Kelas VII"
+                    if (!gradeClass.lowercase().startsWith("kelas")) {
+                        if (gradeClass.lowercase().contains("vii") || gradeClass.contains("7")) gradeClass = "Kelas VII"
+                        else if (gradeClass.lowercase().contains("viii") || gradeClass.contains("8")) gradeClass = "Kelas VIII"
+                        else if (gradeClass.lowercase().contains("ix") || gradeClass.contains("9")) gradeClass = "Kelas IX"
+                        else gradeClass = "Kelas VII"
+                    }
+
+                    if (studentName.isNotBlank() && !studentName.lowercase().contains("nama siswa")) {
+                        val sanitizedId = "stu_" + studentName.lowercase().replace(Regex("[^a-z0-9]"), "_")
+                        val passToUse = when {
+                            gradeClass.lowercase().contains("vii") -> "2027"
+                            gradeClass.lowercase().contains("viii") -> "2026"
+                            gradeClass.lowercase().contains("ix") -> "2025"
+                            else -> "2026"
+                        }
+                        val studentUser = UserEntity(
+                            id = sanitizedId,
+                            name = studentName.uppercase(),
+                            email = studentName.uppercase(),
+                            role = "STUDENT",
+                            token = "jwt_student_token",
+                            password = passToUse,
+                            gradeClass = gradeClass
+                        )
+                        newUsers.add(studentUser)
+                        count++
+                    }
+                }
+            }
+
+            if (newUsers.isNotEmpty()) {
+                userDao.insertUsers(newUsers)
+                logAudit("ADMIN", "Operator Admin", "IMPORT_SISWA_EXCEL", "Mengimpor $count akun siswa dari data Excel (Format: nomor, nama siswa, kelas)")
+            }
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Book Search and filter Flow
     fun searchAndFilter(query: String, gradeClass: String, category: String): Flow<List<BookEntity>> {
         val formattedQuery = "%$query%"

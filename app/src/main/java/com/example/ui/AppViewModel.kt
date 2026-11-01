@@ -331,6 +331,30 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun importStudentBatch(
+        csvText: String,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            repository.importStudentBatch(csvText)
+                .onSuccess { count -> onSuccess(count) }
+                .onFailure { err -> onError(err.localizedMessage ?: "Gagal mengimpor akun siswa") }
+        }
+    }
+
+    fun importStudentBatchFromXlsx(
+        inputStream: java.io.InputStream,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            repository.importStudentBatchFromXlsx(inputStream)
+                .onSuccess { count -> onSuccess(count) }
+                .onFailure { err -> onError(err.localizedMessage ?: "Gagal membaca file Excel (.xlsx)") }
+        }
+    }
+
     // Download action
     fun unduhBuku(bookId: String) {
         viewModelScope.launch {

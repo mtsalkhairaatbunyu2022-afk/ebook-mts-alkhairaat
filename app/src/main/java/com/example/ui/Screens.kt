@@ -1668,6 +1668,7 @@ fun StudentListScreen(viewModel: AppViewModel) {
     var userToDelete by remember { mutableStateOf<UserEntity?>(null) }
     var userToResetPassword by remember { mutableStateOf<UserEntity?>(null) }
     var showTeacherTemplateDialog by remember { mutableStateOf(false) }
+    var showStudentTemplateDialog by remember { mutableStateOf(false) }
 
     val filteredUsers = when (selectedTab) {
         0 -> allUsers.filter { it.role == "STUDENT" }
@@ -1710,6 +1711,25 @@ fun StudentListScreen(viewModel: AppViewModel) {
             )
         }
 
+        // Action row for Student Template Generator
+        if (selectedTab == 0 && (currentUser?.role == "ADMIN" || currentUser?.role == "TEACHER")) {
+            OutlinedButton(
+                onClick = { showStudentTemplateDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "📄 Template & Import Siswa (Format: nomor, nama siswa, kelas)",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         // Action row for Teacher Template Generator
         if (selectedTab == 1 && (currentUser?.role == "ADMIN" || currentUser?.role == "TEACHER")) {
             OutlinedButton(
@@ -1722,7 +1742,7 @@ fun StudentListScreen(viewModel: AppViewModel) {
                 Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "📄 Template & Import Guru (Format: nomor,nama guru)",
+                    text = "📄 Template & Import Guru (Format: nomor, nama guru)",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -1854,6 +1874,13 @@ fun StudentListScreen(viewModel: AppViewModel) {
         TeacherBatchTemplateDialog(
             viewModel = viewModel,
             onDismiss = { showTeacherTemplateDialog = false }
+        )
+    }
+
+    if (showStudentTemplateDialog) {
+        StudentBatchTemplateDialog(
+            viewModel = viewModel,
+            onDismiss = { showStudentTemplateDialog = false }
         )
     }
 }
@@ -2060,6 +2087,236 @@ fun TeacherBatchTemplateDialog(
                         onSuccess = { count ->
                             isImporting = false
                             statusMessage = "🎉 Berhasil mengimpor $count akun guru dari data Excel!"
+                        },
+                        onError = { err ->
+                            isImporting = false
+                            errorMessage = err
+                        }
+                    )
+                },
+                enabled = !isImporting
+            ) {
+                if (isImporting) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Mengimpor...")
+                } else {
+                    Text("Import Teks Excel")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Tutup")
+            }
+        }
+    )
+}
+
+@Composable
+fun StudentBatchTemplateDialog(
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var inputExcelText by remember {
+        mutableStateOf(
+            "nomor\tnama siswa\tkelas\n" +
+            "1\tAHMAD FAUZI\tKelas VII\n" +
+            "2\tAQEELA ZAHRATUSSYIFA\tKelas VIII\n" +
+            "3\tALGEZI ACHMAD GIFAHRI\tKelas IX"
+        )
+    }
+    var selectedXlsxFileName by remember { mutableStateOf<String?>(null) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isImporting by remember { mutableStateOf(false) }
+
+    val xlsxPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        selectedXlsxFileName = cursor.getString(nameIndex)
+                    }
+                }
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    isImporting = true
+                    viewModel.importStudentBatchFromXlsx(
+                        inputStream = inputStream,
+                        onSuccess = { count ->
+                            isImporting = false
+                            statusMessage = "🎉 Berhasil mengimpor $count akun siswa dari file Excel '${selectedXlsxFileName ?: "XLSX"}'!"
+                            errorMessage = null
+                        },
+                        onError = { err ->
+                            isImporting = false
+                            errorMessage = err
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                isImporting = false
+                errorMessage = "Gagal membaca file Excel: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.School,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Template Excel (.xlsx) Akun Siswa", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "📊 Format Kolom File Excel (.xlsx):",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Kolom A: nomor",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Kolom B: nama siswa",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Kolom C: kelas",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "• Baris 1: Header 'nomor' (A), 'nama siswa' (B), dan 'kelas' (C).\n• Baris 2 dst: Data siswa.\n• Password otomatis: Kelas VII ('2027'), Kelas VIII ('2026'), Kelas IX ('2025').",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Button(
+                    onClick = { xlsxPickerLauncher.launch("*/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📂 Unggah File Excel (.xlsx) Siswa", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        val excelFormat = "nomor\tnama siswa\tkelas\n1\tAHMAD FAUZI\tKelas VII\n2\tAQEELA ZAHRATUSSYIFA\tKelas VIII\n3\tALGEZI ACHMAD GIFAHRI\tKelas IX"
+                        clipboardManager.setText(AnnotatedString(excelFormat))
+                        statusMessage = "✅ Format Tabel Excel 'nomor | nama siswa | kelas' berhasil disalin!"
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Salin Format Tabel Excel (nomor, nama, kelas)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = "Atau Tempel (Paste) Sel dari Microsoft Excel:",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    value = inputExcelText,
+                    onValueChange = {
+                        inputExcelText = it
+                        statusMessage = null
+                        errorMessage = null
+                    },
+                    minLines = 5,
+                    maxLines = 8,
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (statusMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(statusMessage!!, color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(errorMessage!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (inputExcelText.isBlank()) {
+                        errorMessage = "Data teks Excel tidak boleh kosong!"
+                        return@Button
+                    }
+                    isImporting = true
+                    viewModel.importStudentBatch(
+                        csvText = inputExcelText,
+                        onSuccess = { count ->
+                            isImporting = false
+                            statusMessage = "🎉 Berhasil mengimpor $count akun siswa dari data Excel!"
                         },
                         onError = { err ->
                             isImporting = false
