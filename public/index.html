@@ -407,12 +407,12 @@
             <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
           </div>
           <div class="d-flex gap-2">
-            <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
-              <i class="bi bi-box-arrow-right"></i> Ganti Akun
+            <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="openChangePasswordModal()">
+              <i class="bi bi-shield-lock"></i> Ubah Password
             </button>
-            <a href="/admin.html" id="adminPortalBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark" style="font-size: 0.75rem;">
-              <i class="bi bi-speedometer2"></i> Portal Admin
-            </a>
+            <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
           </div>
         </div>
 
@@ -519,22 +519,32 @@
   </div>
 
 
-  <!-- MODAL 3: FULLSCREEN PDF READER -->
-  <div class="modal fade" id="pdfReaderModal" tabindex="-1">
-    <div class="modal-dialog pdf-modal-dialog">
-      <div class="modal-content pdf-modal-content">
-        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
-            <div>
-              <h6 class="modal-title fw-bold mb-0 fs-7" id="pdfBookTitle">Judul Buku Pelajaran</h6>
-              <span class="badge bg-warning text-dark fs-8" id="pdfBookGrade">Kelas VIII</span>
-            </div>
-          </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <!-- MODAL 4: CHANGE PASSWORD -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-primary"><i class="bi bi-shield-lock-fill me-2"></i> Ubah Password Anda</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-0 bg-secondary position-relative">
-          <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        <div class="modal-body">
+          <p class="text-secondary fs-8 mb-3">Buat password baru yang mudah Anda ingat. Perubahan ini tersimpan di HP ini.</p>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold fs-7">Password Baru:</label>
+            <input type="password" id="newPasswordInput" class="form-control" placeholder="Masukkan password baru">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold fs-7">Konfirmasi Password Baru:</label>
+            <input type="password" id="confirmPasswordInput" class="form-control" placeholder="Ulangi password baru">
+          </div>
+
+          <div id="changePassError" class="alert alert-danger py-2 fs-8 d-none"></div>
+
+          <button type="button" class="btn btn-primary w-100 fw-bold" onclick="submitChangePassword()">
+            SIMPAN & LOGOUT OTOMATIS
+          </button>
         </div>
       </div>
     </div>
@@ -692,6 +702,7 @@
     const studentModal = new bootstrap.Modal(document.getElementById("studentLoginModal"));
     const teacherModal = new bootstrap.Modal(document.getElementById("teacherLoginModal"));
     const pdfModal = new bootstrap.Modal(document.getElementById("pdfReaderModal"));
+    const changePassModal = new bootstrap.Modal(document.getElementById("changePasswordModal"));
 
     function openStudentLoginModal() {
       studentModal.show();
@@ -699,6 +710,46 @@
 
     function openTeacherLoginModal() {
       teacherModal.show();
+    }
+
+    function openChangePasswordModal() {
+      document.getElementById("newPasswordInput").value = "";
+      document.getElementById("confirmPasswordInput").value = "";
+      document.getElementById("changePassError").classList.add("d-none");
+      changePassModal.show();
+    }
+
+    function getLocalPassword(username, defaultPass) {
+      const savedPasses = JSON.parse(localStorage.getItem("app_custom_passwords") || "{}");
+      return savedPasses[username] || defaultPass;
+    }
+
+    function submitChangePassword() {
+      const newPass = document.getElementById("newPasswordInput").value.trim();
+      const confPass = document.getElementById("confirmPasswordInput").value.trim();
+      const errBox = document.getElementById("changePassError");
+
+      if (newPass.length < 4) {
+        errBox.innerText = "Password minimal 4 karakter.";
+        errBox.classList.remove("d-none");
+        return;
+      }
+
+      if (newPass !== confPass) {
+        errBox.innerText = "Konfirmasi password tidak cocok.";
+        errBox.classList.remove("d-none");
+        return;
+      }
+
+      if (currentUser && currentUser.name) {
+        const savedPasses = JSON.parse(localStorage.getItem("app_custom_passwords") || "{}");
+        savedPasses[currentUser.name] = newPass;
+        localStorage.setItem("app_custom_passwords", JSON.stringify(savedPasses));
+        
+        alert("✅ Password berhasil diganti! Anda akan logout otomatis.");
+        changePassModal.hide();
+        logout();
+      }
     }
 
     function submitStudentLogin() {
@@ -714,11 +765,11 @@
         const parts = selVal.split("|");
         name = parts[0];
         grade = parts[1];
-        expectedPass = parts[2] || "2026";
+        expectedPass = getLocalPassword(name, parts[2] || "2026");
       }
 
-      if (pass !== "" && pass !== expectedPass && pass !== "2026" && pass !== "2027" && pass !== "2025") {
-        errBox.innerText = "Sandi Kelas / Sandi Siswa tidak cocok. Gagal masuk.";
+      if (pass !== "" && pass !== expectedPass) {
+        errBox.innerText = "Sandi tidak cocok. Silakan coba lagi.";
         errBox.classList.remove("d-none");
         return;
       }
@@ -741,10 +792,11 @@
         const parts = selVal.split("|");
         name = parts[0];
         grade = parts[1];
+        expectedPass = getLocalPassword(name, "2026");
       }
 
-      if (pass !== "" && pass !== "2026" && pass !== "admin") {
-        errBox.innerText = "Kata Sandi Guru salah. Gunakan default '2026'.";
+      if (pass !== "" && pass !== expectedPass && pass !== "admin") {
+        errBox.innerText = "Kata Sandi Guru salah.";
         errBox.classList.remove("d-none");
         return;
       }
