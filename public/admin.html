@@ -210,7 +210,7 @@
               <!-- Download Template Button -->
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-semibold text-secondary small">1. Unduh Format Template:</span>
-                <button type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadBookTemplateExcel()">
+                <button id="btnDownloadBookTemplate" type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadBookTemplateExcel()">
                   <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Unduh Template Excel Buku (.xlsx)
                 </button>
               </div>
@@ -323,7 +323,7 @@
               <!-- Download Template Button -->
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-semibold text-secondary small">Unduh Format Template:</span>
-                <button type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadStudentTemplateExcel()">
+                <button id="btnDownloadStudentTemplate" type="button" class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="downloadStudentTemplateExcel()">
                   <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Template Excel Siswa (.xlsx)
                 </button>
               </div>
@@ -438,7 +438,7 @@
               <!-- Download Template Button -->
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-semibold text-secondary small">Unduh Format Template:</span>
-                <button type="button" class="btn btn-outline-info btn-sm fw-bold shadow-sm" onclick="downloadTeacherTemplateExcel()">
+                <button id="btnDownloadTeacherTemplate" type="button" class="btn btn-outline-info btn-sm fw-bold shadow-sm" onclick="downloadTeacherTemplateExcel()">
                   <i class="bi bi-file-earmark-person-fill me-1"></i> Template Excel Guru (.xlsx)
                 </button>
               </div>
@@ -1360,33 +1360,70 @@
       }
     }
 
-    function downloadExcelWorkbook(workbook, filename) {
+    function downloadCsvFallback(rows, filename) {
       try {
-        XLSX.writeFile(workbook, filename);
+        const csvContent = "\uFEFF" + rows.map(r => r.map(cell => {
+          if (cell === null || cell === undefined) return '""';
+          const str = String(cell).replace(/"/g, '""');
+          return str.includes(',') || str.includes('"') || str.includes('\n') || str.includes(';') ? `"${str}"` : str;
+        }).join(",")).join("\r\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename.endsWith('.csv') ? filename : filename.replace(/\.xlsx$/i, '.csv');
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 500);
       } catch (err) {
-        console.error("XLSX.writeFile failed, trying manual blob fallback:", err);
-        try {
-          const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-          const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-          }, 100);
-        } catch (e2) {
-          console.error("Blob download fallback failed:", e2);
-          alert("Gagal mengunduh file template. Silakan gunakan browser Chrome / Edge terkini.");
+        console.error("CSV fallback download failed:", err);
+        alert("Gagal mengunduh file template: " + err.message);
+      }
+    }
+
+    function downloadExcelWorkbook(workbook, filename, csvRowsFallback) {
+      console.log("downloadExcelWorkbook called for:", filename);
+      try {
+        if (typeof XLSX !== 'undefined' && XLSX.writeFile) {
+          try {
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              if (document.body.contains(a)) document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            }, 500);
+            return;
+          } catch (errBlob) {
+            console.warn("XLSX Blob write failed, trying XLSX.writeFile:", errBlob);
+            XLSX.writeFile(workbook, filename);
+            return;
+          }
         }
+      } catch (err) {
+        console.warn("XLSX export failed:", err);
+      }
+
+      if (csvRowsFallback && Array.isArray(csvRowsFallback)) {
+        downloadCsvFallback(csvRowsFallback, filename);
+      } else {
+        alert("Perhatian: Pustaka Excel belum siap. Silakan coba lagi.");
       }
     }
 
     function downloadBookTemplateExcel() {
-      console.log("downloadBookTemplateExcel called");
+      console.log("downloadBookTemplateExcel triggered");
       const templateData = [
         {
           "Judul Buku Pelajaran": "bahasa arab kelas VII",
@@ -1404,10 +1441,24 @@
         }
       ];
 
-      const worksheet = XLSX.utils.json_to_sheet(templateData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Buku");
-      downloadExcelWorkbook(workbook, "Template_Impor_Buku_MTs_AlKhairaat.xlsx");
+      const csvRows = [
+        ["Judul Buku Pelajaran", "Mata Pelajaran", "Jenjang Kelas", "Penulis / Penyusun", "Link URL Publik File PDF / Google Drive"],
+        ["bahasa arab kelas VII", "bahasa arab", "VII", "MTs Alkhairaat Bunyu", "https://drive.google.com/file/d/15pI3yiAWMqXIU9taXDUBdg8aiMo9p109/view?usp=sharing"],
+        ["informatika kelas VIII", "informatika", "VIII", "MTs Alkhairaat Bunyu", "https://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/view?usp=drive_link"]
+      ];
+
+      if (typeof XLSX !== 'undefined' && XLSX.utils) {
+        try {
+          const worksheet = XLSX.utils.json_to_sheet(templateData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Template Buku");
+          downloadExcelWorkbook(workbook, "Template_Impor_Buku_MTs_AlKhairaat.xlsx", csvRows);
+          return;
+        } catch (e) {
+          console.warn("XLSX export failed for book template:", e);
+        }
+      }
+      downloadCsvFallback(csvRows, "Template_Impor_Buku_MTs_AlKhairaat.csv");
     }
 
     function loadSampleBookData() {
@@ -1681,19 +1732,36 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     }
 
     function downloadStudentTemplateExcel() {
+      console.log("downloadStudentTemplateExcel triggered");
       const templateData = [
         { "No": 1, "Nama Siswa": "AQEELA ZAHRATUSSYIFA", "Jenjang Kelas": "Kelas VIII" },
         { "No": 2, "Nama Siswa": "BRAYN NUR", "Jenjang Kelas": "Kelas VIII" },
         { "No": 3, "Nama Siswa": "ALGEZI ACHMAD GIFAHRI", "Jenjang Kelas": "Kelas IX" }
       ];
 
-      const worksheet = XLSX.utils.json_to_sheet(templateData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
-      downloadExcelWorkbook(workbook, "Template_Impor_Siswa_MTs_AlKhairaat.xlsx");
+      const csvRows = [
+        ["No", "Nama Siswa", "Jenjang Kelas"],
+        [1, "AQEELA ZAHRATUSSYIFA", "Kelas VIII"],
+        [2, "BRAYN NUR", "Kelas VIII"],
+        [3, "ALGEZI ACHMAD GIFAHRI", "Kelas IX"]
+      ];
+
+      if (typeof XLSX !== 'undefined' && XLSX.utils) {
+        try {
+          const worksheet = XLSX.utils.json_to_sheet(templateData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
+          downloadExcelWorkbook(workbook, "Template_Impor_Siswa_MTs_AlKhairaat.xlsx", csvRows);
+          return;
+        } catch (e) {
+          console.warn("XLSX export failed for student template:", e);
+        }
+      }
+      downloadCsvFallback(csvRows, "Template_Impor_Siswa_MTs_AlKhairaat.csv");
     }
 
     function downloadTeacherTemplateExcel() {
+      console.log("downloadTeacherTemplateExcel triggered");
       const templateData = [
         { "No": 1, "Nama Guru (Gelar Opsional)": "Ust. Ahmad Fauzi, S.Pd.", "Mata Pelajaran": "Bahasa Arab & Fiqih", "Username Login": "ahmad_fauzi", "Kata Sandi": "guru2026" },
         { "No": 2, "Nama Guru (Gelar Opsional)": "Darmansyah", "Mata Pelajaran": "Informatika, IPA", "Username Login": "darmansyah", "Kata Sandi": "guru2026" },
@@ -1701,10 +1769,26 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         { "No": 4, "Nama Guru (Gelar Opsional)": "Budi Santoso", "Mata Pelajaran": "Semua Mapel", "Username Login": "budi_santoso", "Kata Sandi": "guru2026" }
       ];
 
-      const worksheet = XLSX.utils.json_to_sheet(templateData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Guru");
-      downloadExcelWorkbook(workbook, "Template_Impor_Guru_MTs_AlKhairaat.xlsx");
+      const csvRows = [
+        ["No", "Nama Guru (Gelar Opsional)", "Mata Pelajaran", "Username Login", "Kata Sandi"],
+        [1, "Ust. Ahmad Fauzi, S.Pd.", "Bahasa Arab & Fiqih", "ahmad_fauzi", "guru2026"],
+        [2, "Darmansyah", "Informatika, IPA", "darmansyah", "guru2026"],
+        [3, "Ustadzah Siti Aminah, S.Ag.", "Fiqih / Akidah Akhlak / SKI", "siti_aminah", "guru2026"],
+        [4, "Budi Santoso", "Semua Mapel", "budi_santoso", "guru2026"]
+      ];
+
+      if (typeof XLSX !== 'undefined' && XLSX.utils) {
+        try {
+          const worksheet = XLSX.utils.json_to_sheet(templateData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Template Guru");
+          downloadExcelWorkbook(workbook, "Template_Impor_Guru_MTs_AlKhairaat.xlsx", csvRows);
+          return;
+        } catch (e) {
+          console.warn("XLSX export failed for teacher template:", e);
+        }
+      }
+      downloadCsvFallback(csvRows, "Template_Impor_Guru_MTs_AlKhairaat.csv");
     }
 
     // =====================================
