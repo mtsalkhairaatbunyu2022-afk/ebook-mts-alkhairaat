@@ -372,7 +372,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.4.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.5.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -391,7 +391,9 @@
                 <div class="text-secondary fs-8" id="catalogCountText">Memuat katalog server...</div>
               </div>
             </div>
-            <button class="btn btn-sm text-white fw-bold px-3" style="font-size: 0.75rem; background-color: #7e22ce;" onclick="syncCatalog()">Refresh Buku</button>
+            <button id="btnSyncCatalog" class="btn btn-sm text-white fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem; background-color: #7e22ce;" onclick="syncCatalog()">
+              <span id="btnSyncCatalogText">Refresh Buku</span>
+            </button>
           </div>
         </div>
 
@@ -1067,9 +1069,39 @@
       pdfModal.show();
     }
 
-    function syncCatalog() {
-      loadCatalogData();
-      alert("✅ Katalog buku berhasil diperbarui dari server Cloudflare.");
+    async function syncCatalog() {
+      const btn = document.getElementById("btnSyncCatalog");
+      const btnText = document.getElementById("btnSyncCatalogText");
+      if (!btn || !btnText) return;
+
+      // Start Loading State
+      btn.disabled = true;
+      btn.style.backgroundColor = "#6b21a8"; // Darker purple while loading
+      btnText.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sinkron...`;
+
+      try {
+        await loadCatalogData();
+        
+        // Simulate a short delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Show Success State
+        btn.style.backgroundColor = "#10b981"; // Success Green
+        btnText.innerHTML = `<i class="bi bi-check-lg"></i> Berhasil`;
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.style.backgroundColor = "#7e22ce"; // Back to Original Purple
+          btnText.innerText = "Refresh Buku";
+        }, 3000);
+
+      } catch (e) {
+        btn.disabled = false;
+        btn.style.backgroundColor = "#7e22ce";
+        btnText.innerText = "Refresh Buku";
+        alert("Gagal memperbarui katalog. Silakan coba lagi.");
+      }
     }
 
     async function checkAppUpdate() {
