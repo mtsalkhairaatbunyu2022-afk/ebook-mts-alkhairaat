@@ -424,13 +424,10 @@
       </div>
 
       <!-- Filter Chips -->
-      <div class="p-3 bg-light border-bottom">
-        <div class="fw-bold fs-8 text-primary mb-2">Saring Jenjang Kelas & Kategori:</div>
+      <div class="p-3 bg-light border-bottom" id="filterSection">
+        <div class="fw-bold fs-8 text-primary mb-2" id="filterLabel">Saring Jenjang Kelas & Kategori:</div>
         <div class="d-flex gap-2 overflow-x-auto pb-1" id="filterChipsContainer">
-          <div class="nav-chip active" onclick="setGradeFilter('', this)">Semua Kelas</div>
-          <div class="nav-chip" onclick="setGradeFilter('Kelas VII', this)">Kelas VII</div>
-          <div class="nav-chip" onclick="setGradeFilter('Kelas VIII', this)">Kelas VIII</div>
-          <div class="nav-chip" onclick="setGradeFilter('Kelas IX', this)">Kelas IX</div>
+          <!-- Dynamic Chips -->
         </div>
       </div>
 
@@ -776,8 +773,25 @@
         document.getElementById("userDisplayName").innerText = `Assalamu'alaikum, ${currentUser.name}`;
         document.getElementById("userRoleBadge").innerText = currentUser.role === "TEACHER" ? `MODE GURU (${currentUser.grade})` : currentUser.grade.toUpperCase();
         
-        if (currentUser.role === "STUDENT" && currentUser.grade.includes("Kelas")) {
-          setGradeFilter(currentUser.grade);
+        const filterContainer = document.getElementById("filterChipsContainer");
+        const filterLabel = document.getElementById("filterLabel");
+
+        if (currentUser.role === "STUDENT") {
+          // Strict Rule: Students ONLY see their grade, hide other menus
+          currentGradeFilter = currentUser.grade;
+          filterLabel.innerText = "Katalog Khusus Kelas Anda:";
+          filterContainer.innerHTML = `
+            <div class="nav-chip active">${currentUser.grade}</div>
+          `;
+        } else {
+          // Teachers see everything
+          filterLabel.innerText = "Saring Jenjang Kelas & Kategori:";
+          filterContainer.innerHTML = `
+            <div class="nav-chip ${currentGradeFilter === '' ? 'active' : ''}" onclick="setGradeFilter('', this)">Semua Kelas</div>
+            <div class="nav-chip ${currentGradeFilter === 'Kelas VII' ? 'active' : ''}" onclick="setGradeFilter('Kelas VII', this)">Kelas VII</div>
+            <div class="nav-chip ${currentGradeFilter === 'Kelas VIII' ? 'active' : ''}" onclick="setGradeFilter('Kelas VIII', this)">Kelas VIII</div>
+            <div class="nav-chip ${currentGradeFilter === 'Kelas IX' ? 'active' : ''}" onclick="setGradeFilter('Kelas IX', this)">Kelas IX</div>
+          `;
         }
       }
       renderBooks();
