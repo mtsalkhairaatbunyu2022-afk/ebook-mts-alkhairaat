@@ -372,7 +372,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.9.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.1.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -413,16 +413,18 @@
             <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
           </div>
           <div class="d-flex gap-2">
+            <!-- 1. Rekap Nilai (Khusus Guru jika ada link) -->
             <button id="rekapNilaiBtn" class="btn btn-success btn-sm fw-bold py-1 px-2 d-none" style="font-size: 0.75rem;" onclick="openRekapNilai()">
               <i class="bi bi-table"></i> Rekap Nilai
             </button>
-            <button id="adminPortalBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark d-none" style="font-size: 0.75rem;" onclick="location.href='/admin.html'">
-              <i class="bi bi-speedometer2"></i> Portal Admin
+            
+            <!-- 2. Tombol Utama (Bisa Admin atau Ubah Password) -->
+            <button id="mainActionBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark d-none" style="font-size: 0.75rem;">
+              <i class="bi bi-shield-lock" id="mainActionIcon"></i> <span id="mainActionText">Ubah Password</span>
             </button>
-            <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="openChangePasswordModal()">
-              <i class="bi bi-shield-lock"></i> Ubah Password
-            </button>
-            <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
+
+            <!-- 3. Tombol Logout -->
+            <button id="logoutBtn" class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
               <i class="bi bi-box-arrow-right"></i> Logout
             </button>
           </div>
@@ -822,17 +824,7 @@
     }
 
     function populateUserDropdowns() {
-      const teacherSel = document.getElementById("teacherSelect");
-
-      if (teachersList.length > 0) {
-        teacherSel.innerHTML = '<option value="">-- Pilih Akun Guru --</option>';
-        teachersList.forEach(t => {
-          const opt = document.createElement("option");
-          opt.value = `${t.nama}|${t.kelas}|${t.password || "2026"}`;
-          opt.textContent = `${t.nama} (${t.kelas})`;
-          teacherSel.appendChild(opt);
-        });
-      }
+      // Teachers login is manual now for privacy.
     }
 
     // Modal Trigger Helpers
@@ -1019,18 +1011,32 @@
         
         const filterContainer = document.getElementById("filterChipsContainer");
         const filterLabel = document.getElementById("filterLabel");
-        const adminBtn = document.getElementById("adminPortalBtn");
+        
+        const mainBtn = document.getElementById("mainActionBtn");
+        const mainText = document.getElementById("mainActionText");
+        const mainIcon = document.getElementById("mainActionIcon");
+        const rekapBtn = document.getElementById("rekapNilaiBtn");
+        if (logoutBtn) {
+          logoutBtn.classList.remove("btn-warning", "text-dark");
+          logoutBtn.classList.add("btn-outline-light");
+        }
 
         if (currentUser.role === "STUDENT") {
-          // Strict Rule: Students ONLY see their grade, hide other menus
+          // Students: [Ubah Password (Yellow)] [Logout (Outline)]
           currentGradeFilter = currentUser.grade;
           filterLabel.innerText = "Katalog Khusus Kelas Anda:";
-          filterContainer.innerHTML = `
-            <div class="nav-chip active">${currentUser.grade}</div>
-          `;
-          if (adminBtn) adminBtn.classList.add("d-none");
+          filterContainer.innerHTML = `<div class="nav-chip active">${currentUser.grade}</div>`;
+          
+          if (mainBtn) {
+            mainBtn.classList.remove("d-none");
+            mainBtn.onclick = openChangePasswordModal;
+            mainText.innerText = "Ubah Password";
+            mainIcon.className = "bi bi-shield-lock";
+          }
+          if (rekapBtn) rekapBtn.classList.add("d-none");
+
         } else {
-          // Teachers see everything
+          // Teachers: [Rekap Nilai (Green)] [Ubah Password (Yellow)] [Logout (Yellow)]
           filterLabel.innerText = "Saring Jenjang Kelas & Kategori:";
           filterContainer.innerHTML = `
             <div class="nav-chip ${currentGradeFilter === '' ? 'active' : ''}" onclick="setGradeFilter('', this)">Semua Kelas</div>
@@ -1038,9 +1044,19 @@
             <div class="nav-chip ${currentGradeFilter === 'Kelas VIII' ? 'active' : ''}" onclick="setGradeFilter('Kelas VIII', this)">Kelas VIII</div>
             <div class="nav-chip ${currentGradeFilter === 'Kelas IX' ? 'active' : ''}" onclick="setGradeFilter('Kelas IX', this)">Kelas IX</div>
           `;
-          if (adminBtn) adminBtn.classList.remove("d-none");
           
-          const rekapBtn = document.getElementById("rekapNilaiBtn");
+          if (mainBtn) {
+            mainBtn.classList.remove("d-none");
+            mainBtn.onclick = openChangePasswordModal;
+            mainText.innerText = "Ubah Password";
+            mainIcon.className = "bi bi-shield-lock";
+          }
+
+          if (logoutBtn) {
+            logoutBtn.classList.remove("btn-outline-light");
+            logoutBtn.classList.add("btn-warning", "text-dark");
+          }
+
           if (rekapBtn) {
             if (currentUser.rekapUrl) rekapBtn.classList.remove("d-none");
             else rekapBtn.classList.add("d-none");
