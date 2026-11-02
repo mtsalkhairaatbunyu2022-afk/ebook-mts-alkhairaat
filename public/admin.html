@@ -1784,10 +1784,23 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     // =====================================
     function normalizeGrade(raw) {
       if (!raw) return 'Kelas VII';
-      const str = raw.toString().toLowerCase();
-      if (str.includes('7') || str.includes('vii')) return 'Kelas VII';
-      if (str.includes('8') || str.includes('viii')) return 'Kelas VIII';
-      if (str.includes('9') || str.includes('ix')) return 'Kelas IX';
+      const str = raw.toString().trim().toUpperCase();
+      
+      // 1. Exact matches (highest priority)
+      if (str === '9' || str === 'IX' || str === 'KELAS IX') return 'Kelas IX';
+      if (str === '8' || str === 'VIII' || str === 'KELAS VIII') return 'Kelas VIII';
+      if (str === '7' || str === 'VII' || str === 'KELAS VII') return 'Kelas VII';
+      
+      // 2. Substring matches (longest first to avoid overlap)
+      if (str.includes('IX')) return 'Kelas IX';
+      if (str.includes('VIII')) return 'Kelas VIII';
+      if (str.includes('VII')) return 'Kelas VII';
+      
+      // 3. Fallback for numeric
+      if (str.includes('9')) return 'Kelas IX';
+      if (str.includes('8')) return 'Kelas VIII';
+      if (str.includes('7')) return 'Kelas VII';
+
       return 'Kelas VII';
     }
 

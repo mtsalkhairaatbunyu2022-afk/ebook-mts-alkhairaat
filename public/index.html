@@ -415,27 +415,33 @@
       <!-- Top Bar Header -->
       <div class="p-3 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;">
         <div class="d-flex flex-column gap-2 mb-2">
-          <!-- Row 1: Welcome & Logout -->
+          <!-- Row 1: Welcome & Global Logout -->
           <div class="d-flex align-items-center justify-content-between">
-            <div style="max-width: 70%;">
+            <div style="max-width: 75%;">
               <h6 class="fw-bold mb-0 text-truncate" id="userDisplayName">Assalamu'alaikum, Siswa</h6>
               <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
             </div>
+            <!-- Logout simple in top corner (mainly for students) -->
             <button id="logoutBtn" class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
-              <i class="bi bi-box-arrow-right"></i> Logout
+              <i class="bi bi-box-arrow-right"></i> Keluar
             </button>
           </div>
           
-          <!-- Row 2: Special Actions (Teacher only features) -->
-          <div class="d-flex gap-2">
-            <!-- 1. Rekap Nilai (Khusus Guru jika ada link) -->
-            <button id="rekapNilaiBtn" class="btn btn-success btn-sm fw-bold py-1 px-2 d-none flex-fill" style="font-size: 0.75rem;" onclick="openRekapNilai()">
+          <!-- Row 2: Special Actions (Teacher & Student specific buttons) -->
+          <div class="d-flex flex-wrap gap-2" id="headerActionsRow">
+            <!-- 1. Rekap Nilai (Khusus Guru) -->
+            <button id="rekapNilaiBtn" class="btn btn-success btn-sm fw-bold py-2 px-2 d-none flex-fill shadow-sm" style="font-size: 0.7rem; min-width: 100px;" onclick="openRekapNilai()">
               <i class="bi bi-table"></i> Rekap Nilai
             </button>
             
-            <!-- 2. Tombol Utama (Bisa Admin atau Ubah Password) -->
-            <button id="mainActionBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark d-none flex-fill" style="font-size: 0.75rem;">
+            <!-- 2. Tombol Utama (Ubah Password) -->
+            <button id="mainActionBtn" class="btn btn-warning btn-sm fw-bold py-2 px-2 text-dark d-none flex-fill shadow-sm" style="font-size: 0.7rem; min-width: 100px;" onclick="openChangePasswordModal()">
               <i class="bi bi-shield-lock" id="mainActionIcon"></i> <span id="mainActionText">Ubah Password</span>
+            </button>
+
+            <!-- 3. Logout Prominent (Khusus Guru - Request User) -->
+            <button id="teacherLogoutBtn" class="btn btn-danger btn-sm fw-bold py-2 px-2 d-none flex-fill shadow-sm" style="font-size: 0.7rem; min-width: 100px;" onclick="logout()">
+              <i class="bi bi-box-arrow-right"></i> Logout
             </button>
           </div>
         </div>
@@ -871,12 +877,16 @@
       const filteredStudents = studentsList.filter(s => s.kelas === grade);
       filteredStudents.sort((a, b) => a.nama.localeCompare(b.nama));
       
-      filteredStudents.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s.nama;
-        opt.textContent = s.nama;
-        nameSelect.appendChild(opt);
-      });
+      if (filteredStudents.length === 0) {
+        nameSelect.innerHTML = '<option value="">-- Data Siswa Tidak Ditemukan --</option>';
+      } else {
+        filteredStudents.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.nama;
+          opt.textContent = s.nama;
+          nameSelect.appendChild(opt);
+        });
+      }
     }
 
     function backToStep1() {
@@ -1034,13 +1044,10 @@
         const mainText = document.getElementById("mainActionText");
         const mainIcon = document.getElementById("mainActionIcon");
         const rekapBtn = document.getElementById("rekapNilaiBtn");
-        if (logoutBtn) {
-          logoutBtn.classList.remove("btn-warning", "text-dark");
-          logoutBtn.classList.add("btn-outline-light");
-        }
+        const teacherLogoutBtn = document.getElementById("teacherLogoutBtn");
 
         if (currentUser.role === "STUDENT") {
-          // Students: [Ubah Password (Yellow)] [Logout (Outline)]
+          // Students: [Ubah Password (Yellow)] [Logout (Top Corner)]
           currentGradeFilter = currentUser.grade;
           filterLabel.innerText = "Katalog Khusus Kelas Anda:";
           filterContainer.innerHTML = `<div class="nav-chip active">${currentUser.grade}</div>`;
@@ -1052,9 +1059,15 @@
             mainIcon.className = "bi bi-shield-lock";
           }
           if (rekapBtn) rekapBtn.classList.add("d-none");
+          if (teacherLogoutBtn) teacherLogoutBtn.classList.add("d-none");
+          if (logoutBtn) {
+            logoutBtn.classList.remove("d-none");
+            logoutBtn.classList.add("btn-outline-light");
+            logoutBtn.classList.remove("btn-warning", "text-dark");
+          }
 
         } else {
-          // Teachers: [Rekap Nilai (Green)] [Ubah Password (Yellow)] [Logout (Yellow)]
+          // Teachers: [Rekap Nilai (Green)] [Ubah Password (Yellow)] [Logout (Red)]
           filterLabel.innerText = "Saring Jenjang Kelas & Kategori:";
           filterContainer.innerHTML = `
             <div class="nav-chip ${currentGradeFilter === '' ? 'active' : ''}" onclick="setGradeFilter('', this)">Semua Kelas</div>
@@ -1070,15 +1083,13 @@
             mainIcon.className = "bi bi-shield-lock";
           }
 
-          if (logoutBtn) {
-            logoutBtn.classList.remove("btn-outline-light");
-            logoutBtn.classList.add("btn-warning", "text-dark");
-          }
-
           if (rekapBtn) {
             if (currentUser.rekapUrl) rekapBtn.classList.remove("d-none");
             else rekapBtn.classList.add("d-none");
           }
+
+          if (teacherLogoutBtn) teacherLogoutBtn.classList.remove("d-none");
+          if (logoutBtn) logoutBtn.classList.add("d-none"); // Hide top logout for teacher, use big button
         }
       }
       renderBooks();
