@@ -229,7 +229,7 @@
               </div>
 
               <div class="mb-3">
-                <textarea id="multiBookInput" class="form-control fs-7 font-monospace" rows="7" placeholder="bahasa arab kelas VII&#9;bahasa arab&#9;VII&#9;MTs Alkhairaat Bunyu&#9;https://drive.google.com/file/d/15pI3yiAWMqXIU9taXDUBdg8aiMo9p109/view?usp=sharing&#10;informatika kelas VIII&#9;informatika&#9;VIII&#9;MTs Alkhairaat Bunyu&#9;https://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/view?usp=drive_link"></textarea>
+                <textarea id="multiBookInput" class="form-control fs-7 font-monospace" rows="7" placeholder="Judul | Mapel | Kelas | Penulis | Link | Kategori (Buku/Tugas/Video)&#10;bahasa arab kelas VII | bahasa arab | VII | MTs Alkhairaat | https://... | Buku&#10;Tugas Fiqih Bab 1 | Fiqih | VII | Ust. Ahmad | https://forms.gle/... | Tugas&#10;Materi Video SKI | SKI | VIII | Ustz. Siti | https://youtu.be/... | Video"></textarea>
               </div>
 
               <button id="processMultiBookBtn" class="btn btn-success w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
@@ -456,7 +456,7 @@
                 <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-info fw-bold" onclick="loadSampleTeacherData()">Isi Contoh Data Guru</button>
               </div>
 
-              <textarea id="manualTeacherInput" class="form-control mb-3 fs-7" rows="6" placeholder="1, Ust. Ahmad Fauzi S.Pd., Bahasa Arab & Fiqih, ahmad_fauzi, guru2026&#10;2, Darmansyah, Informatika, IPA, darmansyah, guru2026&#10;3, Ustadzah Siti Aminah S.Ag., Fiqih / Akidah Akhlak / SKI, siti_aminah, guru2026&#10;4, Budi Santoso, Semua Mapel, budi_santoso, guru2026"></textarea>
+              <textarea id="manualTeacherInput" class="form-control mb-3 fs-7" rows="6" placeholder="1, Ust. Ahmad Fauzi S.Pd., Bahasa Arab & Fiqih, ahmad_fauzi, guru2026, https://docs.google.com/spreadsheets/...&#10;2, Darmansyah, Informatika, IPA, darmansyah, guru2026, https://...&#10;3, Ustadzah Siti Aminah S.Ag., Fiqih / Akidah Akhlak / SKI, siti_aminah, guru2026, https://..."></textarea>
 
               <button id="processTeacherDataBtn" class="btn btn-info text-white w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
                 <i class="bi bi-person-plus-fill fs-5"></i>
@@ -1770,11 +1770,11 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       ];
 
       const csvRows = [
-        ["No", "Nama Guru (Gelar Opsional)", "Mata Pelajaran", "Username Login", "Kata Sandi"],
-        [1, "Ust. Ahmad Fauzi, S.Pd.", "Bahasa Arab & Fiqih", "ahmad_fauzi", "guru2026"],
-        [2, "Darmansyah", "Informatika, IPA", "darmansyah", "guru2026"],
-        [3, "Ustadzah Siti Aminah, S.Ag.", "Fiqih / Akidah Akhlak / SKI", "siti_aminah", "guru2026"],
-        [4, "Budi Santoso", "Semua Mapel", "budi_santoso", "guru2026"]
+        ["No", "Nama Guru (Gelar Opsional)", "Mata Pelajaran", "Username Login", "Kata Sandi", "Link Rekap Nilai"],
+        [1, "Ust. Ahmad Fauzi, S.Pd.", "Bahasa Arab & Fiqih", "ahmad_fauzi", "guru2026", "https://docs.google.com/spreadsheets/d/link-excel-anda"],
+        [2, "Darmansyah", "Informatika, IPA", "darmansyah", "guru2026", ""],
+        [3, "Ustadzah Siti Aminah, S.Ag.", "Fiqih / Akidah Akhlak / SKI", "siti_aminah", "guru2026", ""],
+        [4, "Budi Santoso", "Semua Mapel", "budi_santoso", "guru2026", ""]
       ];
 
       if (typeof XLSX !== 'undefined' && XLSX.utils) {
@@ -1993,6 +1993,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         let subject = '';
         let username = '';
         let password = '';
+        let rekapUrl = '';
 
         if (Array.isArray(row)) {
           const cleanRow = row.map(c => (c || '').toString().trim()).filter(c => c !== '');
@@ -2017,7 +2018,12 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
             rem.shift();
           }
 
-          if (rem.length >= 3) {
+          if (rem.length >= 4) {
+            rekapUrl = rem.pop();
+            password = rem.pop();
+            username = rem.pop();
+            subject = rem.join(', ');
+          } else if (rem.length === 3) {
             password = rem.pop();
             username = rem.pop();
             subject = rem.join(', ');
@@ -2041,6 +2047,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
           subject = row['Mata Pelajaran'] || row['Mapel'] || row['Pelajaran'] || Object.values(row)[2] || 'Semua Mapel';
           username = row['Username Login'] || row['Username'] || row['Nama Login'] || name;
           password = row['Kata Sandi'] || row['Password'] || row['Pass'] || 'guru2026';
+          rekapUrl = row['Link Rekap Nilai'] || row['Rekap Nilai'] || row['Sheet Nilai'] || Object.values(row)[5] || '';
         }
 
         if (name && name.toString().trim() !== '' && !name.toString().toLowerCase().includes('nama guru')) {
@@ -2057,7 +2064,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
             kelas: "Mapel: " + cleanSubject,
             role: "TEACHER",
             subject: cleanSubject,
-            password: cleanPassword
+            password: cleanPassword,
+            rekapUrl: rekapUrl.toString().trim()
           });
         }
       });
@@ -2099,6 +2107,9 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
           <td><span class="badge bg-info-subtle text-info-emphasis fw-bold">${tch.subject || tch.kelas}</span></td>
           <td><code>${tch.username}</code></td>
           <td><span class="badge bg-success font-monospace fs-7">${tch.password}</span></td>
+          <td>
+            ${tch.rekapUrl ? `<a href="${tch.rekapUrl}" target="_blank" class="btn btn-sm btn-outline-success py-0 px-2" title="Buka Excel Nilai"><i class="bi bi-file-earmark-spreadsheet"></i></a>` : `<span class="text-muted fs-9">Kosong</span>`}
+          </td>
           <td class="text-end">
             <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteTeacher(${index})" title="Hapus Akun Guru">
               <i class="bi bi-trash"></i>
