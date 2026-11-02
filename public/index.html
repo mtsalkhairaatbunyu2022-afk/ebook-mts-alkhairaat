@@ -372,7 +372,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.1.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.3.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -467,25 +467,49 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p class="text-secondary fs-8 mb-3">Pilih nama siswa atau masuk menggunakan kata sandi kelas Anda.</p>
           
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Pilih Nama Siswa / Kelas:</label>
-            <select id="studentSelect" class="form-select form-select-sm fw-semibold">
-              <option value="Siswa MTs Al-Khairaat|Kelas VII|2027">-- Pilih Nama Anda / Kelas --</option>
-            </select>
+          <!-- Step 1: Grade Selection -->
+          <div id="studentLoginStep1">
+            <p class="text-secondary fs-8 mb-3">Silakan pilih jenjang kelas Anda untuk melanjutkan login.</p>
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-primary fw-bold py-3" onclick="selectGrade('Kelas VII')">
+                <i class="bi bi-1-circle-fill me-2"></i> KELAS VII
+              </button>
+              <button class="btn btn-outline-primary fw-bold py-3" onclick="selectGrade('Kelas VIII')">
+                <i class="bi bi-2-circle-fill me-2"></i> KELAS VIII
+              </button>
+              <button class="btn btn-outline-primary fw-bold py-3" onclick="selectGrade('Kelas IX')">
+                <i class="bi bi-3-circle-fill me-2"></i> KELAS IX
+              </button>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Sandi Kelas (VII: 2027, VIII: 2026, IX: 2025):</label>
-            <input type="password" id="studentPasswordInput" class="form-control form-control-sm" placeholder="Masukkan Sandi Kelas">
+          <!-- Step 2: Username & Password -->
+          <div id="studentLoginStep2" class="d-none">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <button class="btn btn-sm btn-light rounded-circle" onclick="backToStep1()"><i class="bi bi-arrow-left"></i></button>
+              <span class="badge bg-primary rounded-pill px-3" id="selectedGradeLabel">Kelas VII</span>
+            </div>
+            
+            <p class="text-secondary fs-8 mb-3">Masukkan Nama Lengkap Anda (Username) dan Kata Sandi dari Admin.</p>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold fs-7">Username (Nama Lengkap):</label>
+              <input type="text" id="studentUsernameInput" class="form-control" placeholder="Contoh: AQEELA ZAHRATUSSYIFA">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold fs-7">Kata Sandi:</label>
+              <input type="password" id="studentPasswordInput" class="form-control" placeholder="Masukkan password Anda">
+            </div>
+
+            <div id="studentLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
+
+            <button type="button" class="btn btn-student" onclick="submitStudentLogin()">
+              MASUK PERPUSTAKAAN SISWA
+            </button>
           </div>
 
-          <div id="studentLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
-
-          <button type="button" class="btn btn-student" onclick="submitStudentLogin()">
-            MASUK PERPUSTAKAAN SISWA
-          </button>
         </div>
       </div>
     </div>
@@ -661,6 +685,7 @@
     let teachersList = [];
     let currentGradeFilter = "";
     let currentUser = null;
+    let selectedLoginGrade = "";
 
     let studentModal, teacherModal, pdfModal, changePassModal;
 
@@ -765,18 +790,7 @@
     }
 
     function populateUserDropdowns() {
-      const studentSel = document.getElementById("studentSelect");
       const teacherSel = document.getElementById("teacherSelect");
-
-      if (studentsList.length > 0) {
-        studentSel.innerHTML = '<option value="">-- Pilih Nama Siswa Anda --</option>';
-        studentsList.forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = `${s.nama}|${s.kelas}|${s.password || "2026"}`;
-          opt.textContent = `${s.nama} (${s.kelas})`;
-          studentSel.appendChild(opt);
-        });
-      }
 
       if (teachersList.length > 0) {
         teacherSel.innerHTML = '<option value="">-- Pilih Akun Guru --</option>';
@@ -791,8 +805,28 @@
 
     // Modal Trigger Helpers
     function openStudentLoginModal() {
-      if (studentModal) studentModal.show();
+      if (studentModal) {
+        document.getElementById("studentLoginStep1").classList.remove("d-none");
+        document.getElementById("studentLoginStep2").classList.add("d-none");
+        document.getElementById("studentLoginError").classList.add("d-none");
+        studentModal.show();
+      }
       else alert("Sistem login sedang memuat, silakan tunggu sebentar...");
+    }
+
+    function selectGrade(grade) {
+      selectedLoginGrade = grade;
+      document.getElementById("studentLoginStep1").classList.add("d-none");
+      document.getElementById("studentLoginStep2").classList.remove("d-none");
+      document.getElementById("selectedGradeLabel").innerText = grade;
+      document.getElementById("studentUsernameInput").value = "";
+      document.getElementById("studentPasswordInput").value = "";
+      document.getElementById("studentLoginError").classList.add("d-none");
+    }
+
+    function backToStep1() {
+      document.getElementById("studentLoginStep1").classList.remove("d-none");
+      document.getElementById("studentLoginStep2").classList.add("d-none");
     }
 
     function openTeacherLoginModal() {
@@ -842,28 +876,37 @@
     }
 
     function submitStudentLogin() {
-      const selVal = document.getElementById("studentSelect").value;
+      const username = document.getElementById("studentUsernameInput").value.trim();
       const pass = document.getElementById("studentPasswordInput").value.trim();
       const errBox = document.getElementById("studentLoginError");
 
-      let name = "Siswa Madrasah";
-      let grade = "Semua Kelas";
-      let expectedPass = "2026";
-
-      if (selVal) {
-        const parts = selVal.split("|");
-        name = parts[0];
-        grade = parts[1];
-        expectedPass = getLocalPassword(name, parts[2] || "2026");
-      }
-
-      if (pass !== "" && pass !== expectedPass) {
-        errBox.innerText = "Sandi tidak cocok. Silakan coba lagi.";
+      if (!username || !pass) {
+        errBox.innerText = "Username dan Password harus diisi.";
         errBox.classList.remove("d-none");
         return;
       }
 
-      currentUser = { name, grade, role: "STUDENT" };
+      // Find student in studentsList matching name (username) and grade
+      const student = studentsList.find(s => 
+        (s.nama.toLowerCase() === username.toLowerCase() || (s.username && s.username.toLowerCase() === username.toLowerCase())) && 
+        s.kelas === selectedLoginGrade
+      );
+
+      if (!student) {
+        errBox.innerText = "Siswa tidak ditemukan di " + selectedLoginGrade + ". Pastikan Nama/Username benar.";
+        errBox.classList.remove("d-none");
+        return;
+      }
+
+      const expectedPass = getLocalPassword(student.nama, student.password || "2026");
+
+      if (pass !== expectedPass) {
+        errBox.innerText = "Sandi salah. Silakan coba lagi.";
+        errBox.classList.remove("d-none");
+        return;
+      }
+
+      currentUser = { name: student.nama, grade: student.kelas, role: "STUDENT" };
       localStorage.setItem("app_current_user", JSON.stringify(currentUser));
       studentModal.hide();
       showLibraryView();

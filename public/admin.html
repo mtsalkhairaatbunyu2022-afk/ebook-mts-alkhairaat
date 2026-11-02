@@ -318,7 +318,7 @@
                 <i class="bi bi-file-earmark-excel-fill text-success fs-3"></i>
                 <h5 class="fw-bold mb-0 text-dark">Unggah File Excel / CSV Siswa</h5>
               </div>
-              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama Siswa</strong>, dan <strong>Kelas</strong> (VII, VIII, IX).</p>
+              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama Siswa</strong>, <strong>Kelas</strong> (VII, VIII, IX), dan <strong>Kata Sandi</strong> (Opsional).</p>
 
               <!-- Download Template Button -->
               <div class="d-flex justify-content-between align-items-center mb-2">
@@ -332,7 +332,7 @@
               <div class="upload-excel-box mb-3" onclick="document.getElementById('excelFileInput').click()">
                 <i class="bi bi-cloud-arrow-up-fill text-success fs-1"></i>
                 <h6 class="fw-bold text-dark mt-2 mb-1" id="excelUploadTitle">Pilih / Tarik File Excel (.xlsx / .csv)</h6>
-                <p class="text-muted fs-7 mb-0" id="excelUploadDesc">Format file Excel dengan kolom No, Nama & Kelas</p>
+                <p class="text-muted fs-7 mb-0" id="excelUploadDesc">Format file Excel dengan kolom No, Nama, Kelas & Sandi</p>
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="d-none">
               </div>
 
@@ -341,7 +341,7 @@
                 <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="loadSampleStudentData()">Isi Contoh Data</button>
               </div>
 
-              <textarea id="manualStudentInput" class="form-control mb-3 fs-7" rows="5" placeholder="1, AQEELA ZAHRATUSSYIFA, VIII&#10;2, BRAYN NUR, VIII&#10;13, ALGEZI ACHMAD GIFAHRI, IX"></textarea>
+              <textarea id="manualStudentInput" class="form-control mb-3 fs-7" rows="5" placeholder="1, AQEELA ZAHRATUSSYIFA, VIII, pass123&#10;2, BRAYN NUR, VIII, brayn2026&#10;13, ALGEZI ACHMAD GIFAHRI, IX, algezi99"></textarea>
 
               <button id="processStudentDataBtn" class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                 <i class="bi bi-gear-wide-connected"></i>
@@ -1734,16 +1734,16 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     function downloadStudentTemplateExcel() {
       console.log("downloadStudentTemplateExcel triggered");
       const templateData = [
-        { "No": 1, "Nama Siswa": "AQEELA ZAHRATUSSYIFA", "Jenjang Kelas": "Kelas VIII" },
-        { "No": 2, "Nama Siswa": "BRAYN NUR", "Jenjang Kelas": "Kelas VIII" },
-        { "No": 3, "Nama Siswa": "ALGEZI ACHMAD GIFAHRI", "Jenjang Kelas": "Kelas IX" }
+        { "No": 1, "Nama Siswa": "AQEELA ZAHRATUSSYIFA", "Jenjang Kelas": "Kelas VIII", "Kata Sandi": "2026" },
+        { "No": 2, "Nama Siswa": "BRAYN NUR", "Jenjang Kelas": "Kelas VIII", "Kata Sandi": "siswa123" },
+        { "No": 3, "Nama Siswa": "ALGEZI ACHMAD GIFAHRI", "Jenjang Kelas": "Kelas IX", "Kata Sandi": "lulus2025" }
       ];
 
       const csvRows = [
-        ["No", "Nama Siswa", "Jenjang Kelas"],
-        [1, "AQEELA ZAHRATUSSYIFA", "Kelas VIII"],
-        [2, "BRAYN NUR", "Kelas VIII"],
-        [3, "ALGEZI ACHMAD GIFAHRI", "Kelas IX"]
+        ["No", "Nama Siswa", "Jenjang Kelas", "Kata Sandi"],
+        [1, "AQEELA ZAHRATUSSYIFA", "Kelas VIII", "2026"],
+        [2, "BRAYN NUR", "Kelas VIII", "siswa123"],
+        [3, "ALGEZI ACHMAD GIFAHRI", "Kelas IX", "lulus2025"]
       ];
 
       if (typeof XLSX !== 'undefined' && XLSX.utils) {
@@ -1815,32 +1815,37 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       rows.forEach((row, idx) => {
         let name = '';
         let gradeRaw = '';
+        let customPass = '';
 
         if (Array.isArray(row)) {
           const col0 = (row[0] || '').toString().trim();
           const col1 = (row[1] || '').toString().trim();
           const col2 = (row[2] || '').toString().trim();
+          const col3 = (row[3] || '').toString().trim();
 
-          if (col0.toLowerCase() === 'no' || col1.toLowerCase() === 'nama') {
+          if (col0.toLowerCase() === 'no' || col1.toLowerCase() === 'nama' || col1.toLowerCase() === 'nama siswa') {
             return; // Skip Header
           }
 
           if (!isNaN(parseInt(col0)) && col1.length > 0) {
             name = col1;
             gradeRaw = col2 || 'Kelas VII';
+            customPass = col3;
           } else {
             name = col0;
             gradeRaw = col1 || 'Kelas VII';
+            customPass = col2;
           }
         } else if (typeof row === 'object') {
           name = row['Nama'] || row['NAMA'] || row['Nama Siswa'] || row['nama'] || Object.values(row)[1] || Object.values(row)[0] || '';
           gradeRaw = row['Kelas'] || row['KELAS'] || row['Jenjang'] || Object.values(row)[2] || Object.values(row)[1] || 'Kelas VII';
+          customPass = row['Kata Sandi'] || row['KATA SANDI'] || row['Password'] || row['Sandi'] || Object.values(row)[3] || '';
         }
 
         if (name && name.toString().trim() !== '' && name.toString().toLowerCase() !== 'nama') {
           const cleanName = name.toString().trim();
           const cleanGrade = normalizeGrade(gradeRaw);
-          const password = getPasswordForGrade(cleanGrade);
+          const password = customPass && customPass.toString().trim() !== '' ? customPass.toString().trim() : getPasswordForGrade(cleanGrade);
           const username = cleanName;
 
           importedStudents.push({
@@ -1953,16 +1958,16 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 
     function loadSampleStudentData() {
       document.getElementById('manualStudentInput').value = 
-`1, AQEELA ZAHRATUSSYIFA, VIII
-2, BRAYN NUR, VIII
-3, EVAN SYAHPUTRA, VIII
-4, HAZRAH NUR FATIYAH, VIII
-5, MUHAMMAD FADHIL PRASETYA, VIII
-6, ALGEZI ACHMAD GIFAHRI, IX
-7, ASHILAH AZZARAH, IX
-8, M DARMA, IX
-9, MUHAMAT SYAFRI, IX
-10, WULAN PURNAMA SARI, IX`;
+`1, AQEELA ZAHRATUSSYIFA, VIII, pass2026
+2, BRAYN NUR, VIII, brayn77
+3, EVAN SYAHPUTRA, VIII, evan_oke
+4, HAZRAH NUR FATIYAH, VIII, hazrah123
+5, MUHAMMAD FADHIL PRASETYA, VIII, fadhil_m3
+6, ALGEZI ACHMAD GIFAHRI, IX, algezi99
+7, ASHILAH AZZARAH, IX, ashi_2025
+8, M DARMA, IX, darma_jaya
+9, MUHAMAT SYAFRI, IX, syafri_ix
+10, WULAN PURNAMA SARI, IX, wulan_sari`;
     }
 
     // =====================================
