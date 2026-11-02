@@ -2,829 +2,102 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>E-Book MTs Al-Khairaat Bunyu - Perpustakaan Digital</title>
-
-  <!-- PWA Web App Manifest & Fullscreen Display Rules -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1e3a8a">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="E-Book MTs">
-
-  <!-- Favicon & Icons -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Book MTs Al-Khairaat Bunyu - Portal Perpustakaan Digital</title>
+  <!-- Favicon / Logo Sekolah di Tab Browser -->
   <link rel="icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
   <link rel="shortcut icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
   <link rel="apple-touch-icon" href="/logo_alkhairaat.jpg">
-  
-  <!-- CSS Frameworks -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-  
   <style>
-    :root {
-      --primary-blue: #1e3a8a;
-      --primary-light: #eff6ff;
-      --accent-yellow: #f59e0b;
-      --teacher-orange: #d97706;
-      --border-radius-card: 20px;
-    }
-
     body {
-      background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 40%, #ffffff 100%);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
       min-height: 100vh;
-      color: #1e293b;
-      margin: 0;
-      padding-bottom: 40px;
-      -webkit-tap-highlight-color: transparent;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    .app-container {
-      max-width: 480px;
-      margin: 0 auto;
-      background: #ffffff;
-      min-height: 100vh;
-      box-shadow: 0 10px 40px rgba(30, 58, 138, 0.08);
-      position: relative;
+    .hero-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
-
-    @media (min-width: 768px) {
-      .app-container {
-        margin: 20px auto;
-        min-height: calc(100vh - 40px);
-        border-radius: 28px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-      }
-    }
-
-    /* Logo Header */
-    .school-logo-wrapper {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: #ffffff;
-      padding: 3px;
-      box-shadow: 0 8px 24px rgba(30, 58, 138, 0.15);
-      margin: 0 auto;
-    }
-
-    .school-logo-img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    /* Custom Cards */
-    .role-card-student {
-      border: 1.5px solid rgba(30, 58, 138, 0.3);
-      border-radius: var(--border-radius-card);
-      background: #ffffff;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 16px rgba(30, 58, 138, 0.05);
-    }
-
-    .role-card-teacher {
-      border: 1.5px solid rgba(217, 119, 6, 0.3);
-      border-radius: var(--border-radius-card);
-      background: #ffffff;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 16px rgba(217, 119, 6, 0.05);
-    }
-
-    .role-card-student:hover, .role-card-teacher:hover {
-      transform: translateY(-2px);
-    }
-
-    .icon-box-blue {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #dbeafe;
-      color: #1e3a8a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .icon-box-orange {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #ffedd5;
-      color: #ea580c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .btn-student {
-      background: #1e3a8a;
+    .btn-custom-admin {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
       color: #ffffff;
       border: none;
-      border-radius: 12px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 12px;
-      width: 100%;
     }
-
-    .btn-student:hover {
-      background: #1e40af;
+    .btn-custom-admin:hover {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
       color: #ffffff;
     }
-
-    .btn-teacher {
-      background: #d97706;
+    .btn-custom-catalog {
+      background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
-      border: none;
-      border-radius: 12px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 12px;
-      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      font-weight: 600;
     }
-
-    .btn-teacher:hover {
-      background: #b45309;
+    .btn-custom-catalog:hover {
+      background: rgba(255, 255, 255, 0.25);
       color: #ffffff;
-    }
-
-    /* Notice Cards */
-    .notice-card-blue {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 14px;
-    }
-
-    .notice-card-purple {
-      background: #f5f3ff;
-      border: 1px solid #ddd6fe;
-      border-radius: 14px;
-    }
-
-    /* PWA Install Banner */
-    .pwa-install-banner {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: #ffffff;
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
-    }
-
-    /* Book Shelf Grid */
-    .book-card {
-      border-radius: 14px;
-      border: 1px solid #e2e8f0;
-      overflow: hidden;
-      background: #ffffff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-      transition: transform 0.2s ease;
-      cursor: pointer;
-    }
-
-    .book-card:hover {
-      transform: translateY(-3px);
-    }
-
-    .book-cover {
-      height: 145px;
-      background: linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%);
-      position: relative;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    /* Modals */
-    .modal-content {
-      border-radius: 20px;
-      border: none;
-    }
-
-    .nav-chip {
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      border: 1px solid #cbd5e1;
-      background: #f8fafc;
-      color: #475569;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .nav-chip.active {
-      background: #1e3a8a;
-      color: #ffffff;
-      border-color: #1e3a8a;
-    }
-
-    /* Fullscreen PDF Modal */
-    .pdf-modal-dialog {
-      max-width: 100%;
-      margin: 0;
-      height: 100vh;
-    }
-    .pdf-modal-content {
-      height: 100vh;
-      border-radius: 0;
-      background: #0f172a;
     }
   </style>
 </head>
-<body>
+<body class="d-flex align-items-center justify-content-center p-3">
 
-  <div class="app-container">
+  <div class="container my-auto">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 text-center">
+        
+        <div class="hero-card p-4 p-md-5">
+          <div class="mb-4">
+            <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill fw-bold">
+              <i class="bi bi-patch-check-fill me-1"></i> Official Portal Cloudflare
+            </span>
+          </div>
 
-    <!-- SCREEN 1: WELCOME DASHBOARD (Default view matching image_48f6a05f.png) -->
-    <div id="welcomeScreen" class="p-4">
-      
-      <!-- PWA Standalone Banner Prompt -->
-      <div id="pwaInstallBox" class="pwa-install-banner mb-3 d-none">
-        <div class="d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-phone-fill fs-3 text-white"></i>
-            <div>
-              <div class="fw-bold fs-7">📱 Pasang Aplikasi Utuh di HP</div>
-              <div class="fs-9 opacity-90">Buka tanpa menu/address bar Chrome.</div>
+          <h1 class="display-5 fw-bold mb-3">E-Book MTs Al-Khairaat Bunyu</h1>
+          <p class="lead text-light opacity-90 mb-4">
+            Perpustakaan Digital Terintegrasi & Server Katalog Online Terpusat
+          </p>
+
+          <hr class="border-light opacity-25 my-4">
+
+          <div class="row g-3 justify-content-center mb-4">
+            <div class="col-md-6">
+              <a href="/admin.html" class="btn btn-custom-admin btn-lg w-100 py-3 shadow d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-display fs-4"></i>
+                <span>Masuk Portal Guru & Admin</span>
+              </a>
+            </div>
+            <div class="col-md-6">
+              <a href="/catalog.json" target="_blank" class="btn btn-custom-catalog btn-lg w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-code-json fs-4 text-warning"></i>
+                <span>Lihat Data Live catalog.json</span>
+              </a>
             </div>
           </div>
-          <button type="button" class="btn btn-light btn-sm fw-bold text-success px-3 shadow-sm" onclick="triggerPwaInstall()">
-            PASANG
-          </button>
-        </div>
-      </div>
 
-      <div class="text-center pt-2 pb-3">
-        <!-- School Logo -->
-        <div class="school-logo-wrapper mb-3">
-          <img src="/logo_alkhairaat.jpg" alt="Logo MTs Al-Khairaat Bunyu" class="school-logo-img">
+          <div class="p-3 rounded-3 bg-black bg-opacity-25 border border-white border-opacity-10 text-start small">
+            <div class="fw-bold text-warning mb-1"><i class="bi bi-info-circle me-1"></i> Informasi Portal Terpadu:</div>
+            <div class="text-light opacity-75">
+              - <strong>Ruang Baca Guru:</strong> Membaca seluruh buku pelajaran (VII, VIII, IX) langsung di laptop & layar proyektor kelas.<br>
+              - <strong>Menu Admin/Operator:</strong> Mengunggah buku baru, memperbarui <code>catalog.json</code>, dan impor akun siswa dari Excel.<br>
+              - <strong>Aplikasi Android Siswa:</strong> Membaca buku otomatis sesuai kelas masing-masing dari server katalog.
+            </div>
+          </div>
         </div>
 
-        <!-- App Header Title -->
-        <h4 class="fw-black text-primary mb-1" style="color: #1e3a8a !important; font-weight: 900;">
-          E-Book MTs Al-Khairaat Bunyu
-        </h4>
-        <p class="text-secondary small fw-semibold mb-3">
-          Perpustakaan Digital Terintegrasi Sekolah
+        <p class="small text-light opacity-50 mt-4 mb-0">
+          &copy; 2026 MTs Al-Khairaat Bunyu • Powered by Cloudflare Pages & Google AI Studio
         </p>
 
-        <!-- Official Badge -->
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-bold fs-7 mb-4">
-          <i class="bi bi-shield-check me-1"></i> Akses Resmi Akun Sekolah
-        </span>
-
-        <h6 class="fw-bold text-dark mb-3">Pilih Peran Login Anda</h6>
-      </div>
-
-      <!-- CARD 1: SISWA -->
-      <div class="role-card-student p-3 mb-3">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="icon-box-blue">
-            <i class="bi bi-mortarboard-fill"></i>
-          </div>
-          <div>
-            <span class="badge bg-primary-subtle text-primary fw-bold mb-1" style="font-size: 0.65rem;">SISWA KELAS VII, VIII, IX</span>
-            <h6 class="fw-bold text-dark mb-0">Kartu Akses Siswa</h6>
-          </div>
-        </div>
-        <p class="text-secondary fs-8 mb-3">
-          Masuk menggunakan Nama Siswa dan Sandi Kelas dari Kartu Login madrasah untuk mengakses buku pelajaran kelas Anda.
-        </p>
-        <button type="button" class="btn btn-student d-flex align-items-center justify-content-center gap-2" onclick="openStudentLoginModal()">
-          <i class="bi bi-box-arrow-in-right"></i>
-          <span>MASUK AKUN SISWA</span>
-        </button>
-      </div>
-
-      <!-- CARD 2: GURU -->
-      <div class="role-card-teacher p-3 mb-3">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="icon-box-orange">
-            <i class="bi bi-person-badge-fill"></i>
-          </div>
-          <div>
-            <span class="badge bg-warning-subtle text-warning-emphasis fw-bold mb-1" style="font-size: 0.65rem; background-color: #fff7ed !important; color: #c2410c !important;">GURU & MAJELIS PENGAJAR</span>
-            <h6 class="fw-bold text-dark mb-0">Kartu Akses Guru & Pengajar</h6>
-          </div>
-        </div>
-        <p class="text-secondary fs-8 mb-3">
-          Masuk menggunakan Akun Guru / Pengajar untuk membuka koleksi pegangan guru & modul pengajaran mata pelajaran Anda.
-        </p>
-        <button type="button" class="btn btn-teacher d-flex align-items-center justify-content-center gap-2" onclick="openTeacherLoginModal()">
-          <i class="bi bi-card-heading"></i>
-          <span>MASUK AKUN GURU</span>
-        </button>
-      </div>
-
-      <!-- CARD 3: PORTAL ADMIN & OPERATOR SEKOLAH -->
-      <div class="p-3 mb-4 rounded-4 border border-2 border-warning bg-warning bg-opacity-10">
-        <div class="d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-speedometer2 text-warning-emphasis fs-4"></i>
-            <div>
-              <div class="fw-bold text-dark fs-7">⚙️ Portal Admin & Operator</div>
-              <div class="text-secondary fs-8">Kelola/Unggah Buku & Impor Akun Excel.</div>
-            </div>
-          </div>
-          <a href="/admin.html" class="btn btn-warning btn-sm fw-bold px-3 text-dark shadow-sm">
-            Buka Portal
-          </a>
-        </div>
-      </div>
-
-      <div class="text-center mb-4">
-        <span class="text-muted fs-8 fw-semibold">MTs Al-Khairaat Bunyu • Sistem E-Book Resmi</span>
-      </div>
-
-      <!-- NOTIFICATIONS FOOTER -->
-      <div class="d-flex flex-column gap-2 mb-2">
-        
-        <!-- App Update Notice -->
-        <div class="notice-card-blue p-3">
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-phone-vibrate text-primary fs-5"></i>
-              <div>
-                <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8">Status: Versi v1.0.0 aktif & terhubung ke server.</div>
-              </div>
-            </div>
-            <button class="btn btn-primary btn-sm fw-bold px-3" style="font-size: 0.75rem;" onclick="checkAppUpdate()">Cek Update</button>
-          </div>
-        </div>
-
-        <!-- Catalog Sync Notice -->
-        <div class="notice-card-purple p-3">
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-book-half text-purple fs-5" style="color: #6b21a8;"></i>
-              <div>
-                <div class="fw-bold fs-7" style="color: #581c87;">📚 Notifikasi Buku & Katalog Terbaru</div>
-                <div class="text-secondary fs-8" id="catalogCountText">Memuat katalog server...</div>
-              </div>
-            </div>
-            <button class="btn btn-sm text-white fw-bold px-3" style="font-size: 0.75rem; background-color: #7e22ce;" onclick="syncCatalog()">Refresh Buku</button>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- SCREEN 2: MAIN BOOKSHELF LIBRARY (Appears after student/teacher logs in) -->
-    <div id="libraryScreen" class="d-none">
-      
-      <!-- Top Bar Header -->
-      <div class="p-3 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <div>
-            <h6 class="fw-bold mb-0" id="userDisplayName">Assalamu'alaikum, Siswa</h6>
-            <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
-              <i class="bi bi-box-arrow-right"></i> Ganti Akun
-            </button>
-            <a href="/admin.html" id="adminPortalBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark" style="font-size: 0.75rem;">
-              <i class="bi bi-speedometer2"></i> Portal Admin
-            </a>
-          </div>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="input-group input-group-sm mt-2">
-          <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" id="searchInput" class="form-control border-0" placeholder="Cari Judul, Pengarang, Mapel..." oninput="filterBooks()">
-        </div>
-      </div>
-
-      <!-- Filter Chips -->
-      <div class="p-3 bg-light border-bottom">
-        <div class="fw-bold fs-8 text-primary mb-2">Saring Jenjang Kelas & Kategori:</div>
-        <div class="d-flex gap-2 overflow-x-auto pb-1" id="filterChipsContainer">
-          <div class="nav-chip active" onclick="setGradeFilter('', this)">Semua Kelas</div>
-          <div class="nav-chip" onclick="setGradeFilter('Kelas VII', this)">Kelas VII</div>
-          <div class="nav-chip" onclick="setGradeFilter('Kelas VIII', this)">Kelas VIII</div>
-          <div class="nav-chip" onclick="setGradeFilter('Kelas IX', this)">Kelas IX</div>
-        </div>
-      </div>
-
-      <!-- Notice Banner for Students -->
-      <div class="px-3 pt-3">
-        <div class="alert alert-primary py-2 px-3 fs-8 mb-0 d-flex align-items-center gap-2 border-0 bg-primary-subtle text-primary-emphasis">
-          <i class="bi bi-check-circle-fill"></i>
-          <span>Katalog terhubung dengan Portal Admin & Guru. Buku otomatis diperbarui.</span>
-        </div>
-      </div>
-
-      <!-- Books Grid -->
-      <div class="p-3">
-        <div class="row g-3" id="booksGrid">
-          <!-- Dynamic Book Cards rendered via JS -->
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- MODAL 1: STUDENT LOGIN -->
-  <div class="modal fade" id="studentLoginModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content p-2">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-primary"><i class="bi bi-mortarboard-fill me-2"></i> Login Akun Siswa</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p class="text-secondary fs-8 mb-3">Pilih nama siswa atau masuk menggunakan kata sandi kelas Anda.</p>
-          
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Pilih Nama Siswa / Kelas:</label>
-            <select id="studentSelect" class="form-select form-select-sm fw-semibold">
-              <option value="Siswa MTs Al-Khairaat|Kelas VII|2027">-- Pilih Nama Anda / Kelas --</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Sandi Kelas (VII: 2027, VIII: 2026, IX: 2025):</label>
-            <input type="password" id="studentPasswordInput" class="form-control form-control-sm" placeholder="Masukkan Sandi Kelas">
-          </div>
-
-          <div id="studentLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
-
-          <button type="button" class="btn btn-student" onclick="submitStudentLogin()">
-            MASUK PERPUSTAKAAN SISWA
-          </button>
-        </div>
       </div>
     </div>
   </div>
 
-
-  <!-- MODAL 2: TEACHER LOGIN -->
-  <div class="modal fade" id="teacherLoginModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content p-2">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-warning-emphasis"><i class="bi bi-person-badge-fill me-2"></i> Login Akun Guru / Pengajar</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p class="text-secondary fs-8 mb-3">Masuk untuk mengakses koleksi pegangan guru & modul pengajaran.</p>
-          
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Pilih Akun Guru:</label>
-            <select id="teacherSelect" class="form-select form-select-sm fw-semibold">
-              <option value="Ustadz Ahmad, S.Pd.I|Mapel: Bahasa Arab|2026">-- Pilih Akun Guru --</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Kata Sandi / PIN Guru (Default: 2026):</label>
-            <input type="password" id="teacherPasswordInput" class="form-control form-control-sm" placeholder="Masukkan Kata Sandi Guru">
-          </div>
-
-          <div id="teacherLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
-
-          <button type="button" class="btn btn-teacher" onclick="submitTeacherLogin()">
-            MASUK AKUN GURU
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- MODAL 3: FULLSCREEN PDF READER -->
-  <div class="modal fade" id="pdfReaderModal" tabindex="-1">
-    <div class="modal-dialog pdf-modal-dialog">
-      <div class="modal-content pdf-modal-content">
-        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
-            <div>
-              <h6 class="modal-title fw-bold mb-0 fs-7" id="pdfBookTitle">Judul Buku Pelajaran</h6>
-              <span class="badge bg-warning text-dark fs-8" id="pdfBookGrade">Kelas VIII</span>
-            </div>
-          </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 bg-secondary position-relative">
-          <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- JS Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    // PWA Service Worker Registration & Deferred Prompt
-    let deferredPwaPrompt = null;
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-          console.log('PWA Service Worker registered successfully:', reg);
-        }).catch(err => {
-          console.log('PWA Service Worker registration failed:', err);
-        });
-      });
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPwaPrompt = e;
-      const pwaBox = document.getElementById("pwaInstallBox");
-      if (pwaBox) {
-        pwaBox.classList.remove("d-none");
-      }
-    });
-
-    function triggerPwaInstall() {
-      if (deferredPwaPrompt) {
-        deferredPwaPrompt.prompt();
-        deferredPwaPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted PWA installation');
-          }
-          deferredPwaPrompt = null;
-          document.getElementById("pwaInstallBox").classList.add("d-none");
-        });
-      } else {
-        alert("💡 Untuk memasang aplikasi utuh tanpa menu Chrome:\n\n1. Klik titik tiga (⋮) di pojok kanan atas Chrome.\n2. Pilih 'Tambahkan ke Layar Utama' / 'Install Application'.\n3. Buka aplikasi dari ikon di Layar Utama HP Anda.");
-      }
-    }
-
-    // Global Application State
-    let allBooks = [];
-    let studentsList = [];
-    let teachersList = [];
-    let currentGradeFilter = "";
-    let currentUser = null;
-
-    // Load Initial Data
-    document.addEventListener("DOMContentLoaded", () => {
-      loadCatalogData();
-      loadUsersData();
-      checkSavedUserSession();
-    });
-
-    async function loadCatalogData() {
-      try {
-        const localSaved = localStorage.getItem("app_catalog_json");
-        if (localSaved) {
-          allBooks = JSON.parse(localSaved);
-        }
-        
-        // Fetch live catalog from server
-        const res = await fetch("/catalog.json?t=" + Date.now());
-        if (res.ok) {
-          const remoteBooks = await res.json();
-          if (Array.isArray(remoteBooks) && remoteBooks.length > 0) {
-            allBooks = remoteBooks;
-            localStorage.setItem("app_catalog_json", JSON.stringify(allBooks));
-          }
-        }
-      } catch (e) {
-        console.warn("Using fallback catalog data:", e);
-      }
-      
-      document.getElementById("catalogCountText").innerText = `${allBooks.length} buku pelajaran siap dibaca.`;
-      renderBooks();
-    }
-
-    async function loadUsersData() {
-      try {
-        const res = await fetch("/students.json?t=" + Date.now());
-        if (res.ok) {
-          const users = await res.json();
-          studentsList = users.filter(u => u.role === "STUDENT");
-          teachersList = users.filter(u => u.role === "TEACHER");
-          populateUserDropdowns();
-        }
-      } catch (e) {
-        console.warn("User data error:", e);
-      }
-    }
-
-    function populateUserDropdowns() {
-      const studentSel = document.getElementById("studentSelect");
-      const teacherSel = document.getElementById("teacherSelect");
-
-      if (studentsList.length > 0) {
-        studentSel.innerHTML = '<option value="">-- Pilih Nama Siswa Anda --</option>';
-        studentsList.forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = `${s.nama}|${s.kelas}|${s.password || "2026"}`;
-          opt.textContent = `${s.nama} (${s.kelas})`;
-          studentSel.appendChild(opt);
-        });
-      }
-
-      if (teachersList.length > 0) {
-        teacherSel.innerHTML = '<option value="">-- Pilih Akun Guru --</option>';
-        teachersList.forEach(t => {
-          const opt = document.createElement("option");
-          opt.value = `${t.nama}|${t.kelas}|${t.password || "2026"}`;
-          opt.textContent = `${t.nama} (${t.kelas})`;
-          teacherSel.appendChild(opt);
-        });
-      }
-    }
-
-    // Modal Triggers
-    const studentModal = new bootstrap.Modal(document.getElementById("studentLoginModal"));
-    const teacherModal = new bootstrap.Modal(document.getElementById("teacherLoginModal"));
-    const pdfModal = new bootstrap.Modal(document.getElementById("pdfReaderModal"));
-
-    function openStudentLoginModal() {
-      studentModal.show();
-    }
-
-    function openTeacherLoginModal() {
-      teacherModal.show();
-    }
-
-    function submitStudentLogin() {
-      const selVal = document.getElementById("studentSelect").value;
-      const pass = document.getElementById("studentPasswordInput").value.trim();
-      const errBox = document.getElementById("studentLoginError");
-
-      let name = "Siswa Madrasah";
-      let grade = "Semua Kelas";
-      let expectedPass = "2026";
-
-      if (selVal) {
-        const parts = selVal.split("|");
-        name = parts[0];
-        grade = parts[1];
-        expectedPass = parts[2] || "2026";
-      }
-
-      if (pass !== "" && pass !== expectedPass && pass !== "2026" && pass !== "2027" && pass !== "2025") {
-        errBox.innerText = "Sandi Kelas / Sandi Siswa tidak cocok. Gagal masuk.";
-        errBox.classList.remove("d-none");
-        return;
-      }
-
-      currentUser = { name, grade, role: "STUDENT" };
-      localStorage.setItem("app_current_user", JSON.stringify(currentUser));
-      studentModal.hide();
-      showLibraryView();
-    }
-
-    function submitTeacherLogin() {
-      const selVal = document.getElementById("teacherSelect").value;
-      const pass = document.getElementById("teacherPasswordInput").value.trim();
-      const errBox = document.getElementById("teacherLoginError");
-
-      let name = "Guru MTs Al-Khairaat";
-      let grade = "Pengajar";
-
-      if (selVal) {
-        const parts = selVal.split("|");
-        name = parts[0];
-        grade = parts[1];
-      }
-
-      if (pass !== "" && pass !== "2026" && pass !== "admin") {
-        errBox.innerText = "Kata Sandi Guru salah. Gunakan default '2026'.";
-        errBox.classList.remove("d-none");
-        return;
-      }
-
-      currentUser = { name, grade, role: "TEACHER" };
-      localStorage.setItem("app_current_user", JSON.stringify(currentUser));
-      teacherModal.hide();
-      showLibraryView();
-    }
-
-    function checkSavedUserSession() {
-      const saved = localStorage.getItem("app_current_user");
-      if (saved) {
-        try {
-          currentUser = JSON.parse(saved);
-          showLibraryView();
-        } catch (_) {}
-      }
-    }
-
-    function showLibraryView() {
-      document.getElementById("welcomeScreen").classList.add("d-none");
-      document.getElementById("libraryScreen").classList.remove("d-none");
-
-      if (currentUser) {
-        document.getElementById("userDisplayName").innerText = `Assalamu'alaikum, ${currentUser.name}`;
-        document.getElementById("userRoleBadge").innerText = currentUser.role === "TEACHER" ? `MODE GURU (${currentUser.grade})` : currentUser.grade.toUpperCase();
-        
-        if (currentUser.role === "STUDENT" && currentUser.grade.includes("Kelas")) {
-          setGradeFilter(currentUser.grade);
-        }
-      }
-      renderBooks();
-    }
-
-    function logout() {
-      localStorage.removeItem("app_current_user");
-      currentUser = null;
-      document.getElementById("libraryScreen").classList.add("d-none");
-      document.getElementById("welcomeScreen").classList.remove("d-none");
-    }
-
-    function setGradeFilter(grade, el) {
-      currentGradeFilter = grade;
-      if (el) {
-        document.querySelectorAll("#filterChipsContainer .nav-chip").forEach(c => c.classList.remove("active"));
-        el.classList.add("active");
-      }
-      renderBooks();
-    }
-
-    function filterBooks() {
-      renderBooks();
-    }
-
-    function renderBooks() {
-      const grid = document.getElementById("booksGrid");
-      const search = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase() : "";
-
-      let filtered = allBooks.filter(b => {
-        const matchGrade = !currentGradeFilter || b.gradeClass.toLowerCase().includes(currentGradeFilter.toLowerCase());
-        const matchSearch = !search || b.title.toLowerCase().includes(search) || b.subject.toLowerCase().includes(search) || b.author.toLowerCase().includes(search);
-        return matchGrade && matchSearch;
-      });
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-12 text-center py-5">
-            <i class="bi bi-book text-muted display-4"></i>
-            <h6 class="fw-bold mt-3 text-secondary">Belum Ada Buku Tersedia</h6>
-            <p class="fs-8 text-muted">Coba pilih 'Semua Kelas' atau sinkronkan kembali dengan Portal Admin.</p>
-          </div>
-        `;
-        return;
-      }
-
-      grid.innerHTML = filtered.map(b => `
-        <div class="col-6 col-sm-6">
-          <div class="book-card" onclick="openPdfReader('${escapeHtml(b.title)}', '${escapeHtml(b.gradeClass)}', '${escapeHtml(b.fileUrl)}')">
-            <div class="book-cover">
-              <span class="badge bg-warning text-dark fw-bold align-self-start fs-8">${escapeHtml(b.gradeClass)}</span>
-              <div class="text-white">
-                <i class="bi bi-book-half fs-3 mb-1"></i>
-                <div class="fw-bold fs-8 text-truncate">${escapeHtml(b.title)}</div>
-                <div class="fs-9 opacity-75">${escapeHtml(b.subject)}</div>
-              </div>
-            </div>
-            <div class="p-2 bg-white text-center">
-              <button class="btn btn-primary btn-sm w-100 fw-bold py-1 fs-8">
-                <i class="bi bi-journal-bookmark me-1"></i> BACA
-              </button>
-            </div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    function openPdfReader(title, grade, url) {
-      document.getElementById("pdfBookTitle").innerText = title;
-      document.getElementById("pdfBookGrade").innerText = grade;
-      
-      let viewUrl = url;
-      if (url.includes("drive.google.com")) {
-        viewUrl = url.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
-      }
-
-      document.getElementById("pdfFrame").src = viewUrl;
-      pdfModal.show();
-    }
-
-    function syncCatalog() {
-      loadCatalogData();
-      alert("✅ Katalog buku berhasil diperbarui dari server Cloudflare.");
-    }
-
-    function checkAppUpdate() {
-      alert("⚡ Versi aplikasi v1.0.0 siap & terhubung dengan Cloudflare.");
-    }
-
-    function escapeHtml(str) {
-      return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-  </script>
 </body>
 </html>
