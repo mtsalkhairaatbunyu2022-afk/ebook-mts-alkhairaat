@@ -236,8 +236,15 @@
       height: 100vh;
       border-radius: 0;
       background: #0f172a;
-      display: flex;
       flex-direction: column;
+    }
+
+    .overflow-x-auto {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .overflow-x-auto::-webkit-scrollbar {
+      display: none;
     }
   </style>
 </head>
@@ -372,7 +379,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.1.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.1.1 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -407,33 +414,35 @@
       
       <!-- Top Bar Header -->
       <div class="p-3 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <div>
-            <h6 class="fw-bold mb-0" id="userDisplayName">Assalamu'alaikum, Siswa</h6>
-            <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
-          </div>
-          <div class="d-flex gap-2">
-            <!-- 1. Rekap Nilai (Khusus Guru jika ada link) -->
-            <button id="rekapNilaiBtn" class="btn btn-success btn-sm fw-bold py-1 px-2 d-none" style="font-size: 0.75rem;" onclick="openRekapNilai()">
-              <i class="bi bi-table"></i> Rekap Nilai
-            </button>
-            
-            <!-- 2. Tombol Utama (Bisa Admin atau Ubah Password) -->
-            <button id="mainActionBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark d-none" style="font-size: 0.75rem;">
-              <i class="bi bi-shield-lock" id="mainActionIcon"></i> <span id="mainActionText">Ubah Password</span>
-            </button>
-
-            <!-- 3. Tombol Logout -->
+        <div class="d-flex flex-column gap-2 mb-2">
+          <!-- Row 1: Welcome & Logout -->
+          <div class="d-flex align-items-center justify-content-between">
+            <div style="max-width: 70%;">
+              <h6 class="fw-bold mb-0 text-truncate" id="userDisplayName">Assalamu'alaikum, Siswa</h6>
+              <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
+            </div>
             <button id="logoutBtn" class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="logout()">
               <i class="bi bi-box-arrow-right"></i> Logout
             </button>
           </div>
+          
+          <!-- Row 2: Special Actions (Teacher only features) -->
+          <div class="d-flex gap-2">
+            <!-- 1. Rekap Nilai (Khusus Guru jika ada link) -->
+            <button id="rekapNilaiBtn" class="btn btn-success btn-sm fw-bold py-1 px-2 d-none flex-fill" style="font-size: 0.75rem;" onclick="openRekapNilai()">
+              <i class="bi bi-table"></i> Rekap Nilai
+            </button>
+            
+            <!-- 2. Tombol Utama (Bisa Admin atau Ubah Password) -->
+            <button id="mainActionBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark d-none flex-fill" style="font-size: 0.75rem;">
+              <i class="bi bi-shield-lock" id="mainActionIcon"></i> <span id="mainActionText">Ubah Password</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="input-group input-group-sm mt-2">
-          <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" id="searchInput" class="form-control border-0" placeholder="Cari Judul, Pengarang, Mapel..." oninput="filterBooks()">
+        <div class="input-group input-group-sm mt-3 shadow-sm rounded-pill overflow-hidden border">
+          <span class="input-group-text bg-white border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" id="searchInput" class="form-control border-0 py-2" placeholder="Cari Judul, Pengarang, Mapel..." oninput="filterBooks()">
         </div>
       </div>
 
