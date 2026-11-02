@@ -2,8 +2,17 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>E-Book MTs Al-Khairaat Bunyu - Perpustakaan Digital</title>
+
+  <!-- PWA Web App Manifest & Fullscreen Display Rules -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="E-Book MTs">
+
   <!-- Favicon & Icons -->
   <link rel="icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
   <link rel="shortcut icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
@@ -29,6 +38,7 @@
       color: #1e293b;
       margin: 0;
       padding-bottom: 40px;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .app-container {
@@ -158,6 +168,15 @@
       border-radius: 14px;
     }
 
+    /* PWA Install Banner */
+    .pwa-install-banner {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+    }
+
     /* Book Shelf Grid */
     .book-card {
       border-radius: 14px;
@@ -226,6 +245,23 @@
 
     <!-- SCREEN 1: WELCOME DASHBOARD (Default view matching image_48f6a05f.png) -->
     <div id="welcomeScreen" class="p-4">
+      
+      <!-- PWA Standalone Banner Prompt -->
+      <div id="pwaInstallBox" class="pwa-install-banner mb-3 d-none">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-phone-fill fs-3 text-white"></i>
+            <div>
+              <div class="fw-bold fs-7">📱 Pasang Aplikasi Utuh di HP</div>
+              <div class="fs-9 opacity-90">Buka tanpa menu/address bar Chrome.</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-light btn-sm fw-bold text-success px-3 shadow-sm" onclick="triggerPwaInstall()">
+            PASANG
+          </button>
+        </div>
+      </div>
+
       <div class="text-center pt-2 pb-3">
         <!-- School Logo -->
         <div class="school-logo-wrapper mb-3">
@@ -269,7 +305,7 @@
       </div>
 
       <!-- CARD 2: GURU -->
-      <div class="role-card-teacher p-3 mb-4">
+      <div class="role-card-teacher p-3 mb-3">
         <div class="d-flex align-items-center gap-3 mb-2">
           <div class="icon-box-orange">
             <i class="bi bi-person-badge-fill"></i>
@@ -286,6 +322,22 @@
           <i class="bi bi-card-heading"></i>
           <span>MASUK AKUN GURU</span>
         </button>
+      </div>
+
+      <!-- CARD 3: PORTAL ADMIN & OPERATOR SEKOLAH -->
+      <div class="p-3 mb-4 rounded-4 border border-2 border-warning bg-warning bg-opacity-10">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-speedometer2 text-warning-emphasis fs-4"></i>
+            <div>
+              <div class="fw-bold text-dark fs-7">⚙️ Portal Admin & Operator</div>
+              <div class="text-secondary fs-8">Kelola/Unggah Buku & Impor Akun Excel.</div>
+            </div>
+          </div>
+          <a href="/admin.html" class="btn btn-warning btn-sm fw-bold px-3 text-dark shadow-sm">
+            Buka Portal
+          </a>
+        </div>
       </div>
 
       <div class="text-center mb-4">
@@ -480,6 +532,43 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
+    // PWA Service Worker Registration & Deferred Prompt
+    let deferredPwaPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('PWA Service Worker registered successfully:', reg);
+        }).catch(err => {
+          console.log('PWA Service Worker registration failed:', err);
+        });
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const pwaBox = document.getElementById("pwaInstallBox");
+      if (pwaBox) {
+        pwaBox.classList.remove("d-none");
+      }
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted PWA installation');
+          }
+          deferredPwaPrompt = null;
+          document.getElementById("pwaInstallBox").classList.add("d-none");
+        });
+      } else {
+        alert("💡 Untuk memasang aplikasi utuh tanpa menu Chrome:\n\n1. Klik titik tiga (⋮) di pojok kanan atas Chrome.\n2. Pilih 'Tambahkan ke Layar Utama' / 'Install Application'.\n3. Buka aplikasi dari ikon di Layar Utama HP Anda.");
+      }
+    }
+
     // Global Application State
     let allBooks = [];
     let studentsList = [];
