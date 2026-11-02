@@ -693,16 +693,22 @@
         const res = await fetch("/catalog.json?t=" + Date.now());
         if (res.ok) {
           const remoteBooks = await res.json();
-          if (Array.isArray(remoteBooks) && remoteBooks.length > 0) {
+          if (Array.isArray(remoteBooks)) {
             allBooks = remoteBooks;
             localStorage.setItem("app_catalog_json", JSON.stringify(allBooks));
+            
+            // Logic: If Admin cleared all books, clear local view immediately
+            if (remoteBooks.length === 0) {
+              console.log("Admin cleared catalog, resetting local shelf.");
+            }
           }
         }
       } catch (e) {
         console.warn("Using fallback catalog data:", e);
       }
       
-      document.getElementById("catalogCountText").innerText = `${allBooks.length} buku pelajaran siap dibaca.`;
+      const countEl = document.getElementById("catalogCountText");
+      if (countEl) countEl.innerText = `${allBooks.length} buku pelajaran siap dibaca.`;
       renderBooks();
     }
 
@@ -711,13 +717,51 @@
         const res = await fetch("/students.json?t=" + Date.now());
         if (res.ok) {
           const users = await res.json();
-          studentsList = users.filter(u => u.role === "STUDENT");
-          teachersList = users.filter(u => u.role === "TEACHER");
-          populateUserDropdowns();
+          if (Array.isArray(users)) {
+            // CRITICAL: If Admin deleted all students, reset the whole app like new
+            if (users.length === 0) {
+              console.log("Admin deleted all students, resetting app...");
+              clearAllAppData();
+              return;
+            }
+
+            // If current logged-in user is not in the new list, force logout
+            if (currentUser) {
+              const stillExists = users.find(u => u.nama === currentUser.name);
+              if (!stillExists) {
+                console.log("Your account was removed by Admin. Logging out.");
+                logout();
+              }
+            }
+
+            studentsList = users.filter(u => u.role === "STUDENT");
+            teachersList = users.filter(u => u.role === "TEACHER");
+            populateUserDropdowns();
+          }
         }
       } catch (e) {
         console.warn("User data error:", e);
       }
+    }
+
+    function clearAllAppData() {
+      localStorage.removeItem("app_catalog_json");
+      localStorage.removeItem("app_current_user");
+      localStorage.removeItem("app_custom_passwords");
+      allBooks = [];
+      currentUser = null;
+      studentsList = [];
+      teachersList = [];
+      
+      // Reset UI to Welcome Screen
+      document.getElementById("libraryScreen").classList.add("d-none");
+      document.getElementById("welcomeScreen").classList.remove("d-none");
+      
+      populateUserDropdowns();
+      renderBooks();
+      
+      const countEl = document.getElementById("catalogCountText");
+      if (countEl) countEl.innerText = "Katalog kosong. Menunggu update Admin.";
     }
 
     function populateUserDropdowns() {
