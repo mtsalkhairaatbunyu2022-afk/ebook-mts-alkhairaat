@@ -372,7 +372,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.8.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.9.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -505,8 +505,10 @@
             <p class="text-secondary fs-8 mb-3">Masukkan Nama Lengkap Anda (Username) dan Kata Sandi dari Admin.</p>
 
             <div class="mb-3">
-              <label class="form-label fw-bold fs-7">Username (Nama Lengkap):</label>
-              <input type="text" id="studentUsernameInput" class="form-control" placeholder="Contoh: AQEELA ZAHRATUSSYIFA">
+              <label class="form-label fw-bold fs-7">Pilih Nama Anda:</label>
+              <select id="studentNameSelect" class="form-select">
+                <option value="">-- Pilih Nama --</option>
+              </select>
             </div>
 
             <div class="mb-3">
@@ -849,9 +851,22 @@
       document.getElementById("studentLoginStep1").classList.add("d-none");
       document.getElementById("studentLoginStep2").classList.remove("d-none");
       document.getElementById("selectedGradeLabel").innerText = grade;
-      document.getElementById("studentUsernameInput").value = "";
       document.getElementById("studentPasswordInput").value = "";
       document.getElementById("studentLoginError").classList.add("d-none");
+
+      // Populate student name select based on selected grade
+      const nameSelect = document.getElementById("studentNameSelect");
+      nameSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
+      
+      const filteredStudents = studentsList.filter(s => s.kelas === grade);
+      filteredStudents.sort((a, b) => a.nama.localeCompare(b.nama));
+      
+      filteredStudents.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.nama;
+        opt.textContent = s.nama;
+        nameSelect.appendChild(opt);
+      });
     }
 
     function backToStep1() {
@@ -906,12 +921,12 @@
     }
 
     function submitStudentLogin() {
-      const username = document.getElementById("studentUsernameInput").value.trim();
+      const username = document.getElementById("studentNameSelect").value;
       const pass = document.getElementById("studentPasswordInput").value.trim();
       const errBox = document.getElementById("studentLoginError");
 
       if (!username || !pass) {
-        errBox.innerText = "Username dan Password harus diisi.";
+        errBox.innerText = "Nama dan Password harus diisi.";
         errBox.classList.remove("d-none");
         return;
       }
