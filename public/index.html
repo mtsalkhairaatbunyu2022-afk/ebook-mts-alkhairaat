@@ -372,7 +372,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.3.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.4.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -525,18 +525,16 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p class="text-secondary fs-8 mb-3">Masuk untuk mengakses koleksi pegangan guru & modul pengajaran.</p>
+          <p class="text-secondary fs-8 mb-3">Masuk menggunakan Username dan Kata Sandi Guru Anda untuk mengakses koleksi pegangan guru.</p>
           
           <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Pilih Akun Guru:</label>
-            <select id="teacherSelect" class="form-select form-select-sm fw-semibold">
-              <option value="Ustadz Ahmad, S.Pd.I|Mapel: Bahasa Arab|2026">-- Pilih Akun Guru --</option>
-            </select>
+            <label class="form-label fw-bold fs-7">Username Guru:</label>
+            <input type="text" id="teacherUsernameInput" class="form-control" placeholder="Masukkan Username Anda">
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Kata Sandi / PIN Guru (Default: 2026):</label>
-            <input type="password" id="teacherPasswordInput" class="form-control form-control-sm" placeholder="Masukkan Kata Sandi Guru">
+            <label class="form-label fw-bold fs-7">Kata Sandi / PIN Guru:</label>
+            <input type="password" id="teacherPasswordInput" class="form-control" placeholder="Masukkan Kata Sandi Guru">
           </div>
 
           <div id="teacherLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
@@ -913,27 +911,37 @@
     }
 
     function submitTeacherLogin() {
-      const selVal = document.getElementById("teacherSelect").value;
+      const username = document.getElementById("teacherUsernameInput").value.trim();
       const pass = document.getElementById("teacherPasswordInput").value.trim();
       const errBox = document.getElementById("teacherLoginError");
 
-      let name = "Guru MTs Al-Khairaat";
-      let grade = "Pengajar";
-
-      if (selVal) {
-        const parts = selVal.split("|");
-        name = parts[0];
-        grade = parts[1];
-        expectedPass = getLocalPassword(name, "2026");
+      if (!username || !pass) {
+        errBox.innerText = "Username dan Password harus diisi.";
+        errBox.classList.remove("d-none");
+        return;
       }
 
-      if (pass !== "" && pass !== expectedPass && pass !== "admin") {
+      // Find teacher in teachersList matching username or name
+      const teacher = teachersList.find(t => 
+        (t.username && t.username.toLowerCase() === username.toLowerCase()) || 
+        (t.nama.toLowerCase() === username.toLowerCase())
+      );
+
+      if (!teacher) {
+        errBox.innerText = "Akun Guru tidak ditemukan. Pastikan Username benar.";
+        errBox.classList.remove("d-none");
+        return;
+      }
+
+      const expectedPass = getLocalPassword(teacher.nama, teacher.password || "2026");
+
+      if (pass !== expectedPass && pass !== "admin") {
         errBox.innerText = "Kata Sandi Guru salah.";
         errBox.classList.remove("d-none");
         return;
       }
 
-      currentUser = { name, grade, role: "TEACHER" };
+      currentUser = { name: teacher.nama, grade: teacher.kelas, role: "TEACHER" };
       localStorage.setItem("app_current_user", JSON.stringify(currentUser));
       teacherModal.hide();
       showLibraryView();
