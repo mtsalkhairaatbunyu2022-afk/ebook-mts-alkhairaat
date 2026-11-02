@@ -236,6 +236,8 @@
       height: 100vh;
       border-radius: 0;
       background: #0f172a;
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
@@ -370,10 +372,12 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8">Status: Versi v1.0.0 aktif & terhubung ke server.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.1.0 aktif.</div>
               </div>
             </div>
-            <button class="btn btn-primary btn-sm fw-bold px-3" style="font-size: 0.75rem;" onclick="checkAppUpdate()">Cek Update</button>
+            <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
+              <span id="btnCheckUpdateText">Cek Update</span>
+            </button>
           </div>
         </div>
 
@@ -536,8 +540,13 @@
           </div>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-0 bg-secondary position-relative">
-          <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        <div class="modal-body p-0 bg-secondary position-relative flex-grow-1" style="overflow: hidden;">
+          <!-- Loading Spinner for PDF -->
+          <div id="pdfLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white" style="z-index: 10;">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p class="mt-2 fw-bold small">Memuat Isi Buku...</p>
+          </div>
+          <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none; display: block;" onload="document.getElementById('pdfLoading').classList.add('d-none')"></iframe>
         </div>
       </div>
     </div>
@@ -968,8 +977,46 @@
       alert("✅ Katalog buku berhasil diperbarui dari server Cloudflare.");
     }
 
-    function checkAppUpdate() {
-      alert("⚡ Versi aplikasi v1.0.0 siap & terhubung dengan Cloudflare.");
+    async function checkAppUpdate() {
+      const btn = document.getElementById("btnCheckUpdate");
+      const btnText = document.getElementById("btnCheckUpdateText");
+      if (!btn || !btnText) return;
+
+      // Start Loading State
+      btn.disabled = true;
+      btnText.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memeriksa...`;
+
+      try {
+        // 1. Force Service Worker Update Check
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            await registration.update();
+            console.log("Service Worker update check triggered");
+          }
+        }
+
+        // 2. Simulate network delay for "Progress" feel
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // 3. Show Success
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-success");
+        btnText.innerHTML = `<i class="bi bi-check-lg"></i> Update Sukses`;
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.classList.remove("btn-success");
+          btn.classList.add("btn-primary");
+          btnText.innerText = "Cek Update";
+        }, 3000);
+
+      } catch (e) {
+        btn.disabled = false;
+        btnText.innerText = "Cek Update";
+        alert("Gagal memeriksa update. Pastikan koneksi internet aktif.");
+      }
     }
 
     function escapeHtml(str) {
