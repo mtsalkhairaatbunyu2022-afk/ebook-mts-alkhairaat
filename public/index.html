@@ -407,6 +407,9 @@
             <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;" id="userRoleBadge">SISWA KELAS VII</span>
           </div>
           <div class="d-flex gap-2">
+            <button id="adminPortalBtn" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark d-none" style="font-size: 0.75rem;" onclick="location.href='/admin.html'">
+              <i class="bi bi-speedometer2"></i> Portal Admin
+            </button>
             <button class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="openChangePasswordModal()">
               <i class="bi bi-shield-lock"></i> Ubah Password
             </button>
@@ -513,6 +516,28 @@
           <button type="button" class="btn btn-teacher" onclick="submitTeacherLogin()">
             MASUK AKUN GURU
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 3: FULLSCREEN PDF READER -->
+  <div class="modal fade" id="pdfReaderModal" tabindex="-1">
+    <div class="modal-dialog pdf-modal-dialog">
+      <div class="modal-content pdf-modal-content">
+        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
+            <div>
+              <h6 class="modal-title fw-bold mb-0 fs-7" id="pdfBookTitle">Judul Buku Pelajaran</h6>
+              <span class="badge bg-warning text-dark fs-8" id="pdfBookGrade">Kelas VIII</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0 bg-secondary position-relative">
+          <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
       </div>
     </div>
@@ -628,8 +653,21 @@
     let currentGradeFilter = "";
     let currentUser = null;
 
+    let studentModal, teacherModal, pdfModal, changePassModal;
+
     // Load Initial Data
     document.addEventListener("DOMContentLoaded", () => {
+      // Initialize Modals Safely
+      const sEl = document.getElementById("studentLoginModal");
+      const tEl = document.getElementById("teacherLoginModal");
+      const pEl = document.getElementById("pdfReaderModal");
+      const cEl = document.getElementById("changePasswordModal");
+
+      if (sEl) studentModal = new bootstrap.Modal(sEl);
+      if (tEl) teacherModal = new bootstrap.Modal(tEl);
+      if (pEl) pdfModal = new bootstrap.Modal(pEl);
+      if (cEl) changePassModal = new bootstrap.Modal(cEl);
+
       loadCatalogData();
       loadUsersData();
       checkSavedUserSession();
@@ -698,25 +736,23 @@
       }
     }
 
-    // Modal Triggers
-    const studentModal = new bootstrap.Modal(document.getElementById("studentLoginModal"));
-    const teacherModal = new bootstrap.Modal(document.getElementById("teacherLoginModal"));
-    const pdfModal = new bootstrap.Modal(document.getElementById("pdfReaderModal"));
-    const changePassModal = new bootstrap.Modal(document.getElementById("changePasswordModal"));
-
+    // Modal Trigger Helpers
     function openStudentLoginModal() {
-      studentModal.show();
+      if (studentModal) studentModal.show();
+      else alert("Sistem login sedang memuat, silakan tunggu sebentar...");
     }
 
     function openTeacherLoginModal() {
-      teacherModal.show();
+      if (teacherModal) teacherModal.show();
+      else alert("Sistem login sedang memuat, silakan tunggu sebentar...");
     }
 
     function openChangePasswordModal() {
       document.getElementById("newPasswordInput").value = "";
       document.getElementById("confirmPasswordInput").value = "";
       document.getElementById("changePassError").classList.add("d-none");
-      changePassModal.show();
+      if (changePassModal) changePassModal.show();
+      else alert("Fitur ganti password sedang memuat...");
     }
 
     function getLocalPassword(username, defaultPass) {
@@ -827,6 +863,7 @@
         
         const filterContainer = document.getElementById("filterChipsContainer");
         const filterLabel = document.getElementById("filterLabel");
+        const adminBtn = document.getElementById("adminPortalBtn");
 
         if (currentUser.role === "STUDENT") {
           // Strict Rule: Students ONLY see their grade, hide other menus
@@ -835,6 +872,7 @@
           filterContainer.innerHTML = `
             <div class="nav-chip active">${currentUser.grade}</div>
           `;
+          if (adminBtn) adminBtn.classList.add("d-none");
         } else {
           // Teachers see everything
           filterLabel.innerText = "Saring Jenjang Kelas & Kategori:";
@@ -844,6 +882,7 @@
             <div class="nav-chip ${currentGradeFilter === 'Kelas VIII' ? 'active' : ''}" onclick="setGradeFilter('Kelas VIII', this)">Kelas VIII</div>
             <div class="nav-chip ${currentGradeFilter === 'Kelas IX' ? 'active' : ''}" onclick="setGradeFilter('Kelas IX', this)">Kelas IX</div>
           `;
+          if (adminBtn) adminBtn.classList.remove("d-none");
         }
       }
       renderBooks();
