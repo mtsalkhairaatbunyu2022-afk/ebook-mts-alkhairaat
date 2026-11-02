@@ -372,7 +372,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.5.0 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v1.6.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -502,7 +502,12 @@
 
             <div class="mb-3">
               <label class="form-label fw-bold fs-7">Kata Sandi:</label>
-              <input type="password" id="studentPasswordInput" class="form-control" placeholder="Masukkan password Anda">
+              <div class="input-group">
+                <input type="password" id="studentPasswordInput" class="form-control" placeholder="Masukkan password Anda">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('studentPasswordInput', 'studentPassIcon')">
+                  <i class="bi bi-eye" id="studentPassIcon"></i>
+                </button>
+              </div>
             </div>
 
             <div id="studentLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
@@ -536,7 +541,12 @@
 
           <div class="mb-3">
             <label class="form-label fw-bold fs-7">Kata Sandi / PIN Guru:</label>
-            <input type="password" id="teacherPasswordInput" class="form-control" placeholder="Masukkan Kata Sandi Guru">
+            <div class="input-group">
+              <input type="password" id="teacherPasswordInput" class="form-control" placeholder="Masukkan Kata Sandi Guru">
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('teacherPasswordInput', 'teacherPassIcon')">
+                <i class="bi bi-eye" id="teacherPassIcon"></i>
+              </button>
+            </div>
           </div>
 
           <div id="teacherLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
@@ -590,12 +600,22 @@
           
           <div class="mb-3">
             <label class="form-label fw-bold fs-7">Password Baru:</label>
-            <input type="password" id="newPasswordInput" class="form-control" placeholder="Masukkan password baru">
+            <div class="input-group">
+              <input type="password" id="newPasswordInput" class="form-control" placeholder="Masukkan password baru">
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('newPasswordInput', 'newPassIcon')">
+                <i class="bi bi-eye" id="newPassIcon"></i>
+              </button>
+            </div>
           </div>
 
           <div class="mb-3">
             <label class="form-label fw-bold fs-7">Konfirmasi Password Baru:</label>
-            <input type="password" id="confirmPasswordInput" class="form-control" placeholder="Ulangi password baru">
+            <div class="input-group">
+              <input type="password" id="confirmPasswordInput" class="form-control" placeholder="Ulangi password baru">
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirmPasswordInput', 'confPassIcon')">
+                <i class="bi bi-eye" id="confPassIcon"></i>
+              </button>
+            </div>
           </div>
 
           <div id="changePassError" class="alert alert-danger py-2 fs-8 d-none"></div>
@@ -1143,6 +1163,20 @@
         btn.disabled = false;
         btnText.innerText = "Cek Update";
         alert("Gagal memeriksa update. Pastikan koneksi internet aktif.");
+      }
+    }
+
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
       }
     }
 
