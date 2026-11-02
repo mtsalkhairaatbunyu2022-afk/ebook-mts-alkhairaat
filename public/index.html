@@ -379,7 +379,7 @@
               <i class="bi bi-phone-vibrate text-primary fs-5"></i>
               <div>
                 <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.1.1 aktif.</div>
+                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.0 aktif.</div>
               </div>
             </div>
             <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -782,31 +782,40 @@
 
     async function loadUsersData() {
       try {
-        const res = await fetch("/students.json?t=" + Date.now());
-        if (res.ok) {
-          const users = await res.json();
-          if (Array.isArray(users)) {
-            // CRITICAL: If Admin deleted all students, reset the whole app like new
-            if (users.length === 0) {
-              console.log("Admin deleted all students, resetting app...");
-              clearAllAppData();
-              return;
-            }
-
-            // If current logged-in user is not in the new list, force logout
-            if (currentUser) {
-              const stillExists = users.find(u => u.nama === currentUser.name);
-              if (!stillExists) {
-                console.log("Your account was removed by Admin. Logging out.");
-                logout();
-              }
-            }
-
-            studentsList = users.filter(u => u.role === "STUDENT");
-            teachersList = users.filter(u => u.role === "TEACHER");
-            populateUserDropdowns();
+        // Fetch students
+        const resStu = await fetch("/students.json?t=" + Date.now());
+        if (resStu.ok) {
+          const students = await resStu.json();
+          if (Array.isArray(students)) {
+            studentsList = students.filter(u => u.role === "STUDENT");
           }
         }
+
+        // Fetch teachers
+        const resTch = await fetch("/teachers.json?t=" + Date.now());
+        if (resTch.ok) {
+          const teachers = await resTch.json();
+          if (Array.isArray(teachers)) {
+            teachersList = teachers.filter(u => u.role === "TEACHER");
+          }
+        }
+
+        // Check if current user still exists in their respective list
+        if (currentUser) {
+          let stillExists = false;
+          if (currentUser.role === "STUDENT") {
+            stillExists = studentsList.find(u => u.nama === currentUser.name);
+          } else if (currentUser.role === "TEACHER") {
+            stillExists = teachersList.find(u => u.nama === currentUser.name);
+          }
+          
+          if (!stillExists && (studentsList.length > 0 || teachersList.length > 0)) {
+            console.log("Your account was removed by Admin. Logging out.");
+            logout();
+          }
+        }
+        
+        populateUserDropdowns();
       } catch (e) {
         console.warn("User data error:", e);
       }

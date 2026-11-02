@@ -503,13 +503,13 @@
                 </button>
                 <button id="downloadTeachersJsonBtn" class="btn btn-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-download fs-5"></i>
-                  <span>Unduh students.json (Siswa & Guru)</span>
+                  <span>Unduh teachers.json</span>
                 </button>
               </div>
               <div class="d-flex flex-wrap gap-2">
                 <button id="copyTeachersJsonBtn" class="btn btn-outline-primary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-clipboard-code fs-5"></i>
-                  <span>Salin Kode JSON</span>
+                  <span>Salin Kode JSON Guru</span>
                 </button>
                 <button id="copyTeacherTextBtn" class="btn btn-outline-secondary flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-clipboard-check fs-5"></i>
@@ -1701,34 +1701,22 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 
 
 
-    function separateAccounts(allAccounts) {
-      importedStudents = [];
-      importedTeachers = [];
-      if (Array.isArray(allAccounts)) {
-        allAccounts.forEach(acc => {
-          if (acc.role === 'TEACHER' || (acc.kelas && acc.kelas.startsWith('Mapel:')) || (acc.subject && acc.subject.length > 0)) {
-            importedTeachers.push(acc);
-          } else {
-            importedStudents.push(acc);
-          }
-        });
-      }
-      importedStudents.forEach((s, idx) => s.no = idx + 1);
-      importedTeachers.forEach((t, idx) => t.no = idx + 1);
-    }
-
-    function saveAllUserAccountsToStorage() {
-      const combined = [...importedTeachers, ...importedStudents];
-      combined.forEach((item, idx) => {
-        item.no = idx + 1;
-      });
+    function saveStudentsToStorage() {
       try {
-        localStorage.setItem('admin_students_override', JSON.stringify(combined));
+        localStorage.setItem('admin_students_override', JSON.stringify(importedStudents));
         localStorage.setItem('admin_students_has_saved', 'true');
       } catch (e) {
-        console.warn('Gagal menyimpan data akun ke localStorage:', e);
+        console.warn('Gagal menyimpan data siswa ke localStorage:', e);
       }
-      return combined;
+    }
+
+    function saveTeachersToStorage() {
+      try {
+        localStorage.setItem('admin_teachers_override', JSON.stringify(importedTeachers));
+        localStorage.setItem('admin_teachers_has_saved', 'true');
+      } catch (e) {
+        console.warn('Gagal menyimpan data guru ke localStorage:', e);
+      }
     }
 
     function downloadStudentTemplateExcel() {
@@ -1861,7 +1849,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       });
 
       renderStudentTable();
-      saveAllUserAccountsToStorage();
+      saveStudentsToStorage();
     }
 
     function deleteStudent(index) {
@@ -1869,7 +1857,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         importedStudents.splice(index, 1);
         importedStudents.forEach((s, idx) => s.no = idx + 1);
         renderStudentTable();
-        saveAllUserAccountsToStorage();
+        saveStudentsToStorage();
       }
     }
 
@@ -2071,7 +2059,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       });
 
       renderTeacherTable();
-      saveAllUserAccountsToStorage();
+      saveTeachersToStorage();
     }
 
     function deleteTeacher(index) {
@@ -2079,7 +2067,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         importedTeachers.splice(index, 1);
         importedTeachers.forEach((t, idx) => t.no = idx + 1);
         renderTeacherTable();
-        saveAllUserAccountsToStorage();
+        saveTeachersToStorage();
       }
     }
 
@@ -2184,9 +2172,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     // =====================================
     // EXPORT & DOWNLOAD HANDLERS
     // =====================================
-    function downloadCombinedStudentsJson() {
-      const combined = saveAllUserAccountsToStorage();
-      const jsonText = JSON.stringify(combined, null, 2);
+    function downloadStudentsJson() {
+      const jsonText = JSON.stringify(importedStudents, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2198,11 +2185,30 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       URL.revokeObjectURL(url);
     }
 
-    function copyCombinedStudentsJson() {
-      const combined = saveAllUserAccountsToStorage();
-      const jsonText = JSON.stringify(combined, null, 2);
+    function downloadTeachersJson() {
+      const jsonText = JSON.stringify(importedTeachers, null, 2);
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'teachers.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function copyStudentsJson() {
+      const jsonText = JSON.stringify(importedStudents, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
-        alert('📋 Kode students.json (Siswa & Guru) berhasil disalin ke clipboard!');
+        alert('📋 Kode students.json berhasil disalin ke clipboard!');
+      });
+    }
+
+    function copyTeachersJson() {
+      const jsonText = JSON.stringify(importedTeachers, null, 2);
+      navigator.clipboard.writeText(jsonText).then(() => {
+        alert('📋 Kode teachers.json berhasil disalin ke clipboard!');
       });
     }
 
@@ -2251,16 +2257,20 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     }
 
     // Download students.json File
-    ['downloadStudentsJsonBtn', 'downloadTeachersJsonBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.addEventListener('click', downloadCombinedStudentsJson);
-    });
+    const downloadStudentsBtn = document.getElementById('downloadStudentsJsonBtn');
+    if (downloadStudentsBtn) downloadStudentsBtn.addEventListener('click', downloadStudentsJson);
 
-    // Copy JSON Code
-    ['copyStudentsJsonBtn', 'copyTeachersJsonBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.addEventListener('click', copyCombinedStudentsJson);
-    });
+    // Download teachers.json File
+    const downloadTeachersBtn = document.getElementById('downloadTeachersJsonBtn');
+    if (downloadTeachersBtn) downloadTeachersBtn.addEventListener('click', downloadTeachersJson);
+
+    // Copy JSON Code Students
+    const copyStuBtn = document.getElementById('copyStudentsJsonBtn');
+    if (copyStuBtn) copyStuBtn.addEventListener('click', copyStudentsJson);
+
+    // Copy JSON Code Teachers
+    const copyTchBtn = document.getElementById('copyTeachersJsonBtn');
+    if (copyTchBtn) copyTchBtn.addEventListener('click', copyTeachersJson);
 
     // Reset Students Data
     const resetStudentsBtn = document.getElementById('resetStudentsBtn');
@@ -2269,7 +2279,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun siswa?')) {
           importedStudents = [];
           renderStudentTable();
-          saveAllUserAccountsToStorage();
+          saveStudentsToStorage();
         }
       });
     }
@@ -2281,7 +2291,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun guru?')) {
           importedTeachers = [];
           renderTeacherTable();
-          saveAllUserAccountsToStorage();
+          saveTeachersToStorage();
         }
       });
     }
@@ -2329,12 +2339,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       if (hasSavedCatalog === 'true') {
         try {
           const stored = localStorage.getItem('admin_catalog_override');
-          if (stored) {
-            catalog = JSON.parse(stored);
-          }
-        } catch (e) {
-          console.warn('Gagal membaca catalog dari localStorage:', e);
-        }
+          if (stored) catalog = JSON.parse(stored);
+        } catch (e) { console.warn('Gagal membaca catalog:', e); }
       } else {
         try {
           const res = await fetch('/catalog.json');
@@ -2346,35 +2352,51 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
               localStorage.setItem('admin_catalog_has_saved', 'true');
             }
           }
-        } catch (e) {
-          console.log('Menggunakan data katalog lokal.');
-        }
+        } catch (e) {}
       }
 
-      // 2. Load User Accounts (Students & Teachers)
+      // 2. Load Students
       const hasSavedStudents = localStorage.getItem('admin_students_has_saved');
       if (hasSavedStudents === 'true') {
         try {
-          const storedStu = localStorage.getItem('admin_students_override');
-          if (storedStu) {
-            separateAccounts(JSON.parse(storedStu));
-          }
-        } catch (e) {
-          console.warn('Gagal membaca akun dari localStorage:', e);
-        }
+          const stored = localStorage.getItem('admin_students_override');
+          if (stored) importedStudents = JSON.parse(stored);
+        } catch (e) {}
       } else {
         try {
-          const resStu = await fetch('/students.json');
-          if (resStu.ok) {
-            const liveStu = await resStu.json();
-            if (Array.isArray(liveStu)) {
-              separateAccounts(liveStu);
-              saveAllUserAccountsToStorage();
+          const res = await fetch('/students.json');
+          if (res.ok) {
+            const data = await res.json();
+            importedStudents = Array.isArray(data) ? data.filter(u => u.role === 'STUDENT') : [];
+            saveStudentsToStorage();
+          }
+        } catch (e) {}
+      }
+
+      // 3. Load Teachers
+      const hasSavedTeachers = localStorage.getItem('admin_teachers_has_saved');
+      if (hasSavedTeachers === 'true') {
+        try {
+          const stored = localStorage.getItem('admin_teachers_override');
+          if (stored) importedTeachers = JSON.parse(stored);
+        } catch (e) {}
+      } else {
+        try {
+          const res = await fetch('/teachers.json');
+          if (res.ok) {
+            const data = await res.json();
+            importedTeachers = Array.isArray(data) ? data.filter(u => u.role === 'TEACHER') : [];
+            saveTeachersToStorage();
+          } else {
+            // Fallback for first time or if teachers.json doesn't exist yet
+            const resStu = await fetch('/students.json');
+            if (resStu.ok) {
+              const data = await resStu.json();
+              importedTeachers = Array.isArray(data) ? data.filter(u => u.role === 'TEACHER') : [];
+              saveTeachersToStorage();
             }
           }
-        } catch (e) {
-          console.log('Menggunakan data akun lokal.');
-        }
+        } catch (e) {}
       }
 
       updateView();
