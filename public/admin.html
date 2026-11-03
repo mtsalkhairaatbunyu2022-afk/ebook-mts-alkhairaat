@@ -144,7 +144,7 @@
     }
     .landing-logo-container {
       position: relative;
-      margin-top: -60px;
+      margin-top: 30px;
       margin-bottom: 20px;
     }
     .landing-logo {
@@ -216,6 +216,10 @@
       0% { transform: translateX(100vw); }
       100% { transform: translateX(-100%); }
     }
+    @keyframes marquee-run-small {
+      0% { transform: translateX(350px); }
+      100% { transform: translateX(-100%); }
+    }
     .landing-footer-text {
       font-size: 0.8rem;
       opacity: 0.8;
@@ -232,9 +236,17 @@
   <!-- Landing Page View -->
   <div id="landingPageView">
     <div class="landing-header">
-      <div class="marquee-container" style="margin-top: 0; padding-bottom: 0;">
+      <div class="marquee-container" style="flex: 1; margin-top: 0; padding-bottom: 0;">
         <div class="marquee-text">
           Selamat datang di pembelajaran terpadu MTs Al-Khairaat Bunyu
+        </div>
+      </div>
+      <div class="marquee-container" style="width: 350px; margin-top: 0; padding-bottom: 0; margin-right: 20px; background: rgba(255,255,255,0.1); border: 1px solid #00ffc2; border-radius: 15px; display: flex; align-items: center; gap: 10px; padding: 5px 10px; flex-shrink: 0;">
+        <img src="/logo_alkhairaat.jpg" alt="Logo" width="30" height="30" class="rounded-circle">
+        <div style="overflow: hidden; flex: 1;">
+          <div class="marquee-text" style="font-size: 18pt; animation: marquee-run-small 10s linear infinite; white-space: nowrap;">
+            MTs Al-Khairaat Bunyu
+          </div>
         </div>
       </div>
     </div>
@@ -271,10 +283,10 @@
         <span>Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu</span>
       </a>
       <div class="d-flex align-items-center gap-2">
-        <a href="admin.html" class="btn btn-sm btn-outline-light d-flex align-items-center gap-2 px-3 fw-medium">
+        <button onclick="backToLanding()" class="btn btn-sm btn-outline-light d-flex align-items-center gap-2 px-3 fw-medium">
           <i class="bi bi-house-door-fill"></i>
-          <span>Ke Dashboard</span>
-        </a>
+          <span>Ke Halaman Awal</span>
+        </button>
         <span class="badge bg-warning text-dark px-3 py-2 fw-bold">
           <i class="bi bi-display me-1"></i> Khusus Laptop Guru & Operator
         </span>
@@ -830,6 +842,12 @@
       function enterMainApp() {
         document.getElementById('landingPageView').classList.add('d-none');
         document.getElementById('mainManagementView').classList.remove('d-none');
+        window.scrollTo(0, 0);
+      }
+
+      function backToLanding() {
+        document.getElementById('landingPageView').classList.remove('d-none');
+        document.getElementById('mainManagementView').classList.add('d-none');
         window.scrollTo(0, 0);
       }
 
