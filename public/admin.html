@@ -200,31 +200,37 @@
       background-color: #00e0b0;
       color: white;
     }
-    .marquee-container {
+    .banner-fade-container {
       width: 100%;
-      background: transparent;
-      overflow: hidden;
-      white-space: nowrap;
-      margin-top: auto;
-      padding-bottom: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4px 10px;
     }
-    .marquee-text {
-      display: inline-block;
-      animation: marquee-run 25s linear infinite;
+    .banner-fade-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 20pt;
+      font-size: 1.25rem;
       color: #00ffc2; /* Diamond Green */
       font-weight: 800;
-      text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
       letter-spacing: 1px;
+      animation: fadeInOutSync 4s ease-in-out infinite;
+      width: 100%;
     }
-    @keyframes marquee-run {
-      0% { transform: translateX(100vw); }
-      100% { transform: translateX(-100%); }
-    }
-    @keyframes marquee-run-small {
-      0% { transform: translateX(350px); }
-      100% { transform: translateX(-100%); }
+    @keyframes fadeInOutSync {
+      0%, 100% {
+        opacity: 0.15;
+        transform: scale(0.98);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
     .landing-footer-text {
       font-size: 0.8rem;
@@ -242,10 +248,10 @@
   <!-- Landing Page View -->
   <div id="landingPageView">
     <div class="landing-header">
-      <div class="marquee-container" style="padding-bottom: 0;">
-        <div class="marquee-text">
-          <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 36px; vertical-align: middle; margin-right: 12px; border-radius: 50%; border: 2px solid white;">
-          SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU
+      <div class="banner-fade-container">
+        <div class="banner-fade-text">
+          <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 32px; width: 32px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+          <span>SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU</span>
         </div>
       </div>
     </div>
@@ -263,9 +269,10 @@
       </div>
     </div>
 
-    <div class="marquee-container">
-      <div class="marquee-text" style="font-size: 18pt; color: #ffffff;">
-        Selamat datang di portal pembelajaran digital MTs Al-Khairaat Bunyu - Belajar lebih mudah, efektif, dan menyenangkan kapan saja dan di mana saja!
+    <div class="banner-fade-container" style="margin-top: auto; padding-bottom: 14px;">
+      <div class="banner-fade-text">
+        <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 32px; width: 32px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+        <span>SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU</span>
       </div>
     </div>
   </div>
