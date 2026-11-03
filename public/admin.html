@@ -152,8 +152,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 12px 16px;
-      gap: 16px;
+      padding: 0 16px 12px 16px;
+      gap: 8px;
     }
     .landing-logo {
       width: 90px;
@@ -164,6 +164,8 @@
       background-color: #ffffff;
       object-fit: cover;
       flex-shrink: 0;
+      margin-top: -15px;
+      z-index: 5;
     }
     .school-image-container {
       width: 95%;
@@ -173,7 +175,7 @@
       overflow: hidden;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
       background-color: #064e3b;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 16 / 11;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -184,7 +186,7 @@
         height: 105px;
       }
       .school-image-container {
-        aspect-ratio: 21 / 9;
+        aspect-ratio: 21 / 12;
       }
     }
     .school-image {
@@ -283,7 +285,7 @@
       <img src="/logo_alkhairaat.jpg" alt="Logo" class="landing-logo">
 
       <div class="school-image-container">
-        <img src="assets/aistudio/school_building_clean.png?v=5" alt="School Building" class="school-image">
+        <img src="assets/aistudio/school_building_clean.png?v=10" alt="School Building" class="school-image">
         <div class="enter-btn-overlay">
           <button class="enter-btn" onclick="enterMainApp()">
             Masuk Ke Aplikasi Utama <i class="bi bi-arrow-right"></i>
