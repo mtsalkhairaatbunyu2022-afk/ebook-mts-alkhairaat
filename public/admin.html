@@ -117,9 +117,150 @@
       border: 0;
       border-radius: 0;
     }
+    
+    /* Landing Page Styles */
+    #landingPageView {
+      background: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    .landing-header {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .landing-logo-container {
+      position: relative;
+      margin-top: -60px;
+      margin-bottom: 20px;
+    }
+    .landing-logo {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 5px solid white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      background-color: white;
+    }
+    .school-image-container {
+      width: 90%;
+      max-width: 1000px;
+      position: relative;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      margin-bottom: 40px;
+    }
+    .school-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .enter-btn-overlay {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+    .enter-btn {
+      background-color: #00ffc2; /* Diamond Green */
+      color: #064e3b;
+      font-weight: bold;
+      padding: 12px 30px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.25rem;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .enter-btn:hover {
+      transform: translateX(-50%) scale(1.05);
+      background-color: #00e0b0;
+      color: white;
+    }
+    .marquee-container {
+      width: 100%;
+      background: transparent;
+      overflow: hidden;
+      white-space: nowrap;
+      margin-top: auto;
+      padding-bottom: 20px;
+    }
+    .marquee-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee-run 25s linear infinite;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 25pt;
+      color: #00ffc2; /* Diamond Green */
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    @keyframes marquee-run {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+    .landing-footer-text {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin-top: 10px;
+      color: #b9f2ff;
+    }
+    #mainManagementView.d-none {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Landing Page View -->
+  <div id="landingPageView">
+    <div class="landing-header">
+      <h3 class="fw-bold mb-0 me-4">MTS AL-KHAIRAAT BUNYU</h3>
+    </div>
+    
+    <div class="landing-logo-container">
+      <img src="/logo_alkhairaat.jpg" alt="Logo" class="landing-logo">
+    </div>
+
+    <div class="school-image-container">
+      <img src="/public/assets/aistudio/image_354e9375.png" alt="School" class="school-image">
+      <div class="enter-btn-overlay">
+        <button class="enter-btn" onclick="enterMainApp()">
+          Masuk Ke Aplikasi Utama <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="marquee-container">
+      <div class="marquee-text">
+        Selamat datang di pembelajaran terpadu MTs Al-Khairaat Bunyu
+      </div>
+    </div>
+
+    <div class="pb-4">
+      <div class="landing-footer-text">Sistem Informasi Kesiswaan MTs Al-Khairaat Bunyu</div>
+      <div class="landing-footer-text" style="font-size: 0.7rem;">Aman, cepat, dan kompatibel 100% offline dengan sinkronisasi local storage.</div>
+    </div>
+  </div>
+
+  <!-- Main Management View (Initially Hidden) -->
+  <div id="mainManagementView" class="d-none">
 
   <!-- Header Navbar -->
   <nav class="navbar navbar-dark navbar-custom py-3 shadow-sm">
@@ -139,7 +280,7 @@
   <div class="container my-4">
 
     <!-- Top Navigation Tabs: 1. Kelola Katalog, 2. Impor Massal Siswa, 3. Ruang Baca Guru -->
-    <ul class="nav nav-tabs mb-4 bg-white p-2 rounded-3 shadow-sm" id="adminTabs" role="tablist">
+    <ul class="nav nav-tabs mb-4 bg-white p-2 rounded-3 shadow-sm" id="guruTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active fs-6" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalogSection" type="button" role="tab">
           <i class="bi bi-gear-wide-connected text-primary me-2 fs-5"></i>Kelola Katalog (catalog.json)
@@ -162,10 +303,10 @@
       </li>
     </ul>
 
-    <div class="tab-content" id="adminTabsContent">
+    <div class="tab-content" id="guruTabsContent">
 
       <!-- ========================================== -->
-      <!-- TAB 1: KELOLA KATALOG BUKU (ADMIN/OPERATOR) -->
+      <!-- TAB 1: KELOLA KATALOG BUKU (GURU/OPERATOR) -->
       <!-- ========================================== -->
       <div class="tab-pane fade show active" id="catalogSection" role="tabpanel">
 
@@ -589,7 +730,7 @@
 
     </div>
 
-  </div>
+  </div> <!-- End mainManagementView -->
 
   <!-- ========================================== -->
   <!-- MODAL: WEB PDF READER UNTUK GURU / KELAS -->
@@ -679,7 +820,13 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     // Initial catalog (starts empty as requested)
-    let catalog = [];
+      let catalog = [];
+
+      function enterMainApp() {
+        document.getElementById('landingPageView').classList.add('d-none');
+        document.getElementById('mainManagementView').classList.remove('d-none');
+        window.scrollTo(0, 0);
+      }
 
     let importedStudents = [];
     let importedTeachers = [];
@@ -1189,7 +1336,7 @@
     });
 
     // =====================================
-    // CATALOG ADMIN VIEW FUNCTIONS
+    // CATALOG GURU VIEW FUNCTIONS
     // =====================================
     function updateView() {
       const jsonViewer = document.getElementById('jsonViewer');
@@ -1198,8 +1345,8 @@
 
       // Persist catalog changes (additions, edits, deletions) to localStorage so page refresh doesn't resurrect deleted books
       try {
-        localStorage.setItem('admin_catalog_override', JSON.stringify(catalog));
-        localStorage.setItem('admin_catalog_has_saved', 'true');
+        localStorage.setItem('guru_catalog_override', JSON.stringify(catalog));
+        localStorage.setItem('guru_catalog_has_saved', 'true');
       } catch (e) {
         console.warn('Gagal menyimpan katalog ke localStorage:', e);
       }
@@ -1207,7 +1354,7 @@
       jsonViewer.textContent = JSON.stringify(catalog, null, 2);
       bookCountBadge.textContent = `${catalog.length} Buku Tersimpan`;
 
-      // Render Table Rows in Admin tab
+      // Render Table Rows in Guru tab
       bookTableBody.innerHTML = '';
       if (catalog.length === 0) {
         bookTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada buku dalam katalog. Silakan isi form di sebelah kiri.</td></tr>`;
@@ -1689,8 +1836,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         if (res.ok) {
           const liveData = await res.json();
           catalog = liveData;
-          localStorage.setItem('admin_catalog_override', JSON.stringify(catalog));
-          localStorage.setItem('admin_catalog_has_saved', 'true');
+          localStorage.setItem('guru_catalog_override', JSON.stringify(catalog));
+          localStorage.setItem('guru_catalog_has_saved', 'true');
           updateView();
           alert('Berhasil memuat katalog terbaru dari Cloudflare! Total: ' + liveData.length + ' buku.');
         }
@@ -1703,8 +1850,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 
     function saveStudentsToStorage() {
       try {
-        localStorage.setItem('admin_students_override', JSON.stringify(importedStudents));
-        localStorage.setItem('admin_students_has_saved', 'true');
+        localStorage.setItem('guru_students_override', JSON.stringify(importedStudents));
+        localStorage.setItem('guru_students_has_saved', 'true');
       } catch (e) {
         console.warn('Gagal menyimpan data siswa ke localStorage:', e);
       }
@@ -1712,8 +1859,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 
     function saveTeachersToStorage() {
       try {
-        localStorage.setItem('admin_teachers_override', JSON.stringify(importedTeachers));
-        localStorage.setItem('admin_teachers_has_saved', 'true');
+        localStorage.setItem('guru_teachers_override', JSON.stringify(importedTeachers));
+        localStorage.setItem('guru_teachers_has_saved', 'true');
       } catch (e) {
         console.warn('Gagal menyimpan data guru ke localStorage:', e);
       }
@@ -2348,10 +2495,10 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     // Auto load live catalog & student/teacher data on initial start
     (async function init() {
       // 1. Load Catalog
-      const hasSavedCatalog = localStorage.getItem('admin_catalog_has_saved');
+      const hasSavedCatalog = localStorage.getItem('guru_catalog_has_saved');
       if (hasSavedCatalog === 'true') {
         try {
-          const stored = localStorage.getItem('admin_catalog_override');
+          const stored = localStorage.getItem('guru_catalog_override');
           if (stored) catalog = JSON.parse(stored);
         } catch (e) { console.warn('Gagal membaca catalog:', e); }
       } else {
@@ -2361,18 +2508,18 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
             const liveData = await res.json();
             if (Array.isArray(liveData)) {
               catalog = liveData;
-              localStorage.setItem('admin_catalog_override', JSON.stringify(catalog));
-              localStorage.setItem('admin_catalog_has_saved', 'true');
+              localStorage.setItem('guru_catalog_override', JSON.stringify(catalog));
+              localStorage.setItem('guru_catalog_has_saved', 'true');
             }
           }
         } catch (e) {}
       }
 
       // 2. Load Students
-      const hasSavedStudents = localStorage.getItem('admin_students_has_saved');
+      const hasSavedStudents = localStorage.getItem('guru_students_has_saved');
       if (hasSavedStudents === 'true') {
         try {
-          const stored = localStorage.getItem('admin_students_override');
+          const stored = localStorage.getItem('guru_students_override');
           if (stored) importedStudents = JSON.parse(stored);
         } catch (e) {}
       } else {
@@ -2387,10 +2534,10 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       }
 
       // 3. Load Teachers
-      const hasSavedTeachers = localStorage.getItem('admin_teachers_has_saved');
+      const hasSavedTeachers = localStorage.getItem('guru_teachers_has_saved');
       if (hasSavedTeachers === 'true') {
         try {
-          const stored = localStorage.getItem('admin_teachers_override');
+          const stored = localStorage.getItem('guru_teachers_override');
           if (stored) importedTeachers = JSON.parse(stored);
         } catch (e) {}
       } else {
