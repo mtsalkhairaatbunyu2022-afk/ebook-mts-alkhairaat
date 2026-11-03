@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ebook-mts-v2.2';
+const CACHE_NAME = 'ebook-mts-v2.3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -38,6 +38,20 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Network-First for HTML navigation so / always serves fresh index.html (Student View)
+  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {

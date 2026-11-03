@@ -72,16 +72,7 @@ fun WelcomeDashboardScreen(
     onStartApp: () -> Unit,
     onLoginWithCard: () -> Unit = onStartApp
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "bannerFadeSync")
-    val bannerAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.15f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "fadeSyncAlpha"
-    )
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Box(
         modifier = Modifier
@@ -89,184 +80,359 @@ fun WelcomeDashboardScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF065F46),
-                        Color(0xFF064E3B)
+                        Color(0xFFEEF2FF),
+                        Color(0xFFF8FAFC),
+                        Color.White
                     )
                 )
             )
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Header Banner
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // School Logo Wrapper
             Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                color = Color(0x66000000)
+                    .size(90.dp)
+                    .shadow(8.dp, CircleShape),
+                color = Color.White,
+                shape = CircleShape,
+                border = BorderStroke(2.dp, Color(0xFFEFF6FF))
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo_alkhairaat),
+                    contentDescription = "Logo MTs Al-Khairaat Bunyu",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Title Header
+            Text(
+                text = "Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu",
+                color = Color(0xFF1E3A8A),
+                fontWeight = FontWeight.Black,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 26.sp,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Perpustakaan Digital Terintegrasi Sekolah",
+                color = Color(0xFF64748B),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Official Badge Pill
+            Surface(
+                color = Color(0xFFEFF6FF),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, Color(0xFFBFDBFE))
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .graphicsLayer(alpha = bannerAlpha),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo_alkhairaat),
-                            contentDescription = "Logo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .border(2.dp, Color.White, CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU",
-                            color = Color(0xFF00FFC2),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Shield,
+                        contentDescription = null,
+                        tint = Color(0xFF1E3A8A),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Akses Resmi Akun Sekolah",
+                        color = Color(0xFF1E3A8A),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
-            // Middle Content: School Logo + Full Building Image Box
-            Column(
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "Pilih Peran Login Anda",
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1E293B),
+                fontSize = 15.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CARD 1: SISWA
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .testTag("card_student_access"),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.5.dp, Color(0xFF1E3A8A).copy(alpha = 0.3f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                // Centered School Logo
-                Surface(
-                    modifier = Modifier
-                        .size(105.dp)
-                        .shadow(12.dp, CircleShape),
-                    color = Color.White,
-                    shape = CircleShape,
-                    border = BorderStroke(4.dp, Color.White)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_alkhairaat),
-                        contentDescription = "Logo MTs Al-Khairaat Bunyu",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(44.dp),
+                            shape = CircleShape,
+                            color = Color(0xFFDBEAFE)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1E3A8A),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Surface(
+                                color = Color(0xFFDBEAFE),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "SISWA KELAS VII, VIII, IX",
+                                    color = Color(0xFF1E3A8A),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Kartu Akses Siswa",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E293B),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Masuk menggunakan Nama Siswa dan Sandi Kelas dari Kartu Login madrasah untuk mengakses buku pelajaran kelas Anda.",
+                        color = Color(0xFF64748B),
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
                     )
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                // Full School Building Image Container
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 260.dp, max = 420.dp)
-                        .weight(1f, fill = false)
-                        .shadow(16.dp, RoundedCornerShape(20.dp))
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0x40000000)),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.school_building_clean),
-                        contentDescription = "Gedung MTs Al-Khairaat Bunyu",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-
-                    // Button Overlay "Masuk Ke Aplikasi Utama ->"
                     Button(
-                        onClick = onStartApp,
+                        onClick = onLoginWithCard,
                         modifier = Modifier
-                            .padding(bottom = 20.dp)
-                            .testTag("btn_masuk_aplikasi_utama"),
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("btn_masuk_akun_siswa"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00FFC2),
-                            contentColor = Color(0xFF064E3B)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = "Masuk Ke Aplikasi Utama",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                imageVector = Icons.Default.Login,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = Color(0xFF064E3B)
+                            Text(
+                                text = "MASUK AKUN SISWA",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
                             )
                         }
                     }
                 }
             }
 
-            // Bottom Header Banner
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CARD 2: GURU & MAJELIS PENGAJAR
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("card_teacher_access"),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.5.dp, Color(0xFFD97706).copy(alpha = 0.3f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(44.dp),
+                            shape = CircleShape,
+                            color = Color(0xFFFFEDD5)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = Color(0xFFEA580C),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Surface(
+                                color = Color(0xFFFFF7ED),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "GURU & MAJELIS PENGAJAR",
+                                    color = Color(0xFFC2410C),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Kartu Akses Guru & Pengajar",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E293B),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Masuk menggunakan Akun Guru / Pengajar untuk membuka koleksi pegangan guru & modul pengajaran mata pelajaran Anda.",
+                        color = Color(0xFF64748B),
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
+                        onClick = onLoginWithCard,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("btn_masuk_akun_guru"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Article,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "MASUK AKUN GURU",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CARD 3: PORTAL GURU & OPERATOR
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                color = Color.Transparent
+                    .testTag("card_portal_operator"),
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFFEF3C7).copy(alpha = 0.5f),
+                border = BorderStroke(1.5.dp, Color(0xFFF59E0B))
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .fillMaxWidth()
+                        .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
-                        modifier = Modifier
-                            .graphicsLayer(alpha = bannerAlpha),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo_alkhairaat),
-                            contentDescription = "Logo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .border(2.dp, Color.White, CircleShape)
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = null,
+                            tint = Color(0xFFB45309),
+                            modifier = Modifier.size(28.dp)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "⚙️ Portal Guru & Operator",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E293B),
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = "Kelola/Unggah Buku & Impor Akun Excel.",
+                                color = Color(0xFF64748B),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = onLoginWithCard,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
                         Text(
-                            text = "SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU",
-                            color = Color(0xFF00FFC2),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            text = "Buka Portal",
+                            color = Color(0xFF78350F),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
                         )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "MTs Al-Khairaat Bunyu • Sistem E-Book Resmi",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF94A3B8)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
