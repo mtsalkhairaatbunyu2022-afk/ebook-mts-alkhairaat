@@ -1,5 +1,5 @@
 {
-  "name": "E-BOOK MTS",
+  "name": "Sistem Pembelajaran Terpadu",
   "description": "Aplikasi E-Book Sekolah Digital modern, cepat, dan ringan untuk siswa, guru, dan operator sekolah.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
