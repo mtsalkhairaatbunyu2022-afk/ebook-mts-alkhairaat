@@ -157,25 +157,27 @@
       background-color: white;
     }
     .school-image-container {
-      width: 92%;
-      max-width: 860px;
-      max-height: 56vh;
+      width: 95%;
+      max-width: 940px;
+      height: 48vh;
+      min-height: 280px;
+      max-height: 440px;
       position: relative;
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
       margin-top: 5px;
       margin-bottom: 10px;
-      background-color: rgba(0, 0, 0, 0.25);
+      background-color: transparent;
       display: flex;
       justify-content: center;
       align-items: center;
     }
     .school-image {
       width: 100%;
-      height: auto;
-      max-height: 56vh;
-      object-fit: contain;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
       display: block;
       border-radius: 20px;
     }
