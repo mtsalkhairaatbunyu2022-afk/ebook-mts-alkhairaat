@@ -1,1 +1,209 @@
-
+[
+  {
+    "id": "stu_aqeela_zahratussyifa_912",
+    "no": 1,
+    "nama": "AQEELA ZAHRATUSSYIFA",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "AQEELA ZAHRATUSSYIFA",
+    "password": "AQEELA"
+  },
+  {
+    "id": "stu_brayn_nur_799",
+    "no": 2,
+    "nama": "BRAYN NUR",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "BRAYN NUR",
+    "password": "BRAYN"
+  },
+  {
+    "id": "stu_evan_syahputra_60",
+    "no": 3,
+    "nama": "EVAN SYAHPUTRA",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "EVAN SYAHPUTRA",
+    "password": "EVAN"
+  },
+  {
+    "id": "stu_hazrah_nur_fatiyah_824",
+    "no": 4,
+    "nama": "HAZRAH NUR FATIYAH",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "HAZRAH NUR FATIYAH",
+    "password": "HAZRAH"
+  },
+  {
+    "id": "stu_muhammad_fadhil_prasetya_439",
+    "no": 5,
+    "nama": "MUHAMMAD FADHIL PRASETYA",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMMAD FADHIL PRASETYA",
+    "password": "MUHAMMAD"
+  },
+  {
+    "id": "stu_muhammad_fadlu_773",
+    "no": 6,
+    "nama": "MUHAMMAD FADLU",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMMAD FADLU",
+    "password": "MUHAMMAD"
+  },
+  {
+    "id": "stu_muhammad_rayyan_firdaus_292",
+    "no": 7,
+    "nama": "MUHAMMAD RAYYAN FIRDAUS",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMMAD RAYYAN FIRDAUS",
+    "password": "MUHAMMAD"
+  },
+  {
+    "id": "stu_nabila_safira_184",
+    "no": 8,
+    "nama": "NABILA SAFIRA",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "NABILA SAFIRA",
+    "password": "NABILA"
+  },
+  {
+    "id": "stu_nazifa_qurratu_ainhy_811",
+    "no": 9,
+    "nama": "NAZIFA QURRATU AINHY",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "NAZIFA QURRATU AINHY",
+    "password": "NAZIFA"
+  },
+  {
+    "id": "stu_nur_safira_wahyuni_833",
+    "no": 10,
+    "nama": "NUR SAFIRA WAHYUNI",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "NUR SAFIRA WAHYUNI",
+    "password": "NUR"
+  },
+  {
+    "id": "stu_siti_asmanah_5",
+    "no": 11,
+    "nama": "SITI ASMANAH",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "SITI ASMANAH",
+    "password": "SITI"
+  },
+  {
+    "id": "stu_algezi_achmad_gifahri_277",
+    "no": 12,
+    "nama": "ALGEZI ACHMAD GIFAHRI",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "ALGEZI ACHMAD GIFAHRI",
+    "password": "ALGEZI"
+  },
+  {
+    "id": "stu_ashilah_azzarah_302",
+    "no": 13,
+    "nama": "ASHILAH AZZARAH",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "ASHILAH AZZARAH",
+    "password": "ASHILAH"
+  },
+  {
+    "id": "stu_m_darma_798",
+    "no": 14,
+    "nama": "M DARMA",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "M DARMA",
+    "password": "DARMA"
+  },
+  {
+    "id": "stu_muhamat_syafri_205",
+    "no": 15,
+    "nama": "MUHAMAT SYAFRI",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMAT SYAFRI",
+    "password": "MUHAMAT"
+  },
+  {
+    "id": "stu_muhammad_ikhsan_akbar_913",
+    "no": 16,
+    "nama": "MUHAMMAD IKHSAN AKBAR",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMMAD IKHSAN AKBAR",
+    "password": "MUHAMMAD"
+  },
+  {
+    "id": "stu_muhammad_ramadhan_245",
+    "no": 17,
+    "nama": "MUHAMMAD RAMADHAN",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMMAD RAMADHAN",
+    "password": "MUHAMMAD"
+  },
+  {
+    "id": "stu_muhammad_sair_744",
+    "no": 18,
+    "nama": "MUHAMMAD SAIR",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "MUHAMMAD SAIR",
+    "password": "MUHAMMAD"
+  },
+  {
+    "id": "stu_rahmat_kurniawan_465",
+    "no": 19,
+    "nama": "RAHMAT KURNIAWAN",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "RAHMAT KURNIAWAN",
+    "password": "RAHMAT"
+  },
+  {
+    "id": "stu_rido_838",
+    "no": 20,
+    "nama": "RIDO",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "RIDO",
+    "password": "RIDO"
+  },
+  {
+    "id": "stu_rio_772",
+    "no": 21,
+    "nama": "RIO",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "RIO",
+    "password": "RIO"
+  },
+  {
+    "id": "stu_wulan_purnama_sari_117",
+    "no": 22,
+    "nama": "WULAN PURNAMA SARI",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "WULAN PURNAMA SARI",
+    "password": "WULAN"
+  },
+  {
+    "id": "stu_yuzarsyif_904",
+    "no": 23,
+    "nama": "YUZARSYIF",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "YUZARSYIF",
+    "password": "YUZARSYIF"
+  }
+]
