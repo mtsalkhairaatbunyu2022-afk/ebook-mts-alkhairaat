@@ -206,11 +206,12 @@
     .marquee-text {
       display: inline-block;
       animation: marquee-run 25s linear infinite;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 25pt;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 22pt;
       color: #00ffc2; /* Diamond Green */
-      font-weight: bold;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      font-weight: 800;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+      letter-spacing: 1px;
     }
     @keyframes marquee-run {
       0% { transform: translateX(100vw); }
@@ -235,11 +236,16 @@
 
   <!-- Landing Page View -->
   <div id="landingPageView">
-    <div class="landing-header" style="background: transparent; padding: 0;">
-      <!-- Marquee elements removed as requested -->
+    <div class="landing-header">
+      <div class="marquee-container" style="padding-bottom: 0;">
+        <div class="marquee-text">
+          <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 40px; vertical-align: middle; margin-right: 15px; border-radius: 50%; border: 2px solid white;">
+          SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU
+        </div>
+      </div>
     </div>
     
-    <div class="landing-logo-container">
+    <div class="landing-logo-container" style="margin-top: 60px;">
       <img src="/logo_alkhairaat.jpg" alt="Logo" class="landing-logo">
     </div>
 
@@ -252,11 +258,14 @@
       </div>
     </div>
 
-    <div style="height: 50px;"></div> <!-- Spacer to replace bottom marquee -->
+    <div class="marquee-container">
+      <div class="marquee-text" style="font-size: 20pt; color: #ffffff;">
+        Selamat datang di portal pembelajaran digital MTs Al-Khairaat Bunyu - Belajar lebih mudah, efektif, dan menyenangkan kapan saja dan di mana saja!
+      </div>
+    </div>
 
     <div class="pb-4">
-      <div class="landing-footer-text">Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu</div>
-      <div class="landing-footer-text" style="font-size: 0.7rem;">Aman, cepat, dan kompatibel 100% offline dengan sinkronisasi local storage.</div>
+      <!-- Footer text removed to avoid overlapping and cut-off appearance as requested -->
     </div>
   </div>
 
