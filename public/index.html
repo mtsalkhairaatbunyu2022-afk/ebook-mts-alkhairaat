@@ -246,6 +246,40 @@
     .overflow-x-auto::-webkit-scrollbar {
       display: none;
     }
+
+    /* Notes Feature Styles */
+    .fs-7 { font-size: 0.85rem; }
+    .fs-8 { font-size: 0.775rem; }
+    .fs-9 { font-size: 0.7rem; }
+
+    .note-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(30, 58, 138, 0.04);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .note-card:hover {
+      box-shadow: 0 4px 16px rgba(30, 58, 138, 0.1);
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+    }
+    .note-tag-btn {
+      font-size: 0.75rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .note-tag-btn.active {
+      background-color: #1e3a8a !important;
+      color: #ffffff !important;
+      border-color: #1e3a8a !important;
+    }
+    .nav-tab-btn {
+      transition: all 0.2s ease;
+    }
   </style>
 </head>
 <body>
@@ -452,33 +486,86 @@
         </div>
       </div>
 
-      <!-- Filter Chips -->
-      <div class="p-3 bg-light border-bottom" id="filterSection">
-        <div class="fw-bold fs-8 text-primary mb-2" id="filterLabel">Saring Jenjang Kelas & Kategori:</div>
-        <div class="d-flex gap-2 overflow-x-auto pb-1" id="filterChipsContainer">
-          <!-- Grade Chips -->
-        </div>
-        <div class="d-flex gap-2 overflow-x-auto pt-2" id="categoryFilterContainer">
-          <div class="nav-chip active" onclick="setCategoryFilter('', this)">Semua</div>
-          <div class="nav-chip" onclick="setCategoryFilter('Buku', this)">📚 Buku</div>
-          <div class="nav-chip" onclick="setCategoryFilter('Tugas', this)">📝 Tugas</div>
-          <div class="nav-chip" onclick="setCategoryFilter('Video', this)">🎥 Video</div>
-        </div>
-      </div>
-
-      <!-- Notice Banner for Students -->
-      <div class="px-3 pt-3">
-        <div class="alert alert-primary py-2 px-3 fs-8 mb-0 d-flex align-items-center gap-2 border-0 bg-primary-subtle text-primary-emphasis">
-          <i class="bi bi-check-circle-fill"></i>
-          <span>Katalog terhubung dengan Portal Guru. Buku otomatis diperbarui.</span>
+      <!-- Segmented Navigation: Koleksi Buku vs Catatan Belajar -->
+      <div class="p-2 bg-light border-bottom sticky-top" style="z-index: 5;">
+        <div class="d-flex p-1 bg-white rounded-pill border shadow-sm">
+          <button id="navTabBooks" type="button" class="btn btn-sm rounded-pill fw-bold flex-fill py-2 text-white bg-primary shadow-sm nav-tab-btn" onclick="switchDashboardTab('books')">
+            <i class="bi bi-book-half me-1"></i> Koleksi Buku
+          </button>
+          <button id="navTabNotes" type="button" class="btn btn-sm rounded-pill fw-bold flex-fill py-2 text-secondary bg-transparent nav-tab-btn" onclick="switchDashboardTab('notes')">
+            <i class="bi bi-journal-text me-1"></i> Catatan Belajar
+            <span id="notesCountBadge" class="badge rounded-pill bg-warning text-dark ms-1" style="font-size: 0.7rem;">0</span>
+          </button>
         </div>
       </div>
 
-      <!-- Books Grid -->
-      <div class="p-3">
-        <div class="row g-3" id="booksGrid">
-          <!-- Dynamic Book Cards rendered via JS -->
+      <!-- TAB 1: KOLEKSI BUKU & MATERI -->
+      <div id="booksTabContent">
+        <!-- Filter Chips -->
+        <div class="p-3 bg-light border-bottom" id="filterSection">
+          <div class="fw-bold fs-8 text-primary mb-2" id="filterLabel">Saring Jenjang Kelas & Kategori:</div>
+          <div class="d-flex gap-2 overflow-x-auto pb-1" id="filterChipsContainer">
+            <!-- Grade Chips -->
+          </div>
+          <div class="d-flex gap-2 overflow-x-auto pt-2" id="categoryFilterContainer">
+            <div class="nav-chip active" onclick="setCategoryFilter('', this)">Semua</div>
+            <div class="nav-chip" onclick="setCategoryFilter('Buku', this)">📚 Buku</div>
+            <div class="nav-chip" onclick="setCategoryFilter('Tugas', this)">📝 Tugas</div>
+            <div class="nav-chip" onclick="setCategoryFilter('Video', this)">🎥 Video</div>
+          </div>
         </div>
+
+        <!-- Notice Banner for Students -->
+        <div class="px-3 pt-3">
+          <div class="alert alert-primary py-2 px-3 fs-8 mb-0 d-flex align-items-center gap-2 border-0 bg-primary-subtle text-primary-emphasis">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Katalog terhubung dengan Portal Guru. Buku otomatis diperbarui.</span>
+          </div>
+        </div>
+
+        <!-- Books Grid -->
+        <div class="p-3">
+          <div class="row g-3" id="booksGrid">
+            <!-- Dynamic Book Cards rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CATATAN BELAJAR SISWA -->
+      <div id="notesTabContent" class="d-none">
+        
+        <!-- Notes Action Bar -->
+        <div class="p-3 bg-white border-bottom">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+              <h6 class="fw-bold text-primary mb-0"><i class="bi bi-journal-bookmark-fill me-1"></i> Catatan Belajar Siswa</h6>
+              <span class="text-secondary" style="font-size: 0.75rem;">Simpan materi, halaman buku, dan rumus penting.</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm fw-bold px-3 py-2 rounded-pill shadow-sm d-flex align-items-center gap-1" onclick="openAddNoteModal()">
+              <i class="bi bi-plus-circle-fill"></i> Catatan Baru
+            </button>
+          </div>
+
+          <!-- Notes Search & Filters -->
+          <div class="input-group input-group-sm mt-2 rounded-pill overflow-hidden border">
+            <span class="input-group-text bg-light border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="notesSearchInput" class="form-control bg-light border-0 py-2" placeholder="Cari catatan, mapel, atau isi materi..." oninput="filterNotes()">
+          </div>
+
+          <div class="d-flex gap-2 overflow-x-auto pt-2" id="notesTagFilterContainer">
+            <div class="nav-chip active" onclick="setNoteTagFilter('', this)">Semua Tag</div>
+            <div class="nav-chip" onclick="setNoteTagFilter('Ringkasan', this)">📖 Ringkasan</div>
+            <div class="nav-chip" onclick="setNoteTagFilter('Penting', this)">⭐ Penting</div>
+            <div class="nav-chip" onclick="setNoteTagFilter('Tugas', this)">📝 Tugas</div>
+            <div class="nav-chip" onclick="setNoteTagFilter('Rumus', this)">📐 Rumus</div>
+          </div>
+        </div>
+
+        <!-- Notes Cards List Container -->
+        <div class="p-3" id="notesListContainer">
+          <!-- Rendered dynamically via JavaScript -->
+        </div>
+
       </div>
 
     </div>
@@ -600,7 +687,12 @@
               <span class="badge bg-warning text-dark fs-8" id="pdfBookGrade">Kelas VIII</span>
             </div>
           </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="addNoteFromCurrentPdf()">
+              <i class="bi bi-pencil-square"></i> Buat Catatan
+            </button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
         </div>
         <div class="modal-body p-0 bg-secondary position-relative flex-grow-1" style="overflow: hidden;">
           <!-- Loading Spinner for PDF -->
@@ -651,6 +743,114 @@
           <button type="button" class="btn btn-primary w-100 fw-bold" onclick="submitChangePassword()">
             SIMPAN & LOGOUT OTOMATIS
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 5: NOTE EDITOR (TAMBAH / EDIT CATATAN SISWA) -->
+  <div class="modal fade" id="noteEditorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-primary" id="noteEditorModalTitle">
+            <i class="bi bi-journal-plus me-2"></i> Buat Catatan Belajar
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="noteEditId" value="">
+
+          <div class="mb-3">
+            <label class="form-label fw-bold fs-7 text-dark">Judul Catatan: <span class="text-danger">*</span></label>
+            <input type="text" id="noteTitleInput" class="form-control" placeholder="Contoh: Ringkasan Bab 2 - Fotosintesis">
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-7">
+              <label class="form-label fw-bold fs-7 text-dark">Buku / Mata Pelajaran:</label>
+              <select id="noteBookSelect" class="form-select fs-8">
+                <!-- Dynamically populated with student's books -->
+              </select>
+            </div>
+            <div class="col-5">
+              <label class="form-label fw-bold fs-7 text-dark">Halaman Materi:</label>
+              <input type="text" id="notePageInput" class="form-control fs-8" placeholder="Contoh: Hal. 24-28">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold fs-7 text-dark mb-1">Kategori / Label Materi:</label>
+            <div class="d-flex gap-2 flex-wrap" id="noteTagSelector">
+              <button type="button" class="btn btn-sm btn-outline-primary note-tag-btn active" data-tag="Ringkasan" onclick="selectNoteTag('Ringkasan', this)">📖 Ringkasan</button>
+              <button type="button" class="btn btn-sm btn-outline-primary note-tag-btn" data-tag="Penting" onclick="selectNoteTag('Penting', this)">⭐ Penting</button>
+              <button type="button" class="btn btn-sm btn-outline-primary note-tag-btn" data-tag="Tugas" onclick="selectNoteTag('Tugas', this)">📝 Tugas</button>
+              <button type="button" class="btn btn-sm btn-outline-primary note-tag-btn" data-tag="Rumus" onclick="selectNoteTag('Rumus', this)">📐 Rumus</button>
+            </div>
+            <input type="hidden" id="noteSelectedTag" value="Ringkasan">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold fs-7 text-dark">Isi Catatan Materi: <span class="text-danger">*</span></label>
+            <textarea id="noteContentInput" class="form-control fs-8" rows="6" placeholder="Tuliskan poin-poin materi yang sudah dipelajari, rumus, konsep penting, atau ringkasan penjelasan guru..."></textarea>
+          </div>
+
+          <div id="noteEditorError" class="alert alert-danger py-2 fs-8 d-none"></div>
+
+          <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm fw-bold px-3" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-primary btn-sm fw-bold px-4 shadow-sm" onclick="saveStudentNote()">
+              <i class="bi bi-save me-1"></i> Simpan Catatan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 6: DETAIL CATATAN SISWA -->
+  <div class="modal fade" id="noteDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2 shadow-lg">
+        <div class="modal-header border-bottom py-2">
+          <div>
+            <span class="badge bg-primary-subtle text-primary fw-bold mb-1" id="detailNoteTag">Ringkasan</span>
+            <h6 class="modal-title fw-bold text-dark mb-0" id="detailNoteTitle">Judul Catatan</h6>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="p-2 mb-3 bg-light rounded-3 fs-8 border">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-secondary"><i class="bi bi-book me-1"></i> Buku/Mapel:</span>
+              <span class="fw-bold text-dark text-end" id="detailNoteBook">-</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-secondary"><i class="bi bi-bookmark me-1"></i> Halaman:</span>
+              <span class="fw-semibold text-dark text-end" id="detailNotePage">-</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-secondary"><i class="bi bi-calendar3 me-1"></i> Waktu Dicatat:</span>
+              <span class="text-muted text-end" id="detailNoteDate">-</span>
+            </div>
+          </div>
+
+          <label class="form-label fw-bold fs-7 text-secondary">Isi Catatan Materi:</label>
+          <div class="p-3 bg-white border rounded-3 fs-8" id="detailNoteContent" style="white-space: pre-wrap; max-height: 280px; overflow-y: auto; line-height: 1.6;">
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary btn-sm fw-bold" onclick="copyDetailNoteContent()">
+            <i class="bi bi-clipboard me-1"></i> Salin Teks
+          </button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-warning btn-sm fw-bold text-dark" id="detailEditBtn" onclick="editCurrentDetailNote()">
+              <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+            <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">Tutup</button>
+          </div>
         </div>
       </div>
     </div>
@@ -735,8 +935,11 @@
     let currentCategoryFilter = "";
     let currentUser = null;
     let selectedLoginGrade = "";
+    let currentDashboardTab = "books";
+    let currentNoteTagFilter = "";
+    let activeDetailNoteId = null;
 
-    let studentModal, teacherModal, pdfModal, changePassModal;
+    let studentModal, teacherModal, pdfModal, changePassModal, noteEditorModal, noteDetailModal;
 
     // Load Initial Data
     document.addEventListener("DOMContentLoaded", () => {
@@ -745,11 +948,15 @@
       const tEl = document.getElementById("teacherLoginModal");
       const pEl = document.getElementById("pdfReaderModal");
       const cEl = document.getElementById("changePasswordModal");
+      const neEl = document.getElementById("noteEditorModal");
+      const ndEl = document.getElementById("noteDetailModal");
 
       if (sEl) studentModal = new bootstrap.Modal(sEl);
       if (tEl) teacherModal = new bootstrap.Modal(tEl);
       if (pEl) pdfModal = new bootstrap.Modal(pEl);
       if (cEl) changePassModal = new bootstrap.Modal(cEl);
+      if (neEl) noteEditorModal = new bootstrap.Modal(neEl);
+      if (ndEl) noteDetailModal = new bootstrap.Modal(ndEl);
 
       loadCatalogData();
       loadUsersData();
@@ -1092,7 +1299,8 @@
           if (logoutBtn) logoutBtn.classList.add("d-none"); // Hide top logout for teacher, use big button
         }
       }
-      renderBooks();
+      switchDashboardTab(currentDashboardTab || "books");
+      updateNotesBadge();
     }
 
     function openRekapNilai() {
@@ -1106,6 +1314,7 @@
     function logout() {
       localStorage.removeItem("app_current_user");
       currentUser = null;
+      currentDashboardTab = "books";
       document.getElementById("libraryScreen").classList.add("d-none");
       document.getElementById("welcomeScreen").classList.remove("d-none");
     }
@@ -1264,6 +1473,432 @@
         btnText.innerText = "Cek Update";
         alert("Gagal memeriksa update. Pastikan koneksi internet aktif.");
       }
+    }
+
+    // ==========================================
+    // FITUR CATATAN BELAJAR SISWA (NOTES FEATURE)
+    // ==========================================
+
+    function switchDashboardTab(tab) {
+      currentDashboardTab = tab;
+      const booksTab = document.getElementById("booksTabContent");
+      const notesTab = document.getElementById("notesTabContent");
+      const btnBooks = document.getElementById("navTabBooks");
+      const btnNotes = document.getElementById("navTabNotes");
+
+      if (tab === "books") {
+        if (booksTab) booksTab.classList.remove("d-none");
+        if (notesTab) notesTab.classList.add("d-none");
+        if (btnBooks) {
+          btnBooks.className = "btn btn-sm rounded-pill fw-bold flex-fill py-2 text-white bg-primary shadow-sm nav-tab-btn";
+        }
+        if (btnNotes) {
+          btnNotes.className = "btn btn-sm rounded-pill fw-bold flex-fill py-2 text-secondary bg-transparent nav-tab-btn";
+        }
+        renderBooks();
+      } else {
+        if (booksTab) booksTab.classList.add("d-none");
+        if (notesTab) notesTab.classList.remove("d-none");
+        if (btnBooks) {
+          btnBooks.className = "btn btn-sm rounded-pill fw-bold flex-fill py-2 text-secondary bg-transparent nav-tab-btn";
+        }
+        if (btnNotes) {
+          btnNotes.className = "btn btn-sm rounded-pill fw-bold flex-fill py-2 text-white bg-primary shadow-sm nav-tab-btn";
+        }
+        renderNotes();
+      }
+      updateNotesBadge();
+    }
+
+    function getStudentNotesKey() {
+      const identifier = currentUser && (currentUser.name || currentUser.username) 
+        ? (currentUser.name || currentUser.username).toLowerCase().replace(/\s+/g, '_') 
+        : 'guest';
+      return "app_student_notes_" + identifier;
+    }
+
+    function getStudentNotes() {
+      try {
+        const raw = localStorage.getItem(getStudentNotesKey());
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn("Gagal membaca catatan:", e);
+        return [];
+      }
+    }
+
+    function setStudentNotes(notes) {
+      localStorage.setItem(getStudentNotesKey(), JSON.stringify(notes));
+      updateNotesBadge();
+    }
+
+    function updateNotesBadge() {
+      const badge = document.getElementById("notesCountBadge");
+      if (badge) {
+        const notes = getStudentNotes();
+        badge.innerText = notes.length;
+      }
+    }
+
+    function selectNoteTag(tag, btnEl) {
+      document.getElementById("noteSelectedTag").value = tag;
+      document.querySelectorAll("#noteTagSelector .note-tag-btn").forEach(b => b.classList.remove("active"));
+      if (btnEl) btnEl.classList.add("active");
+    }
+
+    function openAddNoteModal(prefillBook, prefillPage) {
+      document.getElementById("noteEditId").value = "";
+      document.getElementById("noteEditorModalTitle").innerHTML = `<i class="bi bi-journal-plus me-2"></i> Buat Catatan Belajar`;
+      document.getElementById("noteTitleInput").value = "";
+      document.getElementById("notePageInput").value = prefillPage || "";
+      document.getElementById("noteContentInput").value = "";
+      document.getElementById("noteEditorError").classList.add("d-none");
+
+      // Default to Ringkasan tag
+      const defaultTagBtn = document.querySelector("#noteTagSelector [data-tag='Ringkasan']");
+      selectNoteTag("Ringkasan", defaultTagBtn);
+
+      populateNoteBookSelect(prefillBook);
+
+      if (noteEditorModal) noteEditorModal.show();
+    }
+
+    function populateNoteBookSelect(selectedBookTitle) {
+      const select = document.getElementById("noteBookSelect");
+      if (!select) return;
+      select.innerHTML = "";
+
+      // Option 1: General note
+      const optGeneral = document.createElement("option");
+      optGeneral.value = "Catatan Umum / Bebas";
+      optGeneral.textContent = "📌 Catatan Umum / Bebas";
+      select.appendChild(optGeneral);
+
+      // Relevant books based on grade if student
+      const relevantBooks = (currentUser && currentUser.grade)
+        ? allBooks.filter(b => !b.gradeClass || b.gradeClass.toLowerCase().includes(currentUser.grade.toLowerCase()))
+        : allBooks;
+
+      relevantBooks.forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.title;
+        opt.textContent = `📚 ${b.title} (${b.subject || b.gradeClass})`;
+        if (selectedBookTitle && selectedBookTitle.trim().toLowerCase() === b.title.trim().toLowerCase()) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      if (selectedBookTitle && ![...select.options].some(o => o.value === selectedBookTitle)) {
+        const optCustom = document.createElement("option");
+        optCustom.value = selectedBookTitle;
+        optCustom.textContent = `📚 ${selectedBookTitle}`;
+        optCustom.selected = true;
+        select.appendChild(optCustom);
+      }
+    }
+
+    function addNoteFromCurrentPdf() {
+      const title = document.getElementById("pdfBookTitle") ? document.getElementById("pdfBookTitle").innerText : "";
+      if (pdfModal) pdfModal.hide();
+      switchDashboardTab("notes");
+      setTimeout(() => {
+        openAddNoteModal(title, "");
+      }, 350);
+    }
+
+    function saveStudentNote() {
+      const id = document.getElementById("noteEditId").value;
+      const title = document.getElementById("noteTitleInput").value.trim();
+      const book = document.getElementById("noteBookSelect").value;
+      const page = document.getElementById("notePageInput").value.trim();
+      const tag = document.getElementById("noteSelectedTag").value || "Ringkasan";
+      const content = document.getElementById("noteContentInput").value.trim();
+      const errEl = document.getElementById("noteEditorError");
+
+      if (!title) {
+        errEl.innerText = "Judul Catatan wajib diisi.";
+        errEl.classList.remove("d-none");
+        return;
+      }
+      if (!content) {
+        errEl.innerText = "Isi Catatan Materi wajib diisi.";
+        errEl.classList.remove("d-none");
+        return;
+      }
+
+      errEl.classList.add("d-none");
+      const notes = getStudentNotes();
+      const dateStr = new Date().toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+      if (id) {
+        // Edit existing
+        const idx = notes.findIndex(n => String(n.id) === String(id));
+        if (idx !== -1) {
+          notes[idx].title = title;
+          notes[idx].bookTitle = book;
+          notes[idx].page = page;
+          notes[idx].tag = tag;
+          notes[idx].content = content;
+          notes[idx].updatedAt = dateStr;
+        }
+      } else {
+        // Add new
+        const newNote = {
+          id: Date.now(),
+          title: title,
+          bookTitle: book,
+          page: page,
+          tag: tag,
+          content: content,
+          date: dateStr,
+          grade: currentUser ? currentUser.grade : ""
+        };
+        notes.unshift(newNote);
+      }
+
+      setStudentNotes(notes);
+      if (noteEditorModal) noteEditorModal.hide();
+      renderNotes();
+    }
+
+    function editStudentNote(noteId) {
+      const notes = getStudentNotes();
+      const note = notes.find(n => String(n.id) === String(noteId));
+      if (!note) return;
+
+      document.getElementById("noteEditId").value = note.id;
+      document.getElementById("noteEditorModalTitle").innerHTML = `<i class="bi bi-pencil-square me-2"></i> Edit Catatan Belajar`;
+      document.getElementById("noteTitleInput").value = note.title;
+      document.getElementById("notePageInput").value = note.page || "";
+      document.getElementById("noteContentInput").value = note.content;
+      document.getElementById("noteEditorError").classList.add("d-none");
+
+      populateNoteBookSelect(note.bookTitle);
+      selectNoteTag(note.tag || "Ringkasan", document.querySelector(`#noteTagSelector [data-tag='${note.tag || "Ringkasan"}']`));
+
+      if (noteDetailModal) noteDetailModal.hide();
+      if (noteEditorModal) noteEditorModal.show();
+    }
+
+    function deleteStudentNote(noteId) {
+      if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
+        let notes = getStudentNotes();
+        notes = notes.filter(n => String(n.id) !== String(noteId));
+        setStudentNotes(notes);
+        if (noteDetailModal) noteDetailModal.hide();
+        renderNotes();
+      }
+    }
+
+    function openNoteDetail(noteId) {
+      const notes = getStudentNotes();
+      const note = notes.find(n => String(n.id) === String(noteId));
+      if (!note) return;
+
+      activeDetailNoteId = note.id;
+      document.getElementById("detailNoteTitle").innerText = note.title;
+      document.getElementById("detailNoteTag").innerText = note.tag || "Ringkasan";
+      document.getElementById("detailNoteBook").innerText = note.bookTitle || "Umum";
+      document.getElementById("detailNotePage").innerText = note.page ? note.page : "Seluruh Bab/Materi";
+      document.getElementById("detailNoteDate").innerText = note.date || "-";
+      document.getElementById("detailNoteContent").innerText = note.content;
+
+      if (noteDetailModal) noteDetailModal.show();
+    }
+
+    function editCurrentDetailNote() {
+      if (activeDetailNoteId) {
+        editStudentNote(activeDetailNoteId);
+      }
+    }
+
+    function copyDetailNoteContent() {
+      const content = document.getElementById("detailNoteContent").innerText;
+      copyTextToClipboard(content);
+    }
+
+    function copyNoteContent(noteId) {
+      const notes = getStudentNotes();
+      const note = notes.find(n => String(n.id) === String(noteId));
+      if (note) {
+        const text = `📌 ${note.title}\n📚 ${note.bookTitle} (${note.page || '-'})\n🏷️ Label: ${note.tag}\n\n${note.content}`;
+        copyTextToClipboard(text);
+      }
+    }
+
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("✅ Catatan disalin ke clipboard!");
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand("copy");
+        alert("✅ Catatan disalin!");
+      } catch (err) {
+        alert("Gagal menyalin otomatis. Silakan salin manual.");
+      }
+      document.body.removeChild(ta);
+    }
+
+    function filterNotes() {
+      renderNotes();
+    }
+
+    function setNoteTagFilter(tag, el) {
+      currentNoteTagFilter = tag;
+      document.querySelectorAll("#notesTagFilterContainer .nav-chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderNotes();
+    }
+
+    function renderNotes() {
+      const container = document.getElementById("notesListContainer");
+      if (!container) return;
+
+      const allStudentNotes = getStudentNotes();
+      const search = (document.getElementById("notesSearchInput") ? document.getElementById("notesSearchInput").value : "").toLowerCase().trim();
+
+      const filtered = allStudentNotes.filter(n => {
+        const matchTag = !currentNoteTagFilter || (n.tag && n.tag.toLowerCase() === currentNoteTagFilter.toLowerCase());
+        const matchSearch = !search ||
+          (n.title && n.title.toLowerCase().includes(search)) ||
+          (n.bookTitle && n.bookTitle.toLowerCase().includes(search)) ||
+          (n.page && n.page.toLowerCase().includes(search)) ||
+          (n.content && n.content.toLowerCase().includes(search));
+        return matchTag && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        if (allStudentNotes.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-5 px-3 bg-light rounded-4 border">
+              <div class="mb-3">
+                <i class="bi bi-journal-plus text-primary display-4"></i>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">Belum Ada Catatan Belajar</h6>
+              <p class="fs-8 text-secondary mb-3" style="max-width: 320px; margin: 0 auto;">
+                Mulai catat ringkasan materi, rumus, halaman penting dari buku pelajaran, atau tugas madrasah Anda di sini.
+              </p>
+              <button type="button" class="btn btn-primary btn-sm fw-bold px-4 py-2 rounded-pill shadow-sm" onclick="openAddNoteModal()">
+                <i class="bi bi-plus-circle-fill me-1"></i> Buat Catatan Pertama
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-4 px-3 bg-light rounded-4 border">
+              <i class="bi bi-search text-muted fs-2 mb-2"></i>
+              <h6 class="fw-bold text-secondary mb-1">Catatan Tidak Ditemukan</h6>
+              <p class="fs-8 text-muted mb-0">Coba ubah kata kunci pencarian atau pilih 'Semua Tag'.</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+          <span class="fs-8 text-muted fw-semibold">Menampilkan ${filtered.length} catatan</span>
+          <button type="button" class="btn btn-sm btn-link text-decoration-none text-primary fs-8 fw-bold p-0" onclick="exportNotesSummary()">
+            <i class="bi bi-share me-1"></i> Salin Semua Catatan
+          </button>
+        </div>
+        <div class="d-flex flex-column gap-3">
+          ${filtered.map(n => {
+            const tagBadgeClass = n.tag === "Penting" ? "bg-danger-subtle text-danger border-danger-subtle" :
+                                  n.tag === "Tugas" ? "bg-warning-subtle text-warning-emphasis border-warning-subtle" :
+                                  n.tag === "Rumus" ? "bg-info-subtle text-info-emphasis border-info-subtle" :
+                                  "bg-primary-subtle text-primary border-primary-subtle";
+            return `
+              <div class="note-card p-3">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                  <div style="max-width: 78%;">
+                    <span class="badge border px-2 py-1 rounded-pill fw-bold fs-9 mb-1 ${tagBadgeClass}">${escapeHtml(n.tag || 'Ringkasan')}</span>
+                    <h6 class="fw-bold text-dark mb-0 text-truncate" style="cursor: pointer;" onclick="openNoteDetail('${n.id}')">
+                      ${escapeHtml(n.title)}
+                    </h6>
+                  </div>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 fs-8">
+                      <li><button class="dropdown-item" onclick="openNoteDetail('${n.id}')"><i class="bi bi-eye text-primary me-2"></i> Lihat Detail</button></li>
+                      <li><button class="dropdown-item" onclick="editStudentNote('${n.id}')"><i class="bi bi-pencil text-warning me-2"></i> Edit Catatan</button></li>
+                      <li><button class="dropdown-item" onclick="copyNoteContent('${n.id}')"><i class="bi bi-clipboard text-secondary me-2"></i> Salin Teks</button></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><button class="dropdown-item text-danger" onclick="deleteStudentNote('${n.id}')"><i class="bi bi-trash me-2"></i> Hapus</button></li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-2 fs-9 text-secondary">
+                  <span class="badge bg-light text-primary border"><i class="bi bi-book me-1"></i> ${escapeHtml(n.bookTitle || 'Umum')}</span>
+                  ${n.page ? `<span class="badge bg-light text-secondary border"><i class="bi bi-bookmark me-1"></i> ${escapeHtml(n.page)}</span>` : ''}
+                  <span class="text-muted ms-auto"><i class="bi bi-clock me-1"></i> ${escapeHtml(n.date || '')}</span>
+                </div>
+
+                <div class="text-secondary fs-8 mb-3" style="white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; cursor: pointer;" onclick="openNoteDetail('${n.id}')">
+                  ${escapeHtml(n.content)}
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                  <button type="button" class="btn btn-outline-primary btn-sm py-1 px-3 fs-9 fw-bold rounded-pill" onclick="openNoteDetail('${n.id}')">
+                    <i class="bi bi-eye me-1"></i> Buka Catatan
+                  </button>
+                  <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-light btn-sm text-secondary py-1 px-2 fs-9 rounded-circle" title="Salin" onclick="copyNoteContent('${n.id}')">
+                      <i class="bi bi-clipboard"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm text-warning py-1 px-2 fs-9 rounded-circle" title="Edit" onclick="editStudentNote('${n.id}')">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm text-danger py-1 px-2 fs-9 rounded-circle" title="Hapus" onclick="deleteStudentNote('${n.id}')">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function exportNotesSummary() {
+      const notes = getStudentNotes();
+      if (notes.length === 0) return;
+      let summary = `📝 CATATAN BELAJAR - ${currentUser ? currentUser.name : 'Siswa'} (${currentUser ? currentUser.grade : ''})\n`;
+      summary += `MTs Al-Khairaat Bunyu\n================================\n\n`;
+      notes.forEach((n, idx) => {
+        summary += `[${idx + 1}] ${n.title}\n`;
+        summary += `Materi/Buku: ${n.bookTitle || '-'} | Halaman: ${n.page || '-'}\n`;
+        summary += `Label: ${n.tag || 'Ringkasan'} | Tanggal: ${n.date || '-'}\n`;
+        summary += `Isi Catatan:\n${n.content}\n\n--------------------------------\n\n`;
+      });
+      copyTextToClipboard(summary);
     }
 
     function togglePasswordVisibility(inputId, iconId) {
