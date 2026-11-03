@@ -199,7 +199,7 @@
     }
     .enter-btn-overlay {
       position: absolute;
-      bottom: 12px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
@@ -213,7 +213,7 @@
       border-radius: 12px;
       border: none;
       font-size: 1.05rem;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -221,9 +221,13 @@
       cursor: pointer;
     }
     .enter-btn:hover {
-      transform: translateX(-50%) scale(1.05);
+      transform: scale(1.05);
       background-color: #00e0b0;
       color: #064e3b;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+    }
+    .enter-btn:active {
+      transform: scale(0.98);
     }
     .banner-fade-container {
       width: 100%;
@@ -285,7 +289,13 @@
       <img src="/logo_alkhairaat.jpg" alt="Logo" class="landing-logo">
 
       <div class="school-image-container">
-        <img src="assets/aistudio/school_building_clean.png?v=12" alt="School Building" class="school-image">
+        <img src="assets/aistudio/school_building_clean.png?v=15" alt="School Building" class="school-image">
+        <div class="enter-btn-overlay">
+          <button type="button" class="enter-btn" onclick="enterMainApp()" aria-label="Masuk Ke Aplikasi Utama">
+            <span>Masuk Ke Aplikasi Utama</span>
+            <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
       </div>
     </div>
 
