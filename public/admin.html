@@ -137,47 +137,51 @@
     .landing-header {
       width: 100%;
       background: rgba(0, 0, 0, 0.4);
-      padding: 8px 0;
+      padding: 10px 0;
       display: flex;
       align-items: center;
-      min-height: 48px;
+      min-height: 50px;
       border-bottom: 2px solid rgba(255, 255, 255, 0.15);
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       flex-shrink: 0;
     }
-    .landing-logo-container {
-      position: relative;
-      margin-top: 8px;
-      margin-bottom: 4px;
-      flex-shrink: 0;
+    .landing-body-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      gap: 16px;
     }
     .landing-logo {
-      width: 85px;
-      height: 85px;
+      width: 90px;
+      height: 90px;
       border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
-      background-color: white;
+      border: 3.5px solid #ffffff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      background-color: #ffffff;
+      object-fit: cover;
+      flex-shrink: 0;
     }
     .school-image-container {
-      width: 94%;
-      max-width: 900px;
+      width: 95%;
+      max-width: 920px;
       position: relative;
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-      margin: 6px auto;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
       background-color: #064e3b;
       aspect-ratio: 16 / 9;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-shrink: 0;
     }
     @media (min-width: 768px) {
       .landing-logo {
-        width: 100px;
-        height: 100px;
+        width: 105px;
+        height: 105px;
       }
       .school-image-container {
         aspect-ratio: 21 / 9;
@@ -189,11 +193,11 @@
       object-fit: cover;
       object-position: center;
       display: block;
-      border-radius: 16px;
+      border-radius: 20px;
     }
     .enter-btn-overlay {
       position: absolute;
-      bottom: 10px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
@@ -203,19 +207,19 @@
       background-color: #00ffc2; /* Diamond Green */
       color: #064e3b;
       font-weight: 800;
-      padding: 8px 22px;
-      border-radius: 10px;
+      padding: 10px 26px;
+      border-radius: 12px;
       border: none;
-      font-size: 0.95rem;
+      font-size: 1.05rem;
       transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+      gap: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
       cursor: pointer;
     }
     .enter-btn:hover {
-      transform: translateX(-50%) scale(1.04);
+      transform: translateX(-50%) scale(1.05);
       background-color: #00e0b0;
       color: #064e3b;
     }
@@ -269,24 +273,28 @@
     <div class="landing-header">
       <div class="banner-fade-container">
         <div class="banner-fade-text">
-          <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 32px; width: 32px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+          <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 30px; width: 30px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
           <span>SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU</span>
         </div>
       </div>
     </div>
     
-    <div class="school-image-container">
-      <img src="assets/aistudio/school_building_clean.png?v=3" alt="School Building" class="school-image">
-      <div class="enter-btn-overlay">
-        <button class="enter-btn" onclick="enterMainApp()">
-          Masuk Ke Aplikasi Utama <i class="bi bi-arrow-right"></i>
-        </button>
+    <div class="landing-body-wrapper">
+      <img src="/logo_alkhairaat.jpg" alt="Logo" class="landing-logo">
+
+      <div class="school-image-container">
+        <img src="assets/aistudio/school_building_clean.png?v=5" alt="School Building" class="school-image">
+        <div class="enter-btn-overlay">
+          <button class="enter-btn" onclick="enterMainApp()">
+            Masuk Ke Aplikasi Utama <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="banner-fade-container" style="margin-top: auto; padding-bottom: 14px;">
+    <div class="banner-fade-container" style="padding-bottom: 12px;">
       <div class="banner-fade-text">
-        <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 32px; width: 32px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+        <img src="/logo_alkhairaat.jpg" alt="Logo" style="height: 30px; width: 30px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
         <span>SISTEM PEMBELAJARAN TERPADU MTs AL-KHAIRAAT BUNYU</span>
       </div>
     </div>
