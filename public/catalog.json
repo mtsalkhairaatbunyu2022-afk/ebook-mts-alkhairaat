@@ -1,1 +1,50 @@
-
+[
+  {
+    "id": "book_bahasa_arab_6233_969",
+    "title": "bahasa arab kelas VIII",
+    "author": "MTs Alkhairaat Bunyu",
+    "subject": "bahasa arab",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://drive.google.com/file/d/1u4pd7XRPW6T7DMphDCjo3e_0toH8aweH/preview",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 2500000,
+    "pageCount": 100,
+    "category": "mp",
+    "description": "Buku Pelajaran bahasa arab untuk Kelas VII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "book_informatika_6233_495",
+    "title": "informatika kelas VIII",
+    "author": "MTs Alkhairaat Bunyu",
+    "subject": "informatika",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/preview",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 2500000,
+    "pageCount": 100,
+    "category": "mp",
+    "description": "Buku Pelajaran informatika untuk Kelas VII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "book_nahwu_6233_346",
+    "title": "Nahwu kelas VIII",
+    "author": "MTs Alkhairaat Bunyu",
+    "subject": "Nahwu",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://drive.google.com/file/d/1qEW07zWO__9W9eqOleXAthC_kpG9c9Mh/preview",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 2500000,
+    "pageCount": 100,
+    "category": "mp",
+    "description": "Buku Pelajaran Nahwu untuk Kelas VII MTs Al-Khairaat Bunyu."
+  }
+]
