@@ -1537,10 +1537,8 @@
       else if (lowerName.includes("informatika")) document.getElementById('subject').value = "Informatika";
       else document.getElementById('subject').value = cleanTitle;
 
-      // Auto Detect Grade Class
-      if (lowerName.includes("vii") || lowerName.includes("7")) document.getElementById('gradeClass').value = "Kelas VII";
-      else if (lowerName.includes("viii") || lowerName.includes("8")) document.getElementById('gradeClass').value = "Kelas VIII";
-      else if (lowerName.includes("ix") || lowerName.includes("9")) document.getElementById('gradeClass').value = "Kelas IX";
+      // Auto Detect Grade Class (check VIII & IX before VII to prevent 'viii'.includes('vii'))
+      document.getElementById('gradeClass').value = normalizeBookGradeClass(lowerName, cleanTitle);
 
       // Auto Suggest Cloudflare Pages URL
       const cleanFileName = file.name.toLowerCase().replace(/\s+/g, '_');
@@ -1667,6 +1665,99 @@
 informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/view?usp=drive_link`;
     }
 
+    function normalizeBookGradeClass(gradeRaw, fallbackText = '') {
+      const candidates = [gradeRaw, fallbackText];
+      for (const raw of candidates) {
+        if (raw === null || raw === undefined) continue;
+        const str = raw.toString().trim().toLowerCase();
+        if (!str) continue;
+        if (str.includes('semua')) return 'Semua Kelas';
+
+        // Exact & bounded Roman / numeric matches in descending order (VIII/IX before VII!)
+        // Important: 'viii' contains 'vii', so VIII MUST be checked before VII.
+        if (
+          str === 'ix' || str === '9' || str === 'kelas ix' || str === 'kelas 9' ||
+          /(?:^|[^a-z])ix(?:[^a-z]|$)/.test(str) || /(?:^|[^0-9])9(?:[^0-9]|$)/.test(str) ||
+          str.includes('kelasix')
+        ) {
+          return 'Kelas IX';
+        }
+        if (
+          str === 'viii' || str === '8' || str === 'kelas viii' || str === 'kelas 8' ||
+          /(?:^|[^a-z])viii(?:[^a-z]|$)/.test(str) || /(?:^|[^0-9])8(?:[^0-9]|$)/.test(str) ||
+          str.includes('viii')
+        ) {
+          return 'Kelas VIII';
+        }
+        if (
+          str === 'vii' || str === '7' || str === 'kelas vii' || str === 'kelas 7' ||
+          /(?:^|[^a-z])vii(?:[^a-z]|$)/.test(str) || /(?:^|[^0-9])7(?:[^0-9]|$)/.test(str) ||
+          str.includes('kelasvii')
+        ) {
+          return 'Kelas VII';
+        }
+      }
+      return 'Kelas VII';
+    }
+
+    function normalizeBookFileUrl(rawUrl) {
+      let fileUrl = (rawUrl || '').toString().trim();
+      if (!fileUrl) return '';
+
+      // Extract URL if wrapped in Excel =HYPERLINK("url", "label") formula
+      const formulaMatch = fileUrl.match(/^=?HYPERLINK\(\s*["']([^"']+)["']/i);
+      if (formulaMatch && formulaMatch[1]) {
+        fileUrl = formulaMatch[1].trim();
+      }
+
+      if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
+        const fileIdMatch =
+          fileUrl.match(/\/(?:file\/d\/|document\/d\/|spreadsheets\/d\/|presentation\/d\/)([a-zA-Z0-9_-]+)/) ||
+          fileUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+        }
+      }
+      return fileUrl;
+    }
+
+    function normalizeBookCategory(rawCategory) {
+      const cat = (rawCategory || '').toString().trim();
+      if (!cat) return 'mp';
+      const lower = cat.toLowerCase();
+      if (lower === 'buku' || lower === 'mp' || lower === 'materi') return 'mp';
+      if (lower === 'tugas' || lower === 'quiz' || lower === 'kuis') return 'Tugas';
+      if (lower === 'video') return 'Video';
+      return cat;
+    }
+
+    function buildCatalogBookObject({ title, subject, gradeRaw, author, fileUrl, category }) {
+      const cleanTitle = (title || 'Buku Pelajaran').toString().trim();
+      const cleanSubject = (subject || cleanTitle).toString().trim();
+      const gradeClass = normalizeBookGradeClass(gradeRaw, cleanTitle);
+      const cleanAuthor = (author || 'MTs Alkhairaat Bunyu').toString().trim();
+      const cleanUrl = normalizeBookFileUrl(fileUrl);
+      const cleanCategory = normalizeBookCategory(category);
+      const id = "book_" + cleanSubject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
+
+      return {
+        id: id,
+        title: cleanTitle,
+        author: cleanAuthor || 'MTs Alkhairaat Bunyu',
+        subject: cleanSubject,
+        gradeClass: gradeClass,
+        teacherOwner: "Guru MTs Al-Khairaat Bunyu",
+        year: "2026",
+        fileUrl: cleanUrl,
+        localBlobUrl: "",
+        isDownloaded: false,
+        fileSize: 2500000,
+        pageCount: 100,
+        category: cleanCategory,
+        description: `Buku Pelajaran ${cleanSubject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
+      };
+    }
+
     // Multi-Book Batch Process Function (Excel copy-paste Tab / Pipe / Google Drive URLs)
     document.getElementById('processMultiBookBtn').addEventListener('click', () => {
       const text = document.getElementById('multiBookInput').value.trim();
@@ -1678,62 +1769,41 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       const lines = text.split('\n');
       let count = 0;
 
-      lines.forEach(line => {
+      lines.forEach((line, idx) => {
         if (!line.trim()) return;
         let parts = [];
         if (line.includes('\t')) {
           parts = line.split('\t').map(p => p.trim());
         } else if (line.includes('|')) {
           parts = line.split('|').map(p => p.trim());
+        } else if (line.includes(';')) {
+          parts = line.split(';').map(p => p.trim());
         } else {
           parts = line.split(',').map(p => p.trim());
+        }
+
+        // Skip header row if user pasted header from Excel
+        if (idx === 0 && parts[0] && parts[0].toLowerCase().includes('judul') && parts[1] && parts[1].toLowerCase().includes('pelajaran')) {
+          return;
         }
 
         if (parts.length >= 2) {
           const title = parts[0] || 'Buku Pelajaran';
           const subject = parts[1] || title;
-          let gradeRaw = parts[2] || 'Kelas VII';
+          const gradeRaw = parts[2] || '';
           let author = parts[3] || 'MTs Alkhairaat Bunyu';
-          let fileUrl = parts[4] || parts[parts.length - 1] || '';
+          let fileUrl = parts[4] || '';
+          const category = parts[5] || '';
 
-          if (!fileUrl.includes('http') && author.includes('http')) {
+          if (!fileUrl && /^https?:\/\//i.test(author)) {
             fileUrl = author;
             author = 'MTs Alkhairaat Bunyu';
+          } else if (!fileUrl) {
+            const urlPart = parts.find(p => /^https?:\/\//i.test(p));
+            if (urlPart) fileUrl = urlPart;
           }
 
-          let gradeClass = 'Kelas VII';
-          const gStr = gradeRaw.toString().toLowerCase();
-          if (gStr.includes('7') || gStr.includes('vii')) gradeClass = 'Kelas VII';
-          else if (gStr.includes('8') || gStr.includes('viii')) gradeClass = 'Kelas VIII';
-          else if (gStr.includes('9') || gStr.includes('ix')) gradeClass = 'Kelas IX';
-
-          if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
-            const fileIdMatch = fileUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
-            if (fileIdMatch && fileIdMatch[1]) {
-              fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
-            }
-          }
-
-          const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
-          
-          const newBook = {
-            id: id,
-            title: title,
-            author: author || 'MTs Alkhairaat Bunyu',
-            subject: subject,
-            gradeClass: gradeClass,
-            teacherOwner: "Guru MTs Al-Khairaat Bunyu",
-            year: "2026",
-            fileUrl: fileUrl,
-            localBlobUrl: "",
-            isDownloaded: false,
-            fileSize: 2500000,
-            pageCount: 100,
-            category: "mp",
-            description: `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
-          };
-
-          catalog.push(newBook);
+          catalog.push(buildCatalogBookObject({ title, subject, gradeRaw, author, fileUrl, category }));
           count++;
         }
       });
@@ -1746,6 +1816,56 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         alert('Format tidak valid. Pastikan menggunakan format copy-paste dari Excel (Tab) atau pemisah | (pipe).');
       }
     });
+
+    function extractCellTextAndLink(worksheet, r, c) {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      const cell = worksheet[addr];
+      if (!cell) return { text: '', link: '' };
+
+      let text = '';
+      if (cell.w !== undefined && cell.w !== null) text = String(cell.w).trim();
+      else if (cell.v !== undefined && cell.v !== null) text = String(cell.v).trim();
+
+      let link = '';
+      if (cell.l && cell.l.Target) {
+        link = String(cell.l.Target).trim();
+      } else if (cell.f) {
+        const fMatch = String(cell.f).match(/HYPERLINK\(\s*["']([^"']+)["']/i);
+        if (fMatch && fMatch[1]) link = fMatch[1].trim();
+      }
+      return { text, link };
+    }
+
+    function detectBookHeaderMap(headerCells) {
+      const map = { title: -1, subject: -1, grade: -1, author: -1, fileUrl: -1, category: -1 };
+      let matchedCount = 0;
+
+      headerCells.forEach((raw, idx) => {
+        const h = (raw || '').toString().trim().toLowerCase();
+        if (!h) return;
+        if (map.title === -1 && (h.includes('judul') || h.includes('title') || h.includes('nama buku'))) {
+          map.title = idx;
+          matchedCount++;
+        } else if (map.subject === -1 && (h.includes('mata pelajaran') || h.includes('mapel') || h.includes('subject'))) {
+          map.subject = idx;
+          matchedCount++;
+        } else if (map.grade === -1 && (h.includes('jenjang') || h.includes('kelas') || h.includes('grade'))) {
+          map.grade = idx;
+          matchedCount++;
+        } else if (map.author === -1 && (h.includes('penulis') || h.includes('penyusun') || h.includes('pengarang') || h.includes('author'))) {
+          map.author = idx;
+          matchedCount++;
+        } else if (map.fileUrl === -1 && (h.includes('link') || h.includes('url') || h.includes('drive') || h.includes('pdf') || h.includes('file'))) {
+          map.fileUrl = idx;
+          matchedCount++;
+        } else if (map.category === -1 && (h.includes('kategori') || h.includes('category') || h.includes('jenis'))) {
+          map.category = idx;
+          matchedCount++;
+        }
+      });
+
+      return matchedCount >= 2 ? map : null;
+    }
 
     // Excel File Upload for Books Handler
     document.getElementById('excelBookFileInput').addEventListener('change', function(e) {
@@ -1762,54 +1882,102 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          const ref = worksheet['!ref'];
+
+          if (!ref) {
+            alert('File Excel kosong.');
+            return;
+          }
+
+          const range = XLSX.utils.decode_range(ref);
+          const rowsMatrix = [];
+
+          for (let r = range.s.r; r <= range.e.r; r++) {
+            const rowCells = [];
+            let hasAnyContent = false;
+            for (let c = range.s.c; c <= range.e.c; c++) {
+              const cellInfo = extractCellTextAndLink(worksheet, r, c);
+              if (cellInfo.text || cellInfo.link) hasAnyContent = true;
+              rowCells.push(cellInfo);
+            }
+            // Fallback for semicolon-delimited CSV saved by Excel Indonesia
+            if (hasAnyContent && rowCells.length === 1 && rowCells[0].text.includes(';')) {
+              const splitParts = rowCells[0].text.split(';').map(p => ({ text: p.trim(), link: '' }));
+              rowsMatrix.push(splitParts);
+            } else if (hasAnyContent) {
+              rowsMatrix.push(rowCells);
+            }
+          }
+
+          if (rowsMatrix.length === 0) {
+            alert('Tidak ditemukan data buku yang valid di file Excel.');
+            return;
+          }
+
+          const firstRowTexts = rowsMatrix[0].map(c => c.text);
+          const headerMap = detectBookHeaderMap(firstRowTexts);
+          const startIdx = headerMap ? 1 : 0;
+
+          // Fallback column positions if header isn't matched (handle optional leading 'No' column)
+          const defaultMap = (() => {
+            if (headerMap) return headerMap;
+            const sample = rowsMatrix[startIdx] || [];
+            const firstIsNo = sample[0] && /^\d+$/.test(sample[0].text);
+            const offset = firstIsNo ? 1 : 0;
+            return {
+              title: offset + 0,
+              subject: offset + 1,
+              grade: offset + 2,
+              author: offset + 3,
+              fileUrl: offset + 4,
+              category: offset + 5
+            };
+          })();
 
           let count = 0;
-          jsonRows.forEach((row, idx) => {
-            if (idx === 0) return; // skip header
-            if (!Array.isArray(row) || row.length < 2) return;
+          for (let i = startIdx; i < rowsMatrix.length; i++) {
+            const row = rowsMatrix[i];
+            const getCell = (colIdx) => (colIdx >= 0 && colIdx < row.length) ? row[colIdx] : { text: '', link: '' };
 
-            const title = (row[0] || 'Buku Pelajaran').toString().trim();
-            const subject = (row[1] || title).toString().trim();
-            const gradeRaw = (row[2] || 'Kelas VII').toString().trim();
-            const author = (row[3] || 'MTs Alkhairaat Bunyu').toString().trim();
-            let fileUrl = (row[4] || row[row.length - 1] || '').toString().trim();
+            const titleCell = getCell(defaultMap.title);
+            const subjectCell = getCell(defaultMap.subject);
+            const gradeCell = getCell(defaultMap.grade);
+            const authorCell = getCell(defaultMap.author);
+            const urlCell = getCell(defaultMap.fileUrl);
+            const catCell = getCell(defaultMap.category);
 
-            if (fileUrl.includes('drive.google.com') || fileUrl.includes('docs.google.com')) {
-              const fileIdMatch = fileUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
-              if (fileIdMatch && fileIdMatch[1]) {
-                fileUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+            const title = titleCell.text;
+            const subject = subjectCell.text || title;
+            if (!title && !subject) continue;
+
+            const gradeRaw = gradeCell.text;
+            const author = authorCell.text || 'MTs Alkhairaat Bunyu';
+
+            // Extract URL from explicit URL cell (text or hyperlink target), or scan row for any http link
+            let rawUrl = '';
+            if (urlCell.link && /^https?:\/\//i.test(urlCell.link)) {
+              rawUrl = urlCell.link;
+            } else if (urlCell.text && /^https?:\/\//i.test(urlCell.text)) {
+              rawUrl = urlCell.text;
+            } else if (urlCell.link || urlCell.text) {
+              rawUrl = urlCell.link || urlCell.text;
+            } else {
+              const foundUrlCell = row.find(c => /^https?:\/\//i.test(c.link) || /^https?:\/\//i.test(c.text));
+              if (foundUrlCell) {
+                rawUrl = /^https?:\/\//i.test(foundUrlCell.link) ? foundUrlCell.link : foundUrlCell.text;
               }
             }
 
-            let gradeClass = 'Kelas VII';
-            const gStr = gradeRaw.toLowerCase();
-            if (gStr.includes('7') || gStr.includes('vii')) gradeClass = 'Kelas VII';
-            else if (gStr.includes('8') || gStr.includes('viii')) gradeClass = 'Kelas VIII';
-            else if (gStr.includes('9') || gStr.includes('ix')) gradeClass = 'Kelas IX';
-
-            const id = "book_" + subject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
-
-            const newBook = {
-              id: id,
+            catalog.push(buildCatalogBookObject({
               title: title,
-              author: author || 'MTs Alkhairaat Bunyu',
               subject: subject,
-              gradeClass: gradeClass,
-              teacherOwner: "Guru MTs Al-Khairaat Bunyu",
-              year: "2026",
-              fileUrl: fileUrl,
-              localBlobUrl: "",
-              isDownloaded: false,
-              fileSize: 2500000,
-              pageCount: 100,
-              category: "mp",
-              description: `Buku Pelajaran ${subject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
-            };
-
-            catalog.push(newBook);
+              gradeRaw: gradeRaw,
+              author: author,
+              fileUrl: rawUrl,
+              category: catCell.text
+            }));
             count++;
-          });
+          }
 
           if (count > 0) {
             updateView();
@@ -1820,6 +1988,8 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
           }
         } catch (err) {
           alert('Gagal membaca file Excel buku: ' + err.message);
+        } finally {
+          e.target.value = '';
         }
       };
       reader.readAsArrayBuffer(file);
