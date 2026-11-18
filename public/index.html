@@ -1244,6 +1244,7 @@
         
         const filterContainer = document.getElementById("filterChipsContainer");
         const filterLabel = document.getElementById("filterLabel");
+        const categoryContainer = document.getElementById("categoryFilterContainer");
         
         const mainBtn = document.getElementById("mainActionBtn");
         const mainText = document.getElementById("mainActionText");
@@ -1256,6 +1257,7 @@
           currentGradeFilter = currentUser.grade;
           filterLabel.innerText = "Katalog Khusus Kelas Anda:";
           filterContainer.innerHTML = `<div class="nav-chip active">${currentUser.grade}</div>`;
+          if (categoryContainer) categoryContainer.classList.remove("d-none");
           
           if (mainBtn) {
             mainBtn.classList.remove("d-none");
@@ -1272,10 +1274,15 @@
           }
 
         } else {
-          // Teachers: [Rekap Nilai (Green)] [Ubah Password (Yellow)] [Logout (Red)]
-          filterLabel.innerText = "Saring Jenjang Kelas & Kategori:";
+          // Teachers: Simple menu showing only Kelas VII, Kelas VIII, Kelas IX
+          currentCategoryFilter = "";
+          if (categoryContainer) categoryContainer.classList.add("d-none");
+          if (!["Kelas VII", "Kelas VIII", "Kelas IX"].includes(currentGradeFilter)) {
+            currentGradeFilter = "Kelas VII";
+          }
+
+          filterLabel.innerText = "Pilih Jenjang Kelas:";
           filterContainer.innerHTML = `
-            <div class="nav-chip ${currentGradeFilter === '' ? 'active' : ''}" onclick="setGradeFilter('', this)">Semua Kelas</div>
             <div class="nav-chip ${currentGradeFilter === 'Kelas VII' ? 'active' : ''}" onclick="setGradeFilter('Kelas VII', this)">Kelas VII</div>
             <div class="nav-chip ${currentGradeFilter === 'Kelas VIII' ? 'active' : ''}" onclick="setGradeFilter('Kelas VIII', this)">Kelas VIII</div>
             <div class="nav-chip ${currentGradeFilter === 'Kelas IX' ? 'active' : ''}" onclick="setGradeFilter('Kelas IX', this)">Kelas IX</div>
@@ -1312,6 +1319,8 @@
     function logout() {
       localStorage.removeItem("app_current_user");
       currentUser = null;
+      currentGradeFilter = "";
+      currentCategoryFilter = "";
       currentDashboardTab = "books";
       document.getElementById("libraryScreen").classList.add("d-none");
       document.getElementById("welcomeScreen").classList.remove("d-none");
@@ -1339,23 +1348,35 @@
       renderBooks();
     }
 
+    function normalizeGradeForCompare(g) {
+      const s = (g || "").toString().trim().toLowerCase();
+      if (!s) return "";
+      if (s === "kelas ix" || s === "ix" || s === "9" || s === "kelas 9") return "kelas ix";
+      if (s === "kelas viii" || s === "viii" || s === "8" || s === "kelas 8") return "kelas viii";
+      if (s === "kelas vii" || s === "vii" || s === "7" || s === "kelas 7") return "kelas vii";
+      return s;
+    }
+
     function renderBooks() {
       const grid = document.getElementById("booksGrid");
       const search = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase() : "";
 
       let filtered = allBooks.filter(b => {
-        const matchGrade = !currentGradeFilter || (b.gradeClass && b.gradeClass.toLowerCase().includes(currentGradeFilter.toLowerCase()));
+        const matchGrade = !currentGradeFilter || normalizeGradeForCompare(b.gradeClass) === normalizeGradeForCompare(currentGradeFilter);
         const matchCategory = !currentCategoryFilter || (b.category && b.category.toLowerCase() === currentCategoryFilter.toLowerCase()) || (currentCategoryFilter === 'Buku' && (!b.category || b.category === 'mp'));
         const matchSearch = !search || b.title.toLowerCase().includes(search) || b.subject.toLowerCase().includes(search) || b.author.toLowerCase().includes(search);
         return matchGrade && matchCategory && matchSearch;
       });
 
       if (filtered.length === 0) {
+        const emptyHint = (currentUser && currentUser.role === "TEACHER")
+          ? `Belum ada buku untuk ${escapeHtml(currentGradeFilter || 'jenjang ini')}. Silakan pilih jenjang kelas lain atau sinkronkan dengan Portal Guru.`
+          : `Coba pilih 'Semua Kelas' atau sinkronkan kembali dengan Portal Guru.`;
         grid.innerHTML = `
           <div class="col-12 text-center py-5">
             <i class="bi bi-book text-muted display-4"></i>
             <h6 class="fw-bold mt-3 text-secondary">Belum Ada Buku Tersedia</h6>
-            <p class="fs-8 text-muted">Coba pilih 'Semua Kelas' atau sinkronkan kembali dengan Portal Guru.</p>
+            <p class="fs-8 text-muted">${emptyHint}</p>
           </div>
         `;
         return;
