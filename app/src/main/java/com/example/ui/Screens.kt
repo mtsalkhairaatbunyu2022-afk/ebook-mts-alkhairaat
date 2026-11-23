@@ -363,68 +363,6 @@ fun WelcomeDashboardScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // CARD 3: PORTAL GURU & OPERATOR
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("card_portal_operator"),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFEF3C7).copy(alpha = 0.5f),
-                border = BorderStroke(1.5.dp, Color(0xFFF59E0B))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Speed,
-                            contentDescription = null,
-                            tint = Color(0xFFB45309),
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Column {
-                            Text(
-                                text = "⚙️ Portal Guru & Operator",
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1E293B),
-                                fontSize = 13.sp
-                            )
-                            Text(
-                                text = "Kelola/Unggah Buku & Impor Akun Excel.",
-                                color = Color(0xFF64748B),
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = onLoginWithCard,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "Buka Portal",
-                            color = Color(0xFF78350F),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = "MTs Al-Khairaat Bunyu • Sistem E-Book Resmi",
                 fontSize = 11.sp,
