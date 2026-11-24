@@ -4,7 +4,7 @@
     "title": "bahasa arab kelas VIII",
     "author": "MTs Alkhairaat Bunyu",
     "subject": "bahasa arab",
-    "gradeClass": "Kelas VIII",
+    "gradeClass": "Kelas VII",
     "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
     "year": "2026",
     "fileUrl": "https://drive.google.com/file/d/1u4pd7XRPW6T7DMphDCjo3e_0toH8aweH/preview",
@@ -20,7 +20,7 @@
     "title": "informatika kelas VIII",
     "author": "MTs Alkhairaat Bunyu",
     "subject": "informatika",
-    "gradeClass": "Kelas VIII",
+    "gradeClass": "Kelas VII",
     "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
     "year": "2026",
     "fileUrl": "https://drive.google.com/file/d/1t1u5hiRGVhoyW1ql46DCGo9UhYCGDvq6/preview",
@@ -36,7 +36,7 @@
     "title": "Nahwu kelas VIII",
     "author": "MTs Alkhairaat Bunyu",
     "subject": "Nahwu",
-    "gradeClass": "Kelas VIII",
+    "gradeClass": "Kelas VII",
     "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
     "year": "2026",
     "fileUrl": "https://drive.google.com/file/d/1qEW07zWO__9W9eqOleXAthC_kpG9c9Mh/preview",
@@ -45,22 +45,22 @@
     "fileSize": 2500000,
     "pageCount": 100,
     "category": "mp",
-    "description": "Buku Pelajaran Nahwu untuk Kelas VIII MTs Al-Khairaat Bunyu."
+    "description": "Buku Pelajaran Nahwu untuk Kelas VII MTs Al-Khairaat Bunyu."
   },
   {
-    "id": "video_bahasa_arab_viii_01",
-    "title": "Video: Percakapan Bahasa Arab Kelas VIII",
-    "author": "Guru MTs Al-Khairaat Bunyu",
-    "subject": "bahasa arab",
+    "id": "video_informatika_9113_527",
+    "title": "Informatika kelas VIII",
+    "author": "MTs Alkhairaat Bunyu",
+    "subject": "Informatika",
     "gradeClass": "Kelas VIII",
     "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
     "year": "2026",
-    "fileUrl": "https://www.youtube.com/watch?v=0h9g9_3H-X4",
+    "fileUrl": "https://youtu.be/zYBOjzlfpR0?si=DB_2SeBpVUWzchFY",
     "localBlobUrl": "",
     "isDownloaded": false,
     "fileSize": 15000000,
     "pageCount": 1,
     "category": "Video",
-    "description": "Video Pembelajaran Percakapan Bahasa Arab untuk Kelas VIII MTs Al-Khairaat Bunyu."
+    "description": "Video Pembelajaran Informatika untuk Kelas VIII MTs Al-Khairaat Bunyu."
   }
 ]
