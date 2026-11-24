@@ -1,1 +1,92 @@
-
+[
+  {
+    "id": "stu_achmad_kadafi_769",
+    "no": 1,
+    "nama": "Achmad Kadafi",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Achmad Kadafi",
+    "password": "VII-1"
+  },
+  {
+    "id": "stu_dafa_al_ghazali_158",
+    "no": 2,
+    "nama": "Dafa Al Ghazali",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Dafa Al Ghazali",
+    "password": "VII-2"
+  },
+  {
+    "id": "stu_febriyani_867",
+    "no": 3,
+    "nama": "Febriyani",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Febriyani",
+    "password": "VII-3"
+  },
+  {
+    "id": "stu_fitri_ramadhani_38",
+    "no": 4,
+    "nama": "Fitri Ramadhani",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Fitri Ramadhani",
+    "password": "VII-4"
+  },
+  {
+    "id": "stu_muhammad_firzi_y__r__h_545",
+    "no": 5,
+    "nama": "Muhammad Firzi Y. R. H",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Muhammad Firzi Y. R. H",
+    "password": "VII-5"
+  },
+  {
+    "id": "stu_muhammad_hafid_694",
+    "no": 6,
+    "nama": "Muhammad Hafid",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Muhammad Hafid",
+    "password": "VII-6"
+  },
+  {
+    "id": "stu_murniyati_986",
+    "no": 7,
+    "nama": "Murniyati",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Murniyati",
+    "password": "VII-7"
+  },
+  {
+    "id": "stu_muh__sapri_813",
+    "no": 8,
+    "nama": "Muh. Sapri",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Muh. Sapri",
+    "password": "VII-8"
+  },
+  {
+    "id": "stu_riski_ramadan_720",
+    "no": 9,
+    "nama": "Riski Ramadan",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Riski Ramadan",
+    "password": "VII-9"
+  },
+  {
+    "id": "stu_shalshabila_putri_hartono_437",
+    "no": 10,
+    "nama": "Shalshabila Putri Hartono",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Shalshabila Putri Hartono",
+    "password": "VII-10"
+  }
+]
