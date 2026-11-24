@@ -1076,7 +1076,7 @@
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
-            <p class="fw-bold mb-0">Memuat Halaman Buku PDF...</p>
+            <p id="pdfLoadingText" class="fw-bold mb-0">Memuat Halaman Buku PDF...</p>
           </div>
           <!-- Error Card Container -->
           <div id="pdfErrorCard" class="text-center text-white p-4 m-auto" style="display: none; max-width: 620px;">
@@ -1205,10 +1205,13 @@
     const READER_IFRAME_POOL_MAX = 4;
     const readerIframePool = new Map();
     const teacherDriveProbeCache = new Map();
+    const teacherMemoryPdfCache = new Map();
     const teacherSavedOfflineIds = new Set();
     const teacherOfflineDlProgress = new Map();
     let activeReaderPoolKey = null;
     let currentTeacherReaderState = null;
+    let activeAdminReaderToken = 0;
+    let activeAdminFetchController = null;
     let teacherScrollQueue = [];
     let teacherRenderingPages = new Set();
     let teacherActiveWorkers = 0;
@@ -1491,7 +1494,108 @@
       }
     }
 
-    function showTeacherReaderErrorCard(mode, bookUrl) {
+    function cacheTeacherMemoryPdf(bookId, bytes) {
+      if (!bookId || !bytes) return;
+      if (teacherMemoryPdfCache.has(bookId)) {
+        teacherMemoryPdfCache.delete(bookId);
+      } else if (teacherMemoryPdfCache.size >= 6) {
+        const oldestKey = teacherMemoryPdfCache.keys().next().value;
+        if (oldestKey) teacherMemoryPdfCache.delete(oldestKey);
+      }
+      teacherMemoryPdfCache.set(bookId, bytes);
+    }
+
+    async function fetchPdfBytesWithProgress(downloadUrl, signal, onProgress) {
+      const isExternal = /^https?:\/\//i.test(downloadUrl);
+      const opts = isExternal ? { mode: 'cors' } : {};
+      if (signal) opts.signal = signal;
+      const res = await fetch(downloadUrl, opts);
+      if (!res.ok) throw new Error(`Server mengembalikan HTTP ${res.status}`);
+
+      const totalBytes = parseInt(res.headers.get('content-length') || '0', 10);
+      let mergedBytes = null;
+
+      if (res.body && typeof res.body.getReader === 'function') {
+        const reader = res.body.getReader();
+        const chunks = [];
+        let received = 0;
+        let lastNotifyAt = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value && value.byteLength) {
+            chunks.push(value);
+            received += value.byteLength;
+            const now = Date.now();
+            if (typeof onProgress === 'function' && (now - lastNotifyAt > 120 || (totalBytes > 0 && received >= totalBytes))) {
+              lastNotifyAt = now;
+              onProgress(received, totalBytes);
+            }
+          }
+        }
+        mergedBytes = new Uint8Array(received);
+        let offset = 0;
+        for (const chunk of chunks) {
+          mergedBytes.set(chunk, offset);
+          offset += chunk.byteLength;
+        }
+      } else {
+        mergedBytes = new Uint8Array(await res.arrayBuffer());
+      }
+
+      const isPdfMagic = mergedBytes && mergedBytes.length >= 5 &&
+        mergedBytes[0] === 0x25 && mergedBytes[1] === 0x50 && mergedBytes[2] === 0x44 && mergedBytes[3] === 0x46 && mergedBytes[4] === 0x2D;
+      if (!isPdfMagic) {
+        throw new Error('File bukan format PDF langsung (periksa izin akses Google Drive: Siapa saja yang memiliki link).');
+      }
+      return mergedBytes;
+    }
+
+    async function renderAdminPdfBytes(pdfBytes, bookId, token, modeLabel) {
+      const pdfjs = await ensureAdminPdfJsLoaded();
+      if (token !== activeAdminReaderToken) return;
+
+      const spinner = document.getElementById('pdfLoadingSpinner');
+      const loadingText = document.getElementById('pdfLoadingText');
+      if (loadingText) loadingText.textContent = 'Menyiapkan Halaman Pertama...';
+
+      currentTeacherReaderState = {
+        bookId: bookId,
+        engine: modeLabel || 'native-bytes',
+        streamUrl: '',
+        primaryUrl: '',
+        liteUrl: ''
+      };
+      updateTeacherFastModeBtn(currentTeacherReaderState.engine);
+      setReaderModalScrollable(true);
+
+      pdfZoomScale = 1.2;
+      document.getElementById('pdfZoomDisplay').textContent = '120%';
+      const loadingTask = pdfjs.getDocument({
+        data: new Uint8Array(pdfBytes),
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/'
+      });
+      const loadedDoc = await loadingTask.promise;
+      if (token !== activeAdminReaderToken) {
+        try { loadedDoc.destroy(); } catch (_) {}
+        return;
+      }
+
+      currentPdfDoc = loadedDoc;
+      currentBookPageTotal = currentPdfDoc.numPages;
+      document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
+      if (spinner) spinner.classList.add('d-none');
+
+      if (readerViewMode === 'scroll') {
+        await initScrollDownView();
+      } else {
+        await renderModalPdfPage(1);
+      }
+    }
+
+    function showTeacherReaderErrorCard(mode, bookUrl, detailMsg, retryBookId) {
       const errorCard = document.getElementById('pdfErrorCard');
       if (!errorCard) return;
       const iconEl = document.getElementById('pdfErrorIcon');
@@ -1511,6 +1615,23 @@
               <li>Tekan tombol <strong>Simpan Offline</strong> pada kartu buku ini di Ruang Baca Guru.</li>
               <li>Setelah tersimpan, gunakan tombol <strong>Baca Offline</strong> kapan saja tanpa sinyal.</li>
             </ol>
+          `;
+        }
+      } else if (mode === 'drive-error') {
+        if (iconEl) iconEl.className = 'bi bi-exclamation-circle-fill text-warning display-3 mb-3 d-block';
+        if (headingEl) headingEl.textContent = 'Gagal Memuat Buku PDF Secara Mandiri';
+        if (descEl) descEl.textContent = detailMsg || 'Tidak dapat mengambil file PDF dari tautan yang terdaftar.';
+        if (guideEl) {
+          const retryBtn = retryBookId
+            ? `<button type="button" class="btn btn-primary btn-sm fw-bold mt-2 me-2" onclick="openWebReader('${escapeStudentHtml(retryBookId)}')"><i class="bi bi-arrow-clockwise me-1"></i> Coba Muat Ulang</button>`
+            : '';
+          guideEl.innerHTML = `
+            <strong class="d-block mb-1">💡 Pastikan Izin File Google Drive Sudah Terbuka:</strong>
+            <ol class="mb-0 ps-3">
+              <li>Buka file di Google Drive &rarr; klik <strong>Bagikan</strong> &rarr; ubah akses umum ke <strong>Siapa saja yang memiliki link (Pelihat)</strong>.</li>
+              <li>Pastikan koneksi internet perangkat guru stabil lalu coba muat ulang.</li>
+            </ol>
+            ${retryBtn}
           `;
         }
       } else {
@@ -2309,10 +2430,16 @@
       } catch (_) {}
     }
 
-    // Open Web Reader Modal with Online Google Viewer Iframe & Offline IndexedDB PDF.js Support
+    // Open Web Reader Modal with Independent Native PDF.js Engine (Online Direct Fetch + Offline IndexedDB)
     async function openWebReader(bookId, options = {}) {
       const book = catalog.find(b => b.id === bookId);
       if (!book) return;
+
+      const myToken = ++activeAdminReaderToken;
+      if (activeAdminFetchController) {
+        try { activeAdminFetchController.abort(); } catch (_) {}
+        activeAdminFetchController = null;
+      }
 
       const forceOffline = Boolean(options && options.forceOffline);
       const isOffline = navigator.onLine === false;
@@ -2322,12 +2449,14 @@
       document.getElementById('readerOpenNewTabBtn').href = book.fileUrl || '#';
 
       const spinner = document.getElementById('pdfLoadingSpinner');
+      const loadingText = document.getElementById('pdfLoadingText');
       const canvas = document.getElementById('pdfViewerCanvas');
       const iframeContainer = document.getElementById('readerIframeContainer');
       const errorCard = document.getElementById('pdfErrorCard');
       const toast = document.getElementById('iframeNavToast');
       if (toast) toast.classList.add('d-none');
 
+      if (loadingText) loadingText.textContent = 'Memuat Halaman Buku PDF...';
       spinner.classList.remove('d-none');
       canvas.classList.add('d-none');
       canvas.style.display = 'none';
@@ -2370,69 +2499,22 @@
       document.getElementById('pdfZoomDisplay').textContent = '100%';
 
       const rawFileUrl = (book.fileUrl || '').trim();
-      const isDriveBook = Boolean(rawFileUrl && (rawFileUrl.includes('drive.google.com') || rawFileUrl.includes('docs.google.com')));
-      let idbFile = await getPdfFromIDB(book.id);
+      const resolved = resolveTeacherReaderUrls(rawFileUrl);
+      const isDriveBook = resolved.kind === 'drive';
 
-      // Keep Online Google Drive reading 100% identical to the working online iframe flow
-      if (!forceOffline && !isOffline && isDriveBook) {
-        const resolved = resolveTeacherReaderUrls(rawFileUrl);
-        currentTeacherReaderState = {
-          bookId: book.id,
-          engine: resolved.liteUrl ? 'lite' : 'primary',
-          streamUrl: resolved.streamUrl,
-          primaryUrl: resolved.primaryUrl,
-          liteUrl: resolved.liteUrl
-        };
+      // 1. Check IndexedDB first (covers both offline-saved books and local files uploaded from laptop)
+      const idbFile = await getPdfFromIDB(book.id);
+      if (myToken !== activeAdminReaderToken) return;
 
-        const fallbackEngine = currentTeacherReaderState.engine;
-        const fallbackUrl = fallbackEngine === 'lite' ? resolved.liteUrl : resolved.primaryUrl;
-        setReaderModalScrollable(false);
-        if (modalBody) modalBody.classList.remove('py-3');
-        if (iframeContainer) iframeContainer.style.display = 'block';
-        const entry = getOrCreateReaderPooledIframe(fallbackUrl, fallbackEngine, true);
-        if (entry && entry.loaded) {
-          spinner.classList.add('d-none');
-        }
-        applyIframeViewMode(readerViewMode);
-        return;
-      }
-
-      // Render offline/local PDF directly from IndexedDB Blob bytes (no network required)
       if (idbFile) {
         try {
-          const pdfjs = await ensureAdminPdfJsLoaded();
           const ab = await idbFile.arrayBuffer();
-          currentTeacherReaderState = {
-            bookId: book.id,
-            engine: 'offline-blob',
-            streamUrl: '',
-            primaryUrl: '',
-            liteUrl: ''
-          };
-          updateTeacherFastModeBtn('offline-blob');
-          setReaderModalScrollable(true);
-
-          pdfZoomScale = 1.2;
-          document.getElementById('pdfZoomDisplay').textContent = '120%';
-          const loadingTask = pdfjs.getDocument({
-            data: new Uint8Array(ab),
-            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
-            cMapPacked: true,
-            standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/'
-          });
-          currentPdfDoc = await loadingTask.promise;
-          currentBookPageTotal = currentPdfDoc.numPages;
-          document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
-          spinner.classList.add('d-none');
-          if (readerViewMode === 'scroll') {
-            await initScrollDownView();
-          } else {
-            await renderModalPdfPage(1);
-          }
+          if (myToken !== activeAdminReaderToken) return;
+          await renderAdminPdfBytes(ab, book.id, myToken, 'offline-blob');
           return;
         } catch (offlinePdfErr) {
-          console.warn('PDF.js offline render failed:', offlinePdfErr);
-          // Fallback to pooled Blob iframe if possible
+          console.warn('PDF.js IDB render failed:', offlinePdfErr);
+          if (myToken !== activeAdminReaderToken) return;
           try {
             const blobUrl = URL.createObjectURL(idbFile);
             spinner.classList.add('d-none');
@@ -2453,13 +2535,61 @@
         return;
       }
 
+      // 2. Check fast in-memory session cache if previously opened in this tab
+      const cachedMemBytes = teacherMemoryPdfCache.get(book.id);
+      if (cachedMemBytes && cachedMemBytes.byteLength > 0) {
+        try {
+          await renderAdminPdfBytes(cachedMemBytes, book.id, myToken, 'native');
+          return;
+        } catch (_) {
+          teacherMemoryPdfCache.delete(book.id);
+        }
+      }
+
+      // 3. Google Drive PDF -> Fetch bytes directly via CORS & render independently in-app with PDF.js (no Google Drive iframe)
+      if (isDriveBook && resolved.streamUrl) {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        activeAdminFetchController = controller;
+        try {
+          const pdfBytes = await fetchPdfBytesWithProgress(
+            resolved.streamUrl,
+            controller ? controller.signal : undefined,
+            (received, total) => {
+              if (myToken !== activeAdminReaderToken || !loadingText) return;
+              if (total > 0) {
+                const pct = Math.min(99, Math.round((received / total) * 100));
+                loadingText.textContent = `Memuat Buku PDF... ${pct}%`;
+              } else {
+                const mb = (received / (1024 * 1024)).toFixed(1);
+                loadingText.textContent = `Memuat Buku PDF... (${mb} MB)`;
+              }
+            }
+          );
+          if (myToken !== activeAdminReaderToken) return;
+          cacheTeacherMemoryPdf(book.id, pdfBytes);
+          await renderAdminPdfBytes(pdfBytes, book.id, myToken, 'native');
+          return;
+        } catch (driveErr) {
+          if (myToken !== activeAdminReaderToken || (driveErr && driveErr.name === 'AbortError')) return;
+          console.warn('Direct PDF fetch failed:', driveErr);
+          spinner.classList.add('d-none');
+          showTeacherReaderErrorCard('drive-error', rawFileUrl, driveErr.message, book.id);
+          return;
+        } finally {
+          if (activeAdminFetchController === controller) {
+            activeAdminFetchController = null;
+          }
+        }
+      }
+
+      // 4. Non-Drive URL (e.g., local /pdfs/... uploaded file or direct PDF URL)
       let targetUrl = book.localBlobUrl || rawFileUrl;
       document.getElementById('readerOpenNewTabBtn').href = targetUrl || '#';
 
-      // Non-Drive URL (e.g., local /pdfs/... uploaded file)
       if (targetUrl) {
         try {
           const pdfjs = await ensureAdminPdfJsLoaded();
+          if (myToken !== activeAdminReaderToken) return;
           setReaderModalScrollable(true);
           pdfZoomScale = 1.2;
           document.getElementById('pdfZoomDisplay').textContent = '120%';
@@ -2471,7 +2601,12 @@
             disableAutoFetch: true,
             rangeChunkSize: 65536
           });
-          currentPdfDoc = await loadingTask.promise;
+          const loadedDoc = await loadingTask.promise;
+          if (myToken !== activeAdminReaderToken) {
+            try { loadedDoc.destroy(); } catch (_) {}
+            return;
+          }
+          currentPdfDoc = loadedDoc;
           currentBookPageTotal = currentPdfDoc.numPages;
           document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
           spinner.classList.add('d-none');
@@ -2578,6 +2713,11 @@
 
       // Keep pooled iframes cached on modal close for instant 0ms reopen, while resetting active view state
       document.getElementById('webReaderModal').addEventListener('hidden.bs.modal', function () {
+        activeAdminReaderToken++;
+        if (activeAdminFetchController) {
+          try { activeAdminFetchController.abort(); } catch (_) {}
+          activeAdminFetchController = null;
+        }
         const iframe = getActiveReaderIframe();
         const iframeContainer = document.getElementById('readerIframeContainer');
         const toast = document.getElementById('iframeNavToast');
@@ -2599,6 +2739,7 @@
         if (scrollObserver) scrollObserver.disconnect();
         const modalBody = document.getElementById('readerModalBody');
         if (modalBody) modalBody.removeEventListener('scroll', handleModalScrollCheck);
+        setReaderModalScrollable(false);
         const canvas = document.getElementById('pdfViewerCanvas');
         if (canvas) {
           canvas.classList.add('d-none');
@@ -2905,52 +3046,21 @@
         cacheTeacherPdfJsForOffline();
         ensureAdminPdfJsLoaded().catch(() => {});
 
-        const isExternal = /^https?:\/\//i.test(downloadUrl);
-        const res = await fetch(downloadUrl, isExternal ? { mode: 'cors' } : {});
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const totalBytes = parseInt(res.headers.get('content-length') || '0', 10);
-        let mergedBytes = null;
-
-        if (res.body && typeof res.body.getReader === 'function') {
-          const reader = res.body.getReader();
-          const chunks = [];
-          let received = 0;
-          let lastPct = -1;
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (value && value.byteLength) {
-              chunks.push(value);
-              received += value.byteLength;
-              if (totalBytes > 0) {
-                const pct = Math.min(99, Math.round((received / totalBytes) * 100));
-                if (pct !== lastPct) {
-                  lastPct = pct;
-                  teacherOfflineDlProgress.set(bookId, pct);
-                  const btnEl = document.getElementById(`btnTeacherOffline_${bookId}`);
-                  if (btnEl) {
-                    btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${pct}%`;
-                  }
-                }
-              }
+        const mergedBytes = await fetchPdfBytesWithProgress(downloadUrl, null, (received, totalBytes) => {
+          const btnEl = document.getElementById(`btnTeacherOffline_${bookId}`);
+          if (totalBytes > 0) {
+            const pct = Math.min(99, Math.round((received / totalBytes) * 100));
+            teacherOfflineDlProgress.set(bookId, pct);
+            if (btnEl) {
+              btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${pct}%`;
+            }
+          } else {
+            const mb = (received / (1024 * 1024)).toFixed(1);
+            if (btnEl) {
+              btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${mb} MB...`;
             }
           }
-          mergedBytes = new Uint8Array(received);
-          let offset = 0;
-          for (const chunk of chunks) {
-            mergedBytes.set(chunk, offset);
-            offset += chunk.byteLength;
-          }
-        } else {
-          mergedBytes = new Uint8Array(await res.arrayBuffer());
-        }
-
-        const isPdfMagic = mergedBytes && mergedBytes.length >= 5 &&
-          mergedBytes[0] === 0x25 && mergedBytes[1] === 0x50 && mergedBytes[2] === 0x44 && mergedBytes[3] === 0x46 && mergedBytes[4] === 0x2D;
-        if (!isPdfMagic) {
-          throw new Error('File yang diunduh bukan format PDF yang valid.');
-        }
+        });
 
         const pdfBlob = new Blob([mergedBytes], { type: 'application/pdf' });
         const savedOk = await savePdfToIDB(bookId, pdfBlob);
