@@ -867,7 +867,7 @@
         <div class="modal-body p-0 bg-light position-relative flex-grow-1" style="overflow: hidden;">
           <!-- Loading Spinner for PDF with Fast In-App Fallback -->
           <div id="pdfLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white p-3 rounded-4 bg-dark bg-opacity-75 shadow" style="z-index: 15; max-width: 90%; backdrop-filter: blur(4px);">
-            <div class="spinner-border text-warning" role="status"></div>
+            <div id="pdfLoadingSpinnerIcon" class="spinner-border text-warning" role="status"></div>
             <p class="mt-2 fw-bold small mb-1" id="pdfLoadingTitle">Membuka Lembar Buku...</p>
             <p class="text-white-50 mb-0" id="pdfLoadingDesc" style="font-size: 0.75rem;">Merender halaman jelas langsung di dalam aplikasi.</p>
             <div id="slowNetworkHint" class="mt-2 d-none d-flex flex-wrap justify-content-center gap-2">
@@ -1248,6 +1248,7 @@
       loadCatalogData();
       loadUsersData();
       checkSavedUserSession();
+      refreshOfflineBooksIndex();
     });
 
     function isVideoItem(item) {
@@ -1788,11 +1789,43 @@
           `;
         }
 
+        const safeId = escapeHtml(b.id);
+        const isSavedOffline = savedOfflineBookIds.has(b.id);
+        const dlProgress = offlineDownloadProgress.get(b.id);
+        let offlineBtnHtml = "";
+        if (typeof dlProgress === "number") {
+          offlineBtnHtml = `
+            <button type="button" id="btnOfflineAction_${safeId}" class="btn btn-success btn-sm w-100 fw-semibold py-1 mt-1 disabled" style="font-size: 0.72rem;" onclick="event.stopPropagation()">
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan ${dlProgress}%
+            </button>
+          `;
+        } else if (isSavedOffline) {
+          offlineBtnHtml = `
+            <div class="d-flex gap-1 mt-1" onclick="event.stopPropagation()">
+              <button type="button" class="btn btn-success btn-sm flex-grow-1 fw-bold py-1 text-truncate" style="font-size: 0.72rem;" onclick="event.stopPropagation(); openOfflineSavedBook('${safeId}')" title="Baca salinan tersimpan tanpa internet">
+                <i class="bi bi-check-circle-fill me-1"></i> Baca Offline
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" style="font-size: 0.72rem;" onclick="event.stopPropagation(); removeOfflineSavedBook('${safeId}')" title="Hapus salinan offline dari HP">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          `;
+        } else {
+          offlineBtnHtml = `
+            <button type="button" id="btnOfflineAction_${safeId}" class="btn btn-outline-success btn-sm w-100 fw-semibold py-1 mt-1" style="font-size: 0.72rem;" onclick="event.stopPropagation(); downloadBookForOffline('${safeId}')" title="Simpan buku di memori aplikasi agar bisa dibaca offline">
+              <i class="bi bi-cloud-arrow-down me-1"></i> Simpan Offline
+            </button>
+          `;
+        }
+
         return `
           <div class="col-6 col-sm-6">
-            <div class="book-card" onpointerdown="prewarmBookPdf('${escapeHtml(b.id)}')" onmouseenter="prewarmBookPdf('${escapeHtml(b.id)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
+            <div class="book-card" onpointerdown="prewarmBookPdf('${safeId}')" onmouseenter="prewarmBookPdf('${safeId}')" onclick="handleBookItemClick('${safeId}')">
               <div class="book-cover">
-                <span class="badge bg-warning text-dark fw-bold align-self-start fs-8">${escapeHtml(b.gradeClass)}</span>
+                <div class="d-flex justify-content-between align-items-start w-100 gap-1">
+                  <span class="badge bg-warning text-dark fw-bold fs-8">${escapeHtml(b.gradeClass)}</span>
+                  ${isSavedOffline ? '<span class="badge bg-success text-white fs-9"><i class="bi bi-wifi-off me-1"></i>Offline</span>' : ''}
+                </div>
                 <div class="text-white">
                   <i class="bi bi-book-half fs-3 mb-1"></i>
                   <div class="fw-bold fs-8 text-truncate">${escapeHtml(b.title)}</div>
@@ -1803,6 +1836,7 @@
                 <button class="btn btn-primary btn-sm w-100 fw-bold py-1 fs-8 shadow-sm">
                   <i class="bi bi-journal-bookmark me-1"></i> BACA
                 </button>
+                ${offlineBtnHtml}
               </div>
             </div>
           </div>
@@ -1832,6 +1866,8 @@
     const PDF_IFRAME_POOL_MAX = 4;
     const pdfIframePool = new Map();
     const driveStreamProbeCache = new Map();
+    const savedOfflineBookIds = new Set();
+    const offlineDownloadProgress = new Map();
     let activePdfPoolKey = null;
     let currentPdfReaderState = null;
     let pdfLoadTimeout = null;
@@ -2002,15 +2038,10 @@
 
     function prewarmBookPdf(bookId) {
       const b = allBooks.find(item => item.id === bookId);
-      if (!b || !b.fileUrl || isVideoItem(b)) return;
+      if (!b || !b.fileUrl || isVideoItem(b) || navigator.onLine === false) return;
       warmUpResource(b.fileUrl);
-      const resolved = resolveBookReaderUrls(b.fileUrl);
-      if (resolved.kind === "drive" && resolved.streamUrl) {
-        warmUpResource("https://drive.usercontent.google.com");
-        warmUpResource("https://cdn.jsdelivr.net");
-        ensurePdfJsLoaded().catch(() => {});
-        probeDrivePdfStream(resolved.streamUrl).catch(() => {});
-      }
+      warmUpResource("https://drive.google.com");
+      warmUpResource("https://docs.google.com");
     }
 
     function scheduleIdleBookPrewarm(book) {
@@ -2239,29 +2270,93 @@
       }, 350);
     }
 
+    const STUDENT_PDFJS_LIB_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    const STUDENT_PDFJS_WORKER_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    let studentOfflineWorkerBlobUrl = null;
+
+    async function configureOfflineWorkerSrc(pdfjs) {
+      if (!pdfjs) return;
+      if (studentOfflineWorkerBlobUrl) {
+        pdfjs.GlobalWorkerOptions.workerSrc = studentOfflineWorkerBlobUrl;
+        return;
+      }
+      try {
+        if ("caches" in window) {
+          const cachedWorker = await caches.match(STUDENT_PDFJS_WORKER_URL);
+          if (cachedWorker) {
+            const workerText = await cachedWorker.text();
+            const workerBlob = new Blob([workerText], { type: "application/javascript" });
+            studentOfflineWorkerBlobUrl = URL.createObjectURL(workerBlob);
+            pdfjs.GlobalWorkerOptions.workerSrc = studentOfflineWorkerBlobUrl;
+            return;
+          }
+        }
+      } catch (_) {}
+      pdfjs.GlobalWorkerOptions.workerSrc = STUDENT_PDFJS_WORKER_URL;
+    }
+
+    async function cachePdfJsForOffline() {
+      if (!("caches" in window)) return;
+      try {
+        const cache = await caches.open("ebook-mts-cdn-v2");
+        const urls = [STUDENT_PDFJS_LIB_URL, STUDENT_PDFJS_WORKER_URL];
+        await Promise.allSettled(urls.map(async (u) => {
+          const hit = await cache.match(u);
+          if (!hit) {
+            const res = await fetch(u, { mode: "cors" });
+            if (res && res.ok) await cache.put(u, res);
+          }
+        }));
+      } catch (_) {}
+    }
+
     function ensurePdfJsLoaded() {
       if (window.pdfjsLib) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        return Promise.resolve(window.pdfjsLib);
+        return configureOfflineWorkerSrc(window.pdfjsLib).then(() => window.pdfjsLib);
       }
       if (pdfJsLoaderPromise) return pdfJsLoaderPromise;
-      pdfJsLoaderPromise = new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-        script.onload = () => {
-          if (window.pdfjsLib) {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-            resolve(window.pdfjsLib);
-          } else {
-            reject(new Error("PDF.js tidak termuat"));
+      pdfJsLoaderPromise = (async () => {
+        try {
+          if ("caches" in window) {
+            const cachedLib = await caches.match(STUDENT_PDFJS_LIB_URL);
+            if (cachedLib) {
+              const code = await cachedLib.text();
+              const blobUrl = URL.createObjectURL(new Blob([code], { type: "application/javascript" }));
+              await new Promise((res, rej) => {
+                const s = document.createElement("script");
+                s.src = blobUrl;
+                s.onload = res;
+                s.onerror = rej;
+                document.head.appendChild(s);
+              });
+              URL.revokeObjectURL(blobUrl);
+              if (window.pdfjsLib) {
+                await configureOfflineWorkerSrc(window.pdfjsLib);
+                return window.pdfjsLib;
+              }
+            }
           }
-        };
-        script.onerror = () => {
-          pdfJsLoaderPromise = null;
-          reject(new Error("Gagal memuat PDF.js"));
-        };
-        document.head.appendChild(script);
-      });
+        } catch (_) {}
+
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = STUDENT_PDFJS_LIB_URL;
+          script.onload = () => {
+            if (window.pdfjsLib) {
+              resolve(window.pdfjsLib);
+            } else {
+              reject(new Error("PDF.js tidak termuat"));
+            }
+          };
+          script.onerror = () => {
+            pdfJsLoaderPromise = null;
+            reject(new Error("Gagal memuat PDF.js"));
+          };
+          document.head.appendChild(script);
+        });
+        await configureOfflineWorkerSrc(window.pdfjsLib);
+        return window.pdfjsLib;
+      })();
       return pdfJsLoaderPromise;
     }
 
@@ -2294,11 +2389,212 @@
 
     async function saveCachedDirectPdfBlob(key, blob) {
       try {
-        if (!blob || blob.size > 40 * 1024 * 1024) return;
+        if (!blob || blob.size > 100 * 1024 * 1024) return false;
         const db = await openStudentPdfCacheDB();
-        const tx = db.transaction("pdfs", "readwrite");
-        tx.objectStore("pdfs").put(blob, key);
-      } catch (_) {}
+        return await new Promise((resolve) => {
+          const tx = db.transaction("pdfs", "readwrite");
+          tx.objectStore("pdfs").put(blob, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+          tx.onabort = () => resolve(false);
+        });
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function deleteCachedDirectPdfBlob(key) {
+      try {
+        const db = await openStudentPdfCacheDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction("pdfs", "readwrite");
+          tx.objectStore("pdfs").delete(key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function listCachedDirectPdfKeys() {
+      try {
+        const db = await openStudentPdfCacheDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction("pdfs", "readonly");
+          const req = tx.objectStore("pdfs").getAllKeys();
+          req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+          req.onerror = () => resolve([]);
+        });
+      } catch (_) {
+        return [];
+      }
+    }
+
+    async function refreshOfflineBooksIndex() {
+      const keys = await listCachedDirectPdfKeys();
+      savedOfflineBookIds.clear();
+      keys.forEach(k => savedOfflineBookIds.add(String(k)));
+      if (typeof renderBooks === "function") {
+        renderBooks();
+      }
+    }
+
+    async function downloadBookForOffline(bookId) {
+      const book = allBooks.find(item => item.id === bookId);
+      if (!book || isVideoItem(book)) return;
+      if (offlineDownloadProgress.has(bookId)) return;
+
+      if (navigator.onLine === false) {
+        alert("Aktifkan koneksi internet sebentar untuk menyimpan buku ini agar bisa dibaca offline di dalam aplikasi.");
+        return;
+      }
+
+      const resolved = resolveBookReaderUrls(book.fileUrl);
+      const downloadUrl = resolved.streamUrl || resolved.primaryUrl;
+      if (!downloadUrl) {
+        alert("Tautan file buku tidak valid.");
+        return;
+      }
+
+      offlineDownloadProgress.set(bookId, 0);
+      renderBooks();
+
+      try {
+        // Ensure PDF.js library & worker are cached for offline usage
+        cachePdfJsForOffline();
+        ensurePdfJsLoaded().catch(() => {});
+
+        const res = await fetch(downloadUrl, { mode: "cors" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const totalBytes = parseInt(res.headers.get("content-length") || "0", 10);
+        let mergedBytes = null;
+
+        if (res.body && typeof res.body.getReader === "function") {
+          const reader = res.body.getReader();
+          const chunks = [];
+          let received = 0;
+          let lastPct = -1;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value && value.byteLength) {
+              chunks.push(value);
+              received += value.byteLength;
+              if (totalBytes > 0) {
+                const pct = Math.min(99, Math.round((received / totalBytes) * 100));
+                if (pct !== lastPct) {
+                  lastPct = pct;
+                  offlineDownloadProgress.set(bookId, pct);
+                  const btnEl = document.getElementById(`btnOfflineAction_${bookId}`);
+                  if (btnEl) {
+                    btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${pct}%`;
+                  }
+                }
+              }
+            }
+          }
+          mergedBytes = new Uint8Array(received);
+          let offset = 0;
+          for (const chunk of chunks) {
+            mergedBytes.set(chunk, offset);
+            offset += chunk.byteLength;
+          }
+        } else {
+          const ab = await res.arrayBuffer();
+          mergedBytes = new Uint8Array(ab);
+        }
+
+        const isPdfMagic = mergedBytes && mergedBytes.length >= 5 &&
+          mergedBytes[0] === 0x25 && mergedBytes[1] === 0x50 && mergedBytes[2] === 0x44 && mergedBytes[3] === 0x46 && mergedBytes[4] === 0x2D;
+        if (!isPdfMagic) {
+          throw new Error("File yang diunduh bukan format PDF yang valid.");
+        }
+
+        const pdfBlob = new Blob([mergedBytes], { type: "application/pdf" });
+        const savedOk = await saveCachedDirectPdfBlob(bookId, pdfBlob);
+        if (!savedOk) {
+          throw new Error("Gagal menyimpan buku ke memori aplikasi (ruang penyimpanan mungkin penuh).");
+        }
+
+        savedOfflineBookIds.add(bookId);
+        offlineDownloadProgress.delete(bookId);
+        renderBooks();
+      } catch (err) {
+        offlineDownloadProgress.delete(bookId);
+        renderBooks();
+        alert(`Gagal menyimpan buku untuk mode offline: ${err.message || "Periksa koneksi internet Anda."}`);
+      }
+    }
+
+    async function removeOfflineSavedBook(bookId) {
+      const book = allBooks.find(item => item.id === bookId);
+      const title = book ? book.title : "buku ini";
+      if (!confirm(`Hapus salinan offline "${title}" dari penyimpanan aplikasi di HP?`)) return;
+      await deleteCachedDirectPdfBlob(bookId);
+      savedOfflineBookIds.delete(bookId);
+      renderBooks();
+    }
+
+    async function openOfflineSavedBook(bookId) {
+      const book = allBooks.find(item => item.id === bookId);
+      if (!book) return;
+      const cachedBlob = await getCachedDirectPdfBlob(bookId);
+      if (!cachedBlob) {
+        savedOfflineBookIds.delete(bookId);
+        renderBooks();
+        alert("Salinan offline tidak ditemukan. Silakan tekan 'Simpan Offline' saat terhubung ke internet.");
+        return;
+      }
+      openOfflinePdfBlobInModal(book.id, book.title, book.gradeClass, book.fileUrl, cachedBlob);
+    }
+
+    function openOfflinePdfBlobInModal(bookId, title, grade, url, cachedBlob) {
+      if (pdfLoadTimeout) {
+        clearTimeout(pdfLoadTimeout);
+        pdfLoadTimeout = null;
+      }
+      document.getElementById("pdfBookTitle").innerText = title || "Buku Pelajaran";
+      document.getElementById("pdfBookGrade").innerText = `${grade || ""} • Offline`;
+
+      const resolved = resolveBookReaderUrls(url);
+      const sessionToken = Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+      currentPdfReaderState = {
+        sessionToken,
+        bookId: bookId || "",
+        title,
+        grade,
+        url: url || "",
+        engine: "offline-blob",
+        ...resolved
+      };
+
+      const extLink = document.getElementById("btnExternalPdfLink");
+      if (extLink) extLink.href = resolved.directUrl || "#";
+      const directDl = document.getElementById("btnDirectDownloadPdf");
+      if (directDl) directDl.href = resolved.directUrl || "#";
+
+      const spinnerIcon = document.getElementById("pdfLoadingSpinnerIcon");
+      if (spinnerIcon) spinnerIcon.classList.remove("d-none");
+      const slowHint = document.getElementById("slowNetworkHint");
+      if (slowHint) slowHint.classList.add("d-none");
+      const loading = document.getElementById("pdfLoading");
+      const loadTitle = document.getElementById("pdfLoadingTitle");
+      const loadDesc = document.getElementById("pdfLoadingDesc");
+      if (loadTitle) loadTitle.innerText = "Membuka Salinan Offline...";
+      if (loadDesc) loadDesc.innerText = "Memuat halaman buku dari memori internal aplikasi.";
+      if (loading) loading.classList.remove("d-none");
+
+      if (pdfModal) pdfModal.show();
+      renderNativePdfInApp(resolved, bookId, sessionToken, cachedBlob).catch((err) => {
+        console.error("Gagal membuka PDF offline:", err);
+        if (currentPdfReaderState && currentPdfReaderState.sessionToken === sessionToken) {
+          if (spinnerIcon) spinnerIcon.classList.add("d-none");
+          if (loadTitle) loadTitle.innerText = "Gagal Membuka Salinan Offline";
+          if (loadDesc) loadDesc.innerText = "Komponen pembaca belum tersimpan atau file perlu disimpan ulang. Hubungkan ke internet sebentar lalu muat ulang aplikasi.";
+        }
+      });
     }
 
     function createRangeTransportForUrl(pdfjs, streamUrl, totalLength, initialData) {
@@ -2400,7 +2696,7 @@
       }
     }
 
-    async function renderNativePdfInApp(resolved, cacheKey, sessionToken) {
+    async function renderNativePdfInApp(resolved, cacheKey, sessionToken, preloadedBlob) {
       const nativeStage = document.getElementById("pdfNativeStage");
       const frameStage = document.getElementById("pdfFrameStage");
       const navControls = document.getElementById("pdfNativeControls");
@@ -2415,26 +2711,25 @@
 
       const pdfjs = await ensurePdfJsLoaded();
       let docParams = null;
-      let objectUrlToRevoke = null;
 
       const commonPdfOpts = {
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/",
         cMapPacked: true,
-        standardFontDataUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/",
-        disableAutoFetch: true,
-        rangeChunkSize: 65536
+        standardFontDataUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/"
       };
 
-      const cachedBlob = await getCachedDirectPdfBlob(cacheKey || resolved.streamUrl);
+      const cachedBlob = preloadedBlob || await getCachedDirectPdfBlob(cacheKey || resolved.streamUrl);
       if (cachedBlob) {
-        objectUrlToRevoke = URL.createObjectURL(cachedBlob);
-        docParams = { ...commonPdfOpts, url: objectUrlToRevoke };
+        const ab = await cachedBlob.arrayBuffer();
+        docParams = { ...commonPdfOpts, data: new Uint8Array(ab) };
       } else if (resolved.kind === "drive") {
         const probe = await probeDrivePdfStream(resolved.streamUrl);
         if (currentPdfReaderState && currentPdfReaderState.sessionToken !== sessionToken) return;
         const transport = createRangeTransportForUrl(pdfjs, resolved.streamUrl, probe.totalLength, probe.initialData);
         docParams = {
           ...commonPdfOpts,
+          disableAutoFetch: true,
+          rangeChunkSize: 65536,
           range: transport,
           length: probe.totalLength,
           disableStream: true
@@ -2680,10 +2975,6 @@
         }
         studentPdfJumpToPage(keepPage);
       };
-
-      if (objectUrlToRevoke) {
-        setTimeout(() => URL.revokeObjectURL(objectUrlToRevoke), 120000);
-      }
     }
 
     function updatePdfEngineButton(engine) {
@@ -2784,7 +3075,36 @@
       switchPdfReaderEngine();
     }
 
-    function openPdfReader(title, grade, url, bookId) {
+    async function openPdfReader(title, grade, url, bookId) {
+      if (navigator.onLine === false && bookId) {
+        const offlineBlob = await getCachedDirectPdfBlob(bookId);
+        if (offlineBlob) {
+          openOfflinePdfBlobInModal(bookId, title, grade, url, offlineBlob);
+          return;
+        }
+        teardownStudentNativePdfSession();
+        hideAllPooledPdfFrames();
+        const nativeStage = document.getElementById("pdfNativeStage");
+        if (nativeStage) {
+          nativeStage.classList.add("d-none");
+          nativeStage.innerHTML = "";
+        }
+        document.getElementById("pdfBookTitle").innerText = title;
+        document.getElementById("pdfBookGrade").innerText = grade;
+        const spinnerIcon = document.getElementById("pdfLoadingSpinnerIcon");
+        if (spinnerIcon) spinnerIcon.classList.add("d-none");
+        const slowHint = document.getElementById("slowNetworkHint");
+        if (slowHint) slowHint.classList.add("d-none");
+        const loading = document.getElementById("pdfLoading");
+        const loadTitle = document.getElementById("pdfLoadingTitle");
+        const loadDesc = document.getElementById("pdfLoadingDesc");
+        if (loadTitle) loadTitle.innerText = "Anda Sedang Offline";
+        if (loadDesc) loadDesc.innerText = "Buku ini belum disimpan ke memori aplikasi. Aktifkan internet sebentar lalu tekan 'Simpan Offline' pada kartu buku.";
+        if (loading) loading.classList.remove("d-none");
+        if (pdfModal) pdfModal.show();
+        return;
+      }
+
       document.getElementById("pdfBookTitle").innerText = title;
       document.getElementById("pdfBookGrade").innerText = grade;
 
@@ -2802,6 +3122,8 @@
         ...resolved
       };
 
+      const spinnerIcon = document.getElementById("pdfLoadingSpinnerIcon");
+      if (spinnerIcon) spinnerIcon.classList.remove("d-none");
       const extLink = document.getElementById("btnExternalPdfLink");
       if (extLink) extLink.href = resolved.directUrl || "#";
       const directDl = document.getElementById("btnDirectDownloadPdf");
