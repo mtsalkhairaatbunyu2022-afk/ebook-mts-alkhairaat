@@ -1,5 +1,39 @@
 [
   {
+    "id": "tch_darmansyah_689",
+    "no": 1,
+    "nama": "Darmansyah",
+    "username": "darmansyah",
+    "kelas": "Mapel: Bahasa arab & Informatika & Nahwu",
+    "role": "TEACHER",
+    "subject": "Bahasa arab & Informatika & Nahwu",
+    "password": "Darman09@",
+    "rekapUrl": ""
+  },
+  {
+    "id": "tch_guru1_767",
+    "no": 2,
+    "nama": "Guru1",
+    "username": "guru1",
+    "kelas": "Mapel: Informatika",
+    "role": "TEACHER",
+    "subject": "Informatika",
+    "password": "Guru1@",
+    "rekapUrl": ""
+  },
+  {
+    "id": "tch_guru2_523",
+    "no": 3,
+    "nama": "Guru2",
+    "username": "guru2",
+    "kelas": "Mapel: IPA",
+    "role": "TEACHER",
+    "subject": "IPA",
+    "password": "Guru2@",
+    "rekapUrl": ""
+  }
+][
+  {
     "id": "tch_darmansyah_504",
     "no": 1,
     "nama": "Darmansyah",
