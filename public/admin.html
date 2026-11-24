@@ -725,12 +725,28 @@
           <!-- Right Column: Results & Export Table for Students -->
           <div class="col-lg-7">
             <div class="card card-custom p-4 bg-white">
-              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <div>
                   <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-card-checklist text-primary me-2"></i>Daftar Akun Siswa Hasil Impor</h5>
-                  <p class="text-muted small mb-0">Password akun otomatis dikunci sesuai jenjang kelas.</p>
+                  <p class="text-muted small mb-0">Otomatis urut Kelas VII → VIII → IX dengan nomor urut per kelas &amp; sandi sesuai jenjang.</p>
                 </div>
                 <span id="studentCountBadge" class="badge bg-success fs-6 px-3 py-2 rounded-pill">0 Siswa</span>
+              </div>
+
+              <!-- Filter & Jumlah Siswa per Jenjang -->
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-3" id="studentGradeFilterBar">
+                <button type="button" class="btn btn-sm btn-primary fw-bold student-grade-filter-btn" data-grade="ALL">
+                  Semua <span id="studentCountAll" class="badge bg-light text-dark ms-1">0</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold student-grade-filter-btn" data-grade="Kelas VII">
+                  Kelas VII <span id="studentCountVII" class="badge bg-primary-subtle text-primary-emphasis ms-1">0</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold student-grade-filter-btn" data-grade="Kelas VIII">
+                  Kelas VIII <span id="studentCountVIII" class="badge bg-info-subtle text-info-emphasis ms-1">0</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold student-grade-filter-btn" data-grade="Kelas IX">
+                  Kelas IX <span id="studentCountIX" class="badge bg-warning-subtle text-warning-emphasis ms-1">0</span>
+                </button>
               </div>
 
               <div class="table-responsive mb-3" style="max-height: 320px; overflow-y: auto;">
@@ -1081,6 +1097,7 @@
       }
 
     let importedStudents = [];
+    let currentStudentFilterGrade = 'ALL';
     let importedTeachers = [];
     let currentTeacherFilterGrade = 'ALL';
     let currentTeacherSearchQuery = '';
@@ -3108,6 +3125,59 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
       return '2027';
     }
 
+    function getStudentGradeOrder(grade) {
+      if (grade === 'Kelas VII') return 1;
+      if (grade === 'Kelas VIII') return 2;
+      if (grade === 'Kelas IX') return 3;
+      return 99;
+    }
+
+    function getStudentGradeCounts() {
+      const counts = {
+        all: importedStudents.length,
+        vii: 0,
+        viii: 0,
+        ix: 0
+      };
+      importedStudents.forEach(s => {
+        if (s.kelas === 'Kelas VII') counts.vii++;
+        else if (s.kelas === 'Kelas VIII') counts.viii++;
+        else if (s.kelas === 'Kelas IX') counts.ix++;
+      });
+      return counts;
+    }
+
+    function sortAndRenumberStudents() {
+      const perGradeCounters = {};
+      importedStudents = importedStudents
+        .map((stu, originalIndex) => ({
+          stu: {
+            ...stu,
+            kelas: normalizeGrade(stu.kelas)
+          },
+          originalIndex
+        }))
+        .sort((a, b) => {
+          const rankDiff = getStudentGradeOrder(a.stu.kelas) - getStudentGradeOrder(b.stu.kelas);
+          return rankDiff !== 0 ? rankDiff : (a.originalIndex - b.originalIndex);
+        })
+        .map(({ stu }) => {
+          const grade = stu.kelas;
+          perGradeCounters[grade] = (perGradeCounters[grade] || 0) + 1;
+          stu.no = perGradeCounters[grade];
+          return stu;
+        });
+    }
+
+    function escapeStudentHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function processStudentList(rows) {
       importedStudents = [];
       rows.forEach((row, idx) => {
@@ -3158,14 +3228,16 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         }
       });
 
+      sortAndRenumberStudents();
       renderStudentTable();
       saveStudentsToStorage();
     }
 
     function deleteStudent(index) {
+      if (index < 0 || index >= importedStudents.length) return;
       if (confirm(`Hapus akun siswa "${importedStudents[index].nama}"?`)) {
         importedStudents.splice(index, 1);
-        importedStudents.forEach((s, idx) => s.no = idx + 1);
+        sortAndRenumberStudents();
         renderStudentTable();
         saveStudentsToStorage();
       }
@@ -3174,10 +3246,19 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
     function renderStudentTable() {
       const studentTableBody = document.getElementById('studentTableBody');
       const studentCountBadge = document.getElementById('studentCountBadge');
+      const counts = getStudentGradeCounts();
 
       if (studentCountBadge) {
-        studentCountBadge.textContent = `${importedStudents.length} Siswa Terdaftar`;
+        studentCountBadge.textContent = `${counts.all} Siswa Terdaftar`;
       }
+      const elAll = document.getElementById('studentCountAll');
+      const elVII = document.getElementById('studentCountVII');
+      const elVIII = document.getElementById('studentCountVIII');
+      const elIX = document.getElementById('studentCountIX');
+      if (elAll) elAll.textContent = counts.all;
+      if (elVII) elVII.textContent = counts.vii;
+      if (elVIII) elVIII.textContent = counts.viii;
+      if (elIX) elIX.textContent = counts.ix;
 
       if (!studentTableBody) return;
       studentTableBody.innerHTML = '';
@@ -3187,16 +3268,30 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         return;
       }
 
-      importedStudents.forEach((stu, index) => {
+      const filteredStudents = (currentStudentFilterGrade === 'ALL')
+        ? importedStudents
+        : importedStudents.filter(stu => stu.kelas === currentStudentFilterGrade);
+
+      if (filteredStudents.length === 0) {
+        studentTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Belum ada data siswa untuk ${escapeStudentHtml(currentStudentFilterGrade)}.</td></tr>`;
+        return;
+      }
+
+      filteredStudents.forEach((stu) => {
+        const actualIndex = importedStudents.indexOf(stu);
+        let gradeBadgeClass = 'bg-primary-subtle text-primary-emphasis';
+        if (stu.kelas === 'Kelas VIII') gradeBadgeClass = 'bg-info-subtle text-info-emphasis';
+        else if (stu.kelas === 'Kelas IX') gradeBadgeClass = 'bg-warning-subtle text-warning-emphasis';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${stu.no}</td>
-          <td class="fw-semibold text-dark">${stu.nama}</td>
-          <td><span class="badge bg-primary-subtle text-primary-emphasis">${stu.kelas}</span></td>
-          <td><code>${stu.username}</code></td>
-          <td><span class="badge bg-success font-monospace fs-7">${stu.password}</span></td>
+          <td class="fw-semibold text-dark">${escapeStudentHtml(stu.nama)}</td>
+          <td><span class="badge ${gradeBadgeClass}">${escapeStudentHtml(stu.kelas)}</span></td>
+          <td><code>${escapeStudentHtml(stu.username)}</code></td>
+          <td><span class="badge bg-success font-monospace fs-7">${escapeStudentHtml(stu.password)}</span></td>
           <td class="text-end">
-            <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteStudent(${index})" title="Hapus Akun Siswa">
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteStudent(${actualIndex})" title="Hapus Akun Siswa">
               <i class="bi bi-trash"></i>
             </button>
           </td>
@@ -3204,6 +3299,20 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         studentTableBody.appendChild(tr);
       });
     }
+
+    // Student Grade Filter Buttons
+    document.querySelectorAll('.student-grade-filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.student-grade-filter-btn').forEach(b => {
+          b.classList.remove('btn-primary', 'fw-bold');
+          b.classList.add('btn-outline-secondary', 'fw-semibold');
+        });
+        this.classList.remove('btn-outline-secondary', 'fw-semibold');
+        this.classList.add('btn-primary', 'fw-bold');
+        currentStudentFilterGrade = this.getAttribute('data-grade') || 'ALL';
+        renderStudentTable();
+      });
+    });
 
     // Student Excel File Upload Handler
     const excelFileInput = document.getElementById('excelFileInput');
@@ -3225,8 +3334,9 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
             const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
             processStudentList(jsonRows);
-            document.getElementById('excelUploadDesc').textContent = `Berhasil membaca ${importedStudents.length} data siswa!`;
-            alert(`✅ Berhasil mengimpor ${importedStudents.length} siswa dari file Excel "${file.name}"!`);
+            const counts = getStudentGradeCounts();
+            document.getElementById('excelUploadDesc').textContent = `Berhasil membaca ${counts.all} siswa (VII: ${counts.vii}, VIII: ${counts.viii}, IX: ${counts.ix})`;
+            alert(`✅ Berhasil mengimpor ${counts.all} siswa dari "${file.name}"!\n(Kelas VII: ${counts.vii} | Kelas VIII: ${counts.viii} | Kelas IX: ${counts.ix})`);
           } catch (err) {
             alert('Gagal membaca file Excel: ' + err.message);
           }
@@ -3249,7 +3359,8 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
           const lines = rawText.split('\n');
           const rows = lines.map(line => line.split(','));
           processStudentList(rows);
-          alert(`✅ Berhasil memproses ${importedStudents.length} akun siswa!`);
+          const counts = getStudentGradeCounts();
+          alert(`✅ Berhasil memproses ${counts.all} akun siswa!\n(Kelas VII: ${counts.vii} | Kelas VIII: ${counts.viii} | Kelas IX: ${counts.ix})`);
         }
       });
     }
@@ -3483,6 +3594,7 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
     // EXPORT & DOWNLOAD HANDLERS
     // =====================================
     function downloadStudentsJson() {
+      sortAndRenumberStudents();
       const jsonText = JSON.stringify(importedStudents, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -3509,6 +3621,7 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
     }
 
     function copyStudentsJson() {
+      sortAndRenumberStudents();
       const jsonText = JSON.stringify(importedStudents, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
         alert('📋 Kode students.json berhasil disalin ke clipboard!');
@@ -3727,6 +3840,9 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
             saveStudentsToStorage();
           }
         } catch (e) {}
+      }
+      if (Array.isArray(importedStudents) && importedStudents.length > 0) {
+        sortAndRenumberStudents();
       }
 
       // 3. Load Teachers
