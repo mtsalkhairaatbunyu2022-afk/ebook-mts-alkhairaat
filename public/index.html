@@ -855,9 +855,6 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-1 flex-shrink-0">
-            <button id="btnTogglePdfEngine" type="button" class="btn btn-outline-info btn-sm fw-bold py-1 px-2 d-none" style="font-size: 0.72rem;" onclick="togglePdfReaderEngine()" title="Ganti mode tampilan buku di dalam aplikasi">
-              <i class="bi bi-eye-fill"></i> <span class="d-none d-sm-inline">Mode Viewer</span>
-            </button>
             <a id="btnExternalPdfLink" href="#" target="_blank" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark shadow-sm" style="font-size: 0.72rem;" title="Buka langsung di tab baru">
               <i class="bi bi-box-arrow-up-right"></i> <span class="d-none d-sm-inline">Tab Baru</span>
             </a>
@@ -2817,8 +2814,6 @@
       const loadDesc = document.getElementById("pdfLoadingDesc");
       if (loadTitle) loadTitle.innerText = "Membuka Lembar Buku...";
       if (loadDesc) loadDesc.innerText = "Merender halaman jernih langsung di dalam aplikasi.";
-
-      updatePdfEngineButton(currentPdfReaderState.engine);
 
       if (preferNative) {
         if (loading) loading.classList.remove("d-none");
