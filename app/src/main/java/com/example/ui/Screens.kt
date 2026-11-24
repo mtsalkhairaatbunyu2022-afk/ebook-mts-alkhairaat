@@ -920,22 +920,37 @@ fun BookDashboard(
                         }
                     }
 
-                    // Kategori Filter chip picker
+                    // Kategori Filter chip picker (Buku vs Video)
+                    val isVideoActive = viewModel.selectedCategoryFilter.equals("Video", ignoreCase = true)
                     FilterChip(
-                        selected = viewModel.selectedCategoryFilter.isNotEmpty(),
-                        onClick = {
-                            viewModel.selectedCategoryFilter = when (viewModel.selectedCategoryFilter) {
-                                "" -> "Mata Pelajaran"
-                                "Mata Pelajaran" -> "Referensi Tambahan"
-                                else -> ""
-                            }
-                        },
+                        selected = !isVideoActive,
+                        onClick = { viewModel.selectedCategoryFilter = "Buku" },
                         label = {
                             Text(
-                                if (viewModel.selectedCategoryFilter.isEmpty()) "Semua Kategori" else viewModel.selectedCategoryFilter,
-                                fontSize = 12.sp
+                                "📚 Buku",
+                                fontSize = 12.sp,
+                                fontWeight = if (!isVideoActive) FontWeight.Bold else FontWeight.Normal
                             )
-                        }
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                    FilterChip(
+                        selected = isVideoActive,
+                        onClick = { viewModel.selectedCategoryFilter = "Video" },
+                        label = {
+                            Text(
+                                "🎬 Video",
+                                fontSize = 12.sp,
+                                fontWeight = if (isVideoActive) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.error,
+                            selectedLabelColor = MaterialTheme.colorScheme.onError
+                        )
                     )
                 }
             }
@@ -1154,6 +1169,7 @@ fun BookGridCard(
     onDelete: (() -> Unit)? = null
 ) {
     val downloadTask = activeDownloads.find { it.bookId == book.id }
+    val isVideoItem = book.category.equals("Video", ignoreCase = true) || book.fileUrl.contains("youtube.com") || book.fileUrl.contains("youtu.be")
 
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -1175,7 +1191,10 @@ fun BookGridCard(
                     .height(145.dp)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(
+                            colors = if (isVideoItem) listOf(
+                                Color(0xFF7F1D1D),
+                                Color(0xFFDC2626)
+                            ) else listOf(
                                 Color(0xFF1E3A8A), // deep education blue
                                 Color(0xFF2563EB)
                             )
@@ -1186,12 +1205,12 @@ fun BookGridCard(
                 // Top-Start Grade Class badge (Warning Yellow)
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFF59E0B),
+                    color = if (isVideoItem) Color.White else Color(0xFFF59E0B),
                     modifier = Modifier.align(Alignment.TopStart)
                 ) {
                     Text(
-                        text = book.gradeClass,
-                        color = Color.Black,
+                        text = if (isVideoItem) "🎬 ${book.gradeClass}" else book.gradeClass,
+                        color = if (isVideoItem) Color(0xFFDC2626) else Color.Black,
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -1236,10 +1255,10 @@ fun BookGridCard(
                         .padding(top = 18.dp, start = 4.dp, end = 4.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                        contentDescription = "Book",
-                        tint = Color(0xFFF59E0B),
-                        modifier = Modifier.size(24.dp)
+                        imageVector = if (isVideoItem) Icons.Default.PlayCircle else Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = if (isVideoItem) "Video" else "Book",
+                        tint = if (isVideoItem) Color.White else Color(0xFFF59E0B),
+                        modifier = Modifier.size(26.dp)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
@@ -1342,18 +1361,18 @@ fun BookGridCard(
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E3A8A),
+                                containerColor = if (isVideoItem) Color(0xFFDC2626) else Color(0xFF1E3A8A),
                                 contentColor = Color.White
                             )
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Visibility,
+                                imageVector = if (isVideoItem) Icons.Default.PlayArrow else Icons.Default.Visibility,
                                 contentDescription = null,
                                 modifier = Modifier.size(13.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (book.isDownloaded) "Buka Buku" else "Pratinjau & Baca",
+                                text = if (isVideoItem) "Tonton Video" else if (book.isDownloaded) "Buka Buku" else "Pratinjau & Baca",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1903,25 +1922,37 @@ fun BookDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Large CTA Read button
+            // Large CTA Read / Watch button
+            val isVideoDetail = book.category.equals("Video", ignoreCase = true) || book.fileUrl.contains("youtube.com") || book.fileUrl.contains("youtu.be")
+            val context = LocalContext.current
             Button(
-                onClick = onRead,
+                onClick = {
+                    if (isVideoDetail && book.fileUrl.isNotBlank()) {
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(book.fileUrl))
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            onRead()
+                        }
+                    } else {
+                        onRead()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
                     .testTag("read_book_detail_button"),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = if (isVideoDetail) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error) else ButtonDefaults.buttonColors()
             ) {
-                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Read")
+                Icon(if (isVideoDetail) Icons.Default.PlayArrow else Icons.AutoMirrored.Filled.MenuBook, contentDescription = if (isVideoDetail) "Tonton" else "Read")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "BACA SEKARANG",
+                    text = if (isVideoDetail) "TONTON VIDEO SEKARANG" else "BACA SEKARANG",
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
             }
-
-            val context = LocalContext.current
             OutlinedButton(
                 onClick = {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {

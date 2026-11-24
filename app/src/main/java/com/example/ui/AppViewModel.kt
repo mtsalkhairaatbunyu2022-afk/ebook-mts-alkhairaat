@@ -82,7 +82,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 AuthState.Unauthenticated
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthState.Loading)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthState.Unauthenticated)
 
     // Auth State User
     val loggedInUser: StateFlow<UserEntity?> = repository.loggedInUser

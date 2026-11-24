@@ -1039,8 +1039,8 @@ class Repository(
                 }
                 val url = URL(downloadUrl)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 8000
-                    readTimeout = 15000
+                    connectTimeout = 1500
+                    readTimeout = 2500
                     instanceFollowRedirects = true
                     setRequestProperty("User-Agent", "Mozilla/5.0")
                 }
@@ -1105,7 +1105,7 @@ class Repository(
         }
 
         val pdfDocument = PdfDocument()
-        val pageCount = book.pageCount
+        val pageCount = minOf(book.pageCount, 12)
         val chapters = getChaptersForBook(book.subject)
 
         val hasFrontMatter = pageCount > 4
@@ -1638,13 +1638,9 @@ class Repository(
         // Log audit
         logAudit("system", "Unduh Sistem", "UNDUH", "Memulai proses unduh buku: ${book.title}")
 
-        // Simulate multi-step robust download ticks with retry compatibility
+        // Instant high-speed download process without artificial delay
         try {
-            for (p in 1..10) {
-                delay(200) // Simulate download transfer speeds
-                val progressPercent = p * 10
-                downloadTaskDao.updateProgress(bookId, progressPercent, "DOWNLOADING", null, null)
-            }
+            downloadTaskDao.updateProgress(bookId, 50, "DOWNLOADING", null, null)
 
             // Real physical multi-page PDF generation in app internal directory for reading
             val pdfFile = generateSamplePdf(bookId)

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ebook-mts-v2.3';
+const CACHE_NAME = 'ebook-mts-v2.5';
 const urlsToCache = [
   '/',
   '/index.html',

@@ -18,6 +18,17 @@
   <link rel="shortcut icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
   <link rel="apple-touch-icon" href="/logo_alkhairaat.jpg">
   
+  <!-- High Speed Network Preconnect & DNS-Prefetch for Fast Document & Video Opening -->
+  <link rel="preconnect" href="https://drive.google.com" crossorigin>
+  <link rel="preconnect" href="https://docs.google.com" crossorigin>
+  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+  <link rel="dns-prefetch" href="https://drive.google.com">
+  <link rel="dns-prefetch" href="https://docs.google.com">
+  <link rel="dns-prefetch" href="https://www.youtube-nocookie.com">
+  <link rel="dns-prefetch" href="https://www.youtube.com">
+  <link rel="dns-prefetch" href="https://i.ytimg.com">
+
   <!-- CSS Frameworks -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -224,6 +235,12 @@
       background: #1e3a8a;
       color: #ffffff;
       border-color: #1e3a8a;
+    }
+
+    .nav-chip.chip-video.active {
+      background: #dc2626;
+      color: #ffffff;
+      border-color: #dc2626;
     }
 
     /* Fullscreen PDF Modal */
@@ -487,13 +504,13 @@
       <div id="booksTabContent">
         <!-- Filter Chips -->
         <div class="p-3 bg-light border-bottom" id="filterSection">
-          <div class="fw-bold fs-8 text-primary mb-2" id="filterLabel">Saring Jenjang Kelas & Kategori:</div>
+          <div class="fw-bold fs-8 text-primary mb-2" id="filterLabel">Pilih Jenjang Kelas:</div>
           <div class="d-flex gap-2 overflow-x-auto pb-1" id="filterChipsContainer">
             <!-- Grade Chips -->
           </div>
           <div class="d-flex gap-2 overflow-x-auto pt-2" id="categoryFilterContainer">
-            <div class="nav-chip active" onclick="setCategoryFilter('', this)">Semua</div>
-            <div class="nav-chip" onclick="setCategoryFilter('Buku', this)">📚 Buku</div>
+            <div class="nav-chip active" id="chipCategoryBuku" onclick="setCategoryFilter('Buku', this)">📚 Buku</div>
+            <div class="nav-chip chip-video" id="chipCategoryVideo" onclick="setCategoryFilter('Video', this)">🎬 Video</div>
           </div>
         </div>
 
@@ -670,6 +687,9 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-2">
+            <a id="btnExternalPdfLink" href="#" target="_blank" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark shadow-sm" style="font-size: 0.75rem;" title="Buka langsung di tab baru">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Buka Langsung
+            </a>
             <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="addNoteFromCurrentPdf()">
               <i class="bi bi-pencil-square"></i> Buat Catatan
             </button>
@@ -677,12 +697,65 @@
           </div>
         </div>
         <div class="modal-body p-0 bg-secondary position-relative flex-grow-1" style="overflow: hidden;">
-          <!-- Loading Spinner for PDF -->
-          <div id="pdfLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white" style="z-index: 10;">
+          <!-- Loading Spinner for PDF with Fast Fallback -->
+          <div id="pdfLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white p-3 rounded" style="z-index: 10; max-width: 90%;">
             <div class="spinner-border text-warning" role="status"></div>
-            <p class="mt-2 fw-bold small">Memuat Isi Buku...</p>
+            <p class="mt-2 fw-bold small mb-1">Membuka Berkas Buku...</p>
+            <p class="text-white-50 mb-0" style="font-size: 0.75rem;">Mengakses pratinjau Google Drive berkecepatan tinggi.</p>
+            <div id="slowNetworkHint" class="mt-2 d-none">
+              <a id="btnDirectDownloadPdf" href="#" target="_blank" class="btn btn-sm btn-light fw-bold px-3 py-1 text-primary shadow">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Klik Di Sini untuk Buka Cepat
+              </a>
+            </div>
           </div>
-          <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none; display: block;" onload="document.getElementById('pdfLoading').classList.add('d-none')"></iframe>
+          <iframe id="pdfFrame" src="" loading="eager" fetchpriority="high" importance="high" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade" style="width: 100%; height: 100%; border: none; display: block;" onload="handlePdfLoaded()"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 3B: VIDEO PLAYER MODAL -->
+  <div class="modal fade" id="videoPlayerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg overflow-hidden">
+        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2">
+          <div class="d-flex align-items-center gap-2 text-truncate me-2">
+            <i class="bi bi-play-circle-fill text-danger fs-5"></i>
+            <div class="text-truncate">
+              <h6 class="modal-title fw-bold mb-0 fs-7 text-truncate" id="videoModalTitle">Judul Video</h6>
+              <div class="d-flex gap-1 mt-1">
+                <span class="badge bg-warning text-dark fs-9" id="videoModalGrade">Kelas VIII</span>
+                <span class="badge bg-danger fs-9" id="videoModalSubject">Mapel</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="addNoteFromCurrentVideo()">
+              <i class="bi bi-pencil-square"></i> Buat Catatan
+            </button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopVideoPlayer()"></button>
+          </div>
+        </div>
+        <div class="modal-body p-0 bg-black position-relative" style="min-height: 280px;">
+          <!-- Loading Spinner -->
+          <div id="videoLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white" style="z-index: 10;">
+            <div class="spinner-border text-danger" role="status"></div>
+            <p class="mt-2 fw-bold small">Memuat Video Pembelajaran...</p>
+          </div>
+          <!-- Video Container -->
+          <div id="videoPlayerContainer" class="ratio ratio-16x9 w-100" style="min-height: 280px; max-height: 70vh;">
+            <iframe id="videoIframe" src="" loading="eager" fetchpriority="high" importance="high" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" style="border: none;" onload="handleVideoLoaded()"></iframe>
+          </div>
+        </div>
+        <div class="modal-footer bg-light py-2 d-flex justify-content-between align-items-center">
+          <span class="text-muted fs-8"><i class="bi bi-shield-check text-success me-1"></i> Sumber Belajar Madrasah</span>
+          <div class="d-flex gap-2">
+            <a id="btnExternalVideoLink" href="#" target="_blank" class="btn btn-outline-secondary btn-sm fs-8">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Buka Link Asli
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm fs-8" data-bs-dismiss="modal" onclick="stopVideoPlayer()">Tutup</button>
+          </div>
         </div>
       </div>
     </div>
@@ -914,14 +987,15 @@
     let studentsList = [];
     let teachersList = [];
     let currentGradeFilter = "";
-    let currentCategoryFilter = "";
+    let currentCategoryFilter = "Buku";
     let currentUser = null;
     let selectedLoginGrade = "";
     let currentDashboardTab = "books";
     let currentNoteTagFilter = "";
     let activeDetailNoteId = null;
+    let currentPlayingVideo = null;
 
-    let studentModal, teacherModal, pdfModal, changePassModal, noteEditorModal, noteDetailModal;
+    let studentModal, teacherModal, pdfModal, videoModal, changePassModal, noteEditorModal, noteDetailModal;
 
     // Load Initial Data
     document.addEventListener("DOMContentLoaded", () => {
@@ -929,6 +1003,7 @@
       const sEl = document.getElementById("studentLoginModal");
       const tEl = document.getElementById("teacherLoginModal");
       const pEl = document.getElementById("pdfReaderModal");
+      const vEl = document.getElementById("videoPlayerModal");
       const cEl = document.getElementById("changePasswordModal");
       const neEl = document.getElementById("noteEditorModal");
       const ndEl = document.getElementById("noteDetailModal");
@@ -936,6 +1011,12 @@
       if (sEl) studentModal = new bootstrap.Modal(sEl);
       if (tEl) teacherModal = new bootstrap.Modal(tEl);
       if (pEl) pdfModal = new bootstrap.Modal(pEl);
+      if (vEl) {
+        videoModal = new bootstrap.Modal(vEl);
+        vEl.addEventListener("hidden.bs.modal", () => {
+          stopVideoPlayer();
+        });
+      }
       if (cEl) changePassModal = new bootstrap.Modal(cEl);
       if (neEl) noteEditorModal = new bootstrap.Modal(neEl);
       if (ndEl) noteDetailModal = new bootstrap.Modal(ndEl);
@@ -950,6 +1031,9 @@
         const localSaved = localStorage.getItem("app_catalog_json");
         if (localSaved) {
           allBooks = JSON.parse(localSaved);
+          if (Array.isArray(allBooks)) {
+            allBooks.forEach(b => warmUpResource(b.fileUrl));
+          }
         }
         
         // Fetch live catalog from server
@@ -959,6 +1043,7 @@
           if (Array.isArray(remoteBooks)) {
             allBooks = remoteBooks;
             localStorage.setItem("app_catalog_json", JSON.stringify(allBooks));
+            allBooks.forEach(b => warmUpResource(b.fileUrl));
             
             // Logic: If Guru cleared all books, clear local view immediately
             if (remoteBooks.length === 0) {
@@ -1236,10 +1321,14 @@
         const rekapBtn = document.getElementById("rekapNilaiBtn");
         const teacherLogoutBtn = document.getElementById("teacherLogoutBtn");
 
+        if (!currentCategoryFilter || currentCategoryFilter === "") {
+          currentCategoryFilter = "Buku";
+        }
+
         if (currentUser.role === "STUDENT") {
           // Students: [Ubah Password (Yellow)] [Logout (Top Corner)]
           currentGradeFilter = currentUser.grade;
-          filterLabel.innerText = "Katalog Khusus Kelas Anda:";
+          filterLabel.innerText = "Jenjang Kelas Anda:";
           filterContainer.innerHTML = `<div class="nav-chip active">${currentUser.grade}</div>`;
           if (categoryContainer) categoryContainer.classList.remove("d-none");
           
@@ -1259,8 +1348,7 @@
 
         } else {
           // Teachers: Simple menu showing only Kelas VII, Kelas VIII, Kelas IX
-          currentCategoryFilter = "";
-          if (categoryContainer) categoryContainer.classList.add("d-none");
+          if (categoryContainer) categoryContainer.classList.remove("d-none");
           if (!["Kelas VII", "Kelas VIII", "Kelas IX"].includes(currentGradeFilter)) {
             currentGradeFilter = "Kelas VII";
           }
@@ -1287,6 +1375,14 @@
           if (teacherLogoutBtn) teacherLogoutBtn.classList.remove("d-none");
           if (logoutBtn) logoutBtn.classList.add("d-none"); // Hide top logout for teacher, use big button
         }
+
+        // Sync Category selector tabs (📚 Buku vs 🎬 Video)
+        const chipBuku = document.getElementById("chipCategoryBuku");
+        const chipVideo = document.getElementById("chipCategoryVideo");
+        if (chipBuku && chipVideo) {
+          chipBuku.classList.toggle("active", currentCategoryFilter !== "Video");
+          chipVideo.classList.toggle("active", currentCategoryFilter === "Video");
+        }
       }
       switchDashboardTab(currentDashboardTab || "books");
       updateNotesBadge();
@@ -1304,8 +1400,9 @@
       localStorage.removeItem("app_current_user");
       currentUser = null;
       currentGradeFilter = "";
-      currentCategoryFilter = "";
+      currentCategoryFilter = "Buku";
       currentDashboardTab = "books";
+      stopVideoPlayer();
       document.getElementById("libraryScreen").classList.add("d-none");
       document.getElementById("welcomeScreen").classList.remove("d-none");
     }
@@ -1320,10 +1417,12 @@
     }
 
     function setCategoryFilter(cat, el) {
-      currentCategoryFilter = cat;
-      if (el) {
-        document.querySelectorAll("#categoryFilterContainer .nav-chip").forEach(c => c.classList.remove("active"));
-        el.classList.add("active");
+      currentCategoryFilter = (cat && cat.toLowerCase() === 'video') ? 'Video' : 'Buku';
+      const chipBuku = document.getElementById("chipCategoryBuku");
+      const chipVideo = document.getElementById("chipCategoryVideo");
+      if (chipBuku && chipVideo) {
+        chipBuku.classList.toggle("active", currentCategoryFilter === 'Buku');
+        chipVideo.classList.toggle("active", currentCategoryFilter === 'Video');
       }
       renderBooks();
     }
@@ -1344,60 +1443,264 @@
     function renderBooks() {
       const grid = document.getElementById("booksGrid");
       const search = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase() : "";
+      const isVideoMode = (currentCategoryFilter === 'Video');
 
       let filtered = allBooks.filter(b => {
         const matchGrade = !currentGradeFilter || normalizeGradeForCompare(b.gradeClass) === normalizeGradeForCompare(currentGradeFilter);
-        const matchCategory = !currentCategoryFilter || (b.category && b.category.toLowerCase() === currentCategoryFilter.toLowerCase()) || (currentCategoryFilter === 'Buku' && (!b.category || b.category === 'mp'));
+        const cat = (b.category || '').toLowerCase();
+        const isItemVideo = (cat === 'video' || (b.fileUrl && (b.fileUrl.includes('youtube.com') || b.fileUrl.includes('youtu.be'))));
+        const matchCategory = isVideoMode ? isItemVideo : !isItemVideo;
         const matchSearch = !search || b.title.toLowerCase().includes(search) || b.subject.toLowerCase().includes(search) || b.author.toLowerCase().includes(search);
         return matchGrade && matchCategory && matchSearch;
       });
 
       if (filtered.length === 0) {
-        const emptyHint = (currentUser && currentUser.role === "TEACHER")
-          ? `Belum ada buku untuk ${escapeHtml(currentGradeFilter || 'jenjang ini')}. Silakan pilih jenjang kelas lain atau sinkronkan dengan Portal Guru.`
-          : `Coba pilih 'Semua Kelas' atau sinkronkan kembali dengan Portal Guru.`;
-        grid.innerHTML = `
-          <div class="col-12 text-center py-5">
-            <i class="bi bi-book text-muted display-4"></i>
-            <h6 class="fw-bold mt-3 text-secondary">Belum Ada Buku Tersedia</h6>
-            <p class="fs-8 text-muted">${emptyHint}</p>
-          </div>
-        `;
+        if (isVideoMode) {
+          grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <div class="rounded-circle bg-danger-subtle d-inline-flex p-3 mb-2">
+                <i class="bi bi-camera-reels text-danger display-5"></i>
+              </div>
+              <h6 class="fw-bold mt-2 text-secondary">Belum Ada Video Pembelajaran</h6>
+              <p class="fs-8 text-muted">Belum ada materi video untuk ${escapeHtml(currentGradeFilter || 'jenjang ini')}. Guru dapat menambahkan tautan video YouTube atau Google Drive melalui Portal Admin.</p>
+            </div>
+          `;
+        } else {
+          const emptyHint = (currentUser && currentUser.role === "TEACHER")
+            ? `Belum ada buku untuk ${escapeHtml(currentGradeFilter || 'jenjang ini')}. Silakan pilih jenjang kelas lain atau sinkronkan dengan Portal Guru.`
+            : `Coba sinkronkan kembali dengan Portal Guru.`;
+          grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <div class="rounded-circle bg-primary-subtle d-inline-flex p-3 mb-2">
+                <i class="bi bi-book text-primary display-5"></i>
+              </div>
+              <h6 class="fw-bold mt-2 text-secondary">Belum Ada Buku Tersedia</h6>
+              <p class="fs-8 text-muted">${emptyHint}</p>
+            </div>
+          `;
+        }
         return;
       }
 
-      grid.innerHTML = filtered.map(b => `
-        <div class="col-6 col-sm-6">
-          <div class="book-card" onclick="openPdfReader('${escapeHtml(b.title)}', '${escapeHtml(b.gradeClass)}', '${escapeHtml(b.fileUrl)}')">
-            <div class="book-cover">
-              <span class="badge bg-warning text-dark fw-bold align-self-start fs-8">${escapeHtml(b.gradeClass)}</span>
-              <div class="text-white">
-                <i class="bi bi-book-half fs-3 mb-1"></i>
-                <div class="fw-bold fs-8 text-truncate">${escapeHtml(b.title)}</div>
-                <div class="fs-9 opacity-75">${escapeHtml(b.subject)}</div>
+      grid.innerHTML = filtered.map(b => {
+        const cat = (b.category || '').toLowerCase();
+        const isItemVideo = (cat === 'video' || (b.fileUrl && (b.fileUrl.includes('youtube.com') || b.fileUrl.includes('youtu.be'))));
+
+        if (isItemVideo) {
+          return `
+            <div class="col-6 col-sm-6">
+              <div class="book-card border-danger-subtle" onmouseenter="warmUpResource('${escapeHtml(b.fileUrl)}')" ontouchstart="warmUpResource('${escapeHtml(b.fileUrl)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
+                <div class="book-cover" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">
+                  <span class="badge bg-white text-danger fw-bold align-self-start fs-8">
+                    <i class="bi bi-play-circle-fill me-1"></i> ${escapeHtml(b.gradeClass)}
+                  </span>
+                  <div class="text-white text-center my-auto py-2">
+                    <i class="bi bi-play-circle fs-1 mb-1 d-block text-white"></i>
+                    <div class="fw-bold fs-8 text-truncate">${escapeHtml(b.title)}</div>
+                    <div class="fs-9 opacity-75">${escapeHtml(b.subject)}</div>
+                  </div>
+                </div>
+                <div class="p-2 bg-white text-center">
+                  <button class="btn btn-danger btn-sm w-100 fw-bold py-1 fs-8 shadow-sm">
+                    <i class="bi bi-play-fill me-1"></i> TONTON VIDEO
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="p-2 bg-white text-center">
-              <button class="btn ${b.category === 'Tugas' ? 'btn-success' : b.category === 'Video' ? 'btn-danger' : 'btn-primary'} btn-sm w-100 fw-bold py-1 fs-8">
-                <i class="bi ${b.category === 'Tugas' ? 'bi-pencil-square' : b.category === 'Video' ? 'bi-play-circle' : 'bi-journal-bookmark'} me-1"></i> 
-                ${b.category === 'Tugas' ? 'KERJAKAN' : b.category === 'Video' ? 'TONTON' : 'BACA'}
-              </button>
+          `;
+        }
+
+        return `
+          <div class="col-6 col-sm-6">
+            <div class="book-card" onmouseenter="warmUpResource('${escapeHtml(b.fileUrl)}')" ontouchstart="warmUpResource('${escapeHtml(b.fileUrl)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
+              <div class="book-cover">
+                <span class="badge bg-warning text-dark fw-bold align-self-start fs-8">${escapeHtml(b.gradeClass)}</span>
+                <div class="text-white">
+                  <i class="bi bi-book-half fs-3 mb-1"></i>
+                  <div class="fw-bold fs-8 text-truncate">${escapeHtml(b.title)}</div>
+                  <div class="fs-9 opacity-75">${escapeHtml(b.subject)}</div>
+                </div>
+              </div>
+              <div class="p-2 bg-white text-center">
+                <button class="btn btn-primary btn-sm w-100 fw-bold py-1 fs-8 shadow-sm">
+                  <i class="bi bi-journal-bookmark me-1"></i> BACA
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
+    }
+
+    const warmedOrigins = new Set();
+    function warmUpResource(url) {
+      if (!url) return;
+      try {
+        const origin = new URL(url).origin;
+        if (warmedOrigins.has(origin)) return;
+        warmedOrigins.add(origin);
+        const link = document.createElement("link");
+        link.rel = "preconnect";
+        link.href = origin;
+        link.crossOrigin = "anonymous";
+        document.head.appendChild(link);
+      } catch (_) {}
+    }
+
+    let pdfLoadTimeout = null;
+
+    function handlePdfLoaded() {
+      if (pdfLoadTimeout) {
+        clearTimeout(pdfLoadTimeout);
+        pdfLoadTimeout = null;
+      }
+      const loading = document.getElementById("pdfLoading");
+      if (loading) loading.classList.add("d-none");
+    }
+
+    function handleVideoLoaded() {
+      const loading = document.getElementById("videoLoading");
+      if (loading) loading.classList.add("d-none");
+    }
+
+    function handleBookItemClick(bookId) {
+      const b = allBooks.find(item => item.id === bookId);
+      if (!b) return;
+      const cat = (b.category || '').toLowerCase();
+      const isItemVideo = (cat === 'video' || (b.fileUrl && (b.fileUrl.includes('youtube.com') || b.fileUrl.includes('youtu.be'))));
+      if (isItemVideo) {
+        openVideoPlayer(b.title, b.gradeClass, b.subject, b.fileUrl);
+      } else {
+        openPdfReader(b.title, b.gradeClass, b.fileUrl);
+      }
+    }
+
+    function resolveVideoEmbedUrl(rawUrl) {
+      if (!rawUrl) return { type: "iframe", embedUrl: "", directUrl: "" };
+      let url = rawUrl.trim();
+
+      // YouTube matching: watch?v=ID, youtu.be/ID, embed/ID, shorts/ID
+      // Uses youtube-nocookie.com for high speed, zero tracking overhead
+      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+      if (ytMatch && ytMatch[1]) {
+        return {
+          type: "iframe",
+          embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1&rel=0&modestbranding=1`,
+          directUrl: url
+        };
+      }
+
+      // Google Drive video preview
+      if (url.includes("drive.google.com") || url.includes("docs.google.com")) {
+        const fileIdMatch = url.match(/\/(?:file\/d\/|document\/d\/)([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          return {
+            type: "iframe",
+            embedUrl: `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`,
+            directUrl: url
+          };
+        }
+      }
+
+      // Direct video file (mp4, webm, ogg)
+      if (/\.(mp4|webm|ogg)($|\?)/i.test(url)) {
+        return {
+          type: "video",
+          embedUrl: url,
+          directUrl: url
+        };
+      }
+
+      return {
+        type: "iframe",
+        embedUrl: url,
+        directUrl: url
+      };
+    }
+
+    function openVideoPlayer(title, grade, subject, url) {
+      currentPlayingVideo = { title, grade, subject, url };
+      document.getElementById("videoModalTitle").innerText = title;
+      document.getElementById("videoModalGrade").innerText = grade;
+      document.getElementById("videoModalSubject").innerText = subject || "Materi Video";
+
+      const resolved = resolveVideoEmbedUrl(url);
+      const container = document.getElementById("videoPlayerContainer");
+      const extLink = document.getElementById("btnExternalVideoLink");
+      if (extLink) extLink.href = url || "#";
+
+      const loadingEl = document.getElementById("videoLoading");
+      if (loadingEl) loadingEl.classList.remove("d-none");
+
+      if (resolved.type === "video") {
+        container.innerHTML = `
+          <video controls autoplay class="w-100 h-100 rounded" style="max-height: 70vh; background: #000;" onloadeddata="handleVideoLoaded()">
+            <source src="${resolved.embedUrl}" type="video/mp4">
+            Browser Anda tidak mendukung tag video HTML5.
+          </video>
+        `;
+      } else {
+        container.innerHTML = `
+          <iframe id="videoIframe" src="${resolved.embedUrl}" loading="eager" fetchpriority="high" importance="high" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" style="width: 100%; height: 100%; border: none; min-height: 320px;" onload="handleVideoLoaded()"></iframe>
+        `;
+      }
+
+      if (videoModal) {
+        videoModal.show();
+      }
+    }
+
+    function stopVideoPlayer() {
+      const container = document.getElementById("videoPlayerContainer");
+      if (container) {
+        container.innerHTML = "";
+      }
+      currentPlayingVideo = null;
+    }
+
+    function addNoteFromCurrentVideo() {
+      const title = (currentPlayingVideo && currentPlayingVideo.title) ? currentPlayingVideo.title : (document.getElementById("videoModalTitle") ? document.getElementById("videoModalTitle").innerText : "");
+      if (videoModal) videoModal.hide();
+      stopVideoPlayer();
+      switchDashboardTab("notes");
+      setTimeout(() => {
+        openAddNoteModal(title, "");
+      }, 350);
     }
 
     function openPdfReader(title, grade, url) {
       document.getElementById("pdfBookTitle").innerText = title;
       document.getElementById("pdfBookGrade").innerText = grade;
       
-      let viewUrl = url;
-      if (url.includes("drive.google.com")) {
-        viewUrl = url.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
+      let viewUrl = url || "";
+      let directUrl = url || "#";
+      if (viewUrl.includes("drive.google.com")) {
+        viewUrl = viewUrl.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
       }
 
-      document.getElementById("pdfFrame").src = viewUrl;
+      const extLink = document.getElementById("btnExternalPdfLink");
+      if (extLink) extLink.href = directUrl;
+      const directDl = document.getElementById("btnDirectDownloadPdf");
+      if (directDl) directDl.href = directUrl;
+
+      const slowHint = document.getElementById("slowNetworkHint");
+      if (slowHint) slowHint.classList.add("d-none");
+      const loading = document.getElementById("pdfLoading");
+      if (loading) loading.classList.remove("d-none");
+
+      if (pdfLoadTimeout) clearTimeout(pdfLoadTimeout);
+      pdfLoadTimeout = setTimeout(() => {
+        if (slowHint) slowHint.classList.remove("d-none");
+      }, 2500);
+
+      const frame = document.getElementById("pdfFrame");
+      if (frame) {
+        if (frame.src !== viewUrl) {
+          frame.src = viewUrl;
+        } else {
+          handlePdfLoaded();
+        }
+      }
       pdfModal.show();
     }
 

@@ -37,6 +37,8 @@ import com.example.data.BookEntity
 import com.example.ui.*
 import com.example.ui.theme.MyApplicationTheme
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -57,23 +59,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     when (val state = authState) {
-                        is AuthState.Loading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    CircularProgressIndicator()
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text(
-                                        text = "Memuat Sesi Aplikasi...",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                        is AuthState.Unauthenticated -> {
+                        is AuthState.Loading, is AuthState.Unauthenticated -> {
                             com.example.ui.WelcomeDashboardScreen(
                                 viewModel = viewModel,
                                 onStartApp = {
@@ -486,13 +472,11 @@ fun MainAppContent(
                     )
 
                     var fileExists by remember(book.id) { mutableStateOf(pdfFile.exists()) }
-                    // Automated lazy physical file creation helper so it is fully readable out-of-the-box!
+                    // Instant background PDF loader without delay
                     LaunchedEffect(book.id) {
                         if (!pdfFile.exists()) {
-                            // Programmatic background builder rendering for fast demo compatibility!
-                            viewModel.unduhBuku(book.id)
-                            while (!pdfFile.exists()) {
-                                kotlinx.coroutines.delay(100)
+                            withContext(Dispatchers.IO) {
+                                viewModel.generateSamplePdf(book.id)
                             }
                         }
                         fileExists = true

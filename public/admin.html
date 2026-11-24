@@ -1737,8 +1737,13 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       const gradeClass = normalizeBookGradeClass(gradeRaw, cleanTitle);
       const cleanAuthor = (author || 'MTs Alkhairaat Bunyu').toString().trim();
       const cleanUrl = normalizeBookFileUrl(fileUrl);
-      const cleanCategory = normalizeBookCategory(category);
-      const id = "book_" + cleanSubject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
+      let cleanCategory = normalizeBookCategory(category);
+      if (cleanCategory === 'mp' && (cleanUrl.includes('youtube.com') || cleanUrl.includes('youtu.be') || /\.(mp4|webm)($|\?)/i.test(cleanUrl) || cleanTitle.toLowerCase().includes('video'))) {
+        cleanCategory = 'Video';
+      }
+      const isVid = (cleanCategory === 'Video');
+      const prefix = isVid ? 'video_' : 'book_';
+      const id = prefix + cleanSubject.toLowerCase().replace(/[^a-z0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + "_" + Math.floor(Math.random() * 1000);
 
       return {
         id: id,
@@ -1751,10 +1756,10 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         fileUrl: cleanUrl,
         localBlobUrl: "",
         isDownloaded: false,
-        fileSize: 2500000,
-        pageCount: 100,
+        fileSize: isVid ? 15000000 : 2500000,
+        pageCount: isVid ? 1 : 100,
         category: cleanCategory,
-        description: `Buku Pelajaran ${cleanSubject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
+        description: `${isVid ? 'Video Pembelajaran' : 'Buku Pelajaran'} ${cleanSubject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
       };
     }
 
