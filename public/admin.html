@@ -1072,7 +1072,7 @@
           </div>
         </div>
 
-        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-hidden d-flex flex-column" style="flex: 1 1 auto; height: calc(100vh - 60px); min-height: 500px;">
+        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-hidden d-flex flex-column" style="flex: 1 1 auto; min-height: 0; width: 100%;">
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
@@ -1096,8 +1096,8 @@
           <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-none" style="display: none;"></canvas>
           <!-- Continuous Scroll Down Container -->
           <div id="pdfScrollContainer" class="flex-column align-items-center gap-3 w-100 py-3 d-none" style="display: none;"></div>
-          <!-- Fallback / Google Drive Pooled Iframe Container -->
-          <div id="readerIframeContainer" class="w-100 h-100 position-relative bg-white" style="display: none; flex: 1 1 auto; width: 100%; height: 100%;"></div>
+          <!-- Full-Bleed Pooled Iframe Container (fills 100% of modal body with zero top gap) -->
+          <div id="readerIframeContainer" style="display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; margin: 0; background: #202124;"></div>
           <!-- Non-blocking hint toast for cross-origin Google Drive page buttons -->
           <div id="iframeNavToast" class="position-fixed bottom-0 start-50 translate-middle-x mb-3 px-3 py-2 rounded-pill bg-dark text-warning border border-warning shadow-lg small fw-semibold d-none" style="z-index: 1080; max-width: 92vw;">
             <i class="bi bi-info-circle-fill me-1"></i>
@@ -1226,7 +1226,7 @@
           return {
             kind: 'drive',
             streamUrl: `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
-            primaryUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`,
+            primaryUrl: `https://drive.google.com/file/d/${id}/preview`,
             liteUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`
           };
         }
@@ -1373,14 +1373,17 @@
       evictOldestReaderFrameIfNeeded(poolKey);
 
       const iframe = document.createElement('iframe');
-      iframe.className = 'border-0 position-absolute top-0 start-0 bg-light';
+      iframe.className = 'border-0 position-absolute top-0 start-0';
+      iframe.style.inset = '0';
       iframe.style.width = '100%';
       iframe.style.height = '100%';
+      iframe.style.background = '#202124';
       iframe.style.visibility = activateNow ? 'visible' : 'hidden';
       iframe.style.pointerEvents = activateNow ? 'auto' : 'none';
       iframe.style.zIndex = activateNow ? '2' : '0';
       iframe.setAttribute('loading', 'eager');
       iframe.setAttribute('allow', 'fullscreen');
+      iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
 
       const entry = { iframe, url: embedUrl, engine, loaded: false, touchedAt: Date.now() };
       iframe.onload = () => {
@@ -1771,13 +1774,21 @@
     function applyIframeViewMode(mode) {
       const container = document.getElementById('readerIframeContainer');
       if (!container) return;
+      container.style.position = 'absolute';
+      container.style.top = '0';
+      container.style.bottom = '0';
+      container.style.left = '0';
+      container.style.right = '0';
+      container.style.height = '100%';
       if (mode === 'single') {
         container.style.maxWidth = '1120px';
+        container.style.width = '100%';
         container.style.margin = '0 auto';
-        container.style.borderRadius = '6px';
+        container.style.borderRadius = '0';
         container.style.boxShadow = '0 10px 30px rgba(0,0,0,0.6)';
       } else {
         container.style.maxWidth = '100%';
+        container.style.width = '100%';
         container.style.margin = '0';
         container.style.borderRadius = '0';
         container.style.boxShadow = 'none';
@@ -2502,7 +2513,27 @@
       const resolved = resolveTeacherReaderUrls(rawFileUrl);
       const isDriveBook = resolved.kind === 'drive';
 
-      // 1. Check IndexedDB first (covers both offline-saved books and local files uploaded from laptop)
+      // 1. Online Google Drive Book (normal click): restore realtime Google Drive /preview filling 100% of modal body
+      if (!forceOffline && !isOffline && isDriveBook && resolved.primaryUrl) {
+        currentTeacherReaderState = {
+          bookId: book.id,
+          engine: 'primary',
+          streamUrl: resolved.streamUrl,
+          primaryUrl: resolved.primaryUrl,
+          liteUrl: resolved.liteUrl
+        };
+        setReaderModalScrollable(false);
+        if (modalBody) modalBody.classList.remove('py-3');
+        if (iframeContainer) iframeContainer.style.display = 'block';
+        const entry = getOrCreateReaderPooledIframe(resolved.primaryUrl, 'primary', true);
+        if (entry && entry.loaded) {
+          spinner.classList.add('d-none');
+        }
+        applyIframeViewMode(readerViewMode);
+        return;
+      }
+
+      // 2. Check IndexedDB for offline-saved books or local files uploaded from teacher's laptop
       const idbFile = await getPdfFromIDB(book.id);
       if (myToken !== activeAdminReaderToken) return;
 
@@ -2533,53 +2564,6 @@
         spinner.classList.add('d-none');
         showTeacherReaderErrorCard('offline', rawFileUrl);
         return;
-      }
-
-      // 2. Check fast in-memory session cache if previously opened in this tab
-      const cachedMemBytes = teacherMemoryPdfCache.get(book.id);
-      if (cachedMemBytes && cachedMemBytes.byteLength > 0) {
-        try {
-          await renderAdminPdfBytes(cachedMemBytes, book.id, myToken, 'native');
-          return;
-        } catch (_) {
-          teacherMemoryPdfCache.delete(book.id);
-        }
-      }
-
-      // 3. Google Drive PDF -> Fetch bytes directly via CORS & render independently in-app with PDF.js (no Google Drive iframe)
-      if (isDriveBook && resolved.streamUrl) {
-        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        activeAdminFetchController = controller;
-        try {
-          const pdfBytes = await fetchPdfBytesWithProgress(
-            resolved.streamUrl,
-            controller ? controller.signal : undefined,
-            (received, total) => {
-              if (myToken !== activeAdminReaderToken || !loadingText) return;
-              if (total > 0) {
-                const pct = Math.min(99, Math.round((received / total) * 100));
-                loadingText.textContent = `Memuat Buku PDF... ${pct}%`;
-              } else {
-                const mb = (received / (1024 * 1024)).toFixed(1);
-                loadingText.textContent = `Memuat Buku PDF... (${mb} MB)`;
-              }
-            }
-          );
-          if (myToken !== activeAdminReaderToken) return;
-          cacheTeacherMemoryPdf(book.id, pdfBytes);
-          await renderAdminPdfBytes(pdfBytes, book.id, myToken, 'native');
-          return;
-        } catch (driveErr) {
-          if (myToken !== activeAdminReaderToken || (driveErr && driveErr.name === 'AbortError')) return;
-          console.warn('Direct PDF fetch failed:', driveErr);
-          spinner.classList.add('d-none');
-          showTeacherReaderErrorCard('drive-error', rawFileUrl, driveErr.message, book.id);
-          return;
-        } finally {
-          if (activeAdminFetchController === controller) {
-            activeAdminFetchController = null;
-          }
-        }
       }
 
       // 4. Non-Drive URL (e.g., local /pdfs/... uploaded file or direct PDF URL)
