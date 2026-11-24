@@ -1,1 +1,344 @@
-
+[
+  {
+    "id": "stu_chmad_kadafi_612",
+    "no": 1,
+    "nama": "chmad Kadafi",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "chmad Kadafi",
+    "password": "VII-1"
+  },
+  {
+    "id": "stu_dafa_al_ghazali_552",
+    "no": 2,
+    "nama": "Dafa Al Ghazali",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Dafa Al Ghazali",
+    "password": "VII-2"
+  },
+  {
+    "id": "stu_febriyani_587",
+    "no": 3,
+    "nama": "Febriyani",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Febriyani",
+    "password": "VII-3"
+  },
+  {
+    "id": "stu_fitri_ramadhani_728",
+    "no": 4,
+    "nama": "Fitri Ramadhani",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Fitri Ramadhani",
+    "password": "VII-4"
+  },
+  {
+    "id": "stu_muhammad_firzi_y__r__h_561",
+    "no": 5,
+    "nama": "Muhammad Firzi Y. R. H",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Muhammad Firzi Y. R. H",
+    "password": "VII-5"
+  },
+  {
+    "id": "stu_muhammad_hafid_322",
+    "no": 6,
+    "nama": "Muhammad Hafid",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Muhammad Hafid",
+    "password": "VII-6"
+  },
+  {
+    "id": "stu_murniyati_349",
+    "no": 7,
+    "nama": "Murniyati",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Murniyati",
+    "password": "VII-7"
+  },
+  {
+    "id": "stu_muh__sapri_556",
+    "no": 8,
+    "nama": "Muh. Sapri",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Muh. Sapri",
+    "password": "VII-8"
+  },
+  {
+    "id": "stu_riski_ramadan_470",
+    "no": 9,
+    "nama": "Riski Ramadan",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Riski Ramadan",
+    "password": "VII-9"
+  },
+  {
+    "id": "stu_shalshabila_putri_hartono_444",
+    "no": 10,
+    "nama": "Shalshabila Putri Hartono",
+    "kelas": "Kelas VII",
+    "role": "STUDENT",
+    "username": "Shalshabila Putri Hartono",
+    "password": "VII-10"
+  },
+  {
+    "id": "stu_aqeela_zahratussyifa_176",
+    "no": 1,
+    "nama": "Aqeela Zahratussyifa",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Aqeela Zahratussyifa",
+    "password": "VIII-1"
+  },
+  {
+    "id": "stu_bryan_nur_736",
+    "no": 2,
+    "nama": "Bryan Nur",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Bryan Nur",
+    "password": "VIII-2"
+  },
+  {
+    "id": "stu_evan_syahputra_376",
+    "no": 3,
+    "nama": "Evan Syahputra",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Evan Syahputra",
+    "password": "VIII-3"
+  },
+  {
+    "id": "stu_hazrah_nur_fatiyah_176",
+    "no": 4,
+    "nama": "Hazrah Nur Fatiyah",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Hazrah Nur Fatiyah",
+    "password": "VIII-4"
+  },
+  {
+    "id": "stu_muhammad_fadlu_402",
+    "no": 5,
+    "nama": "Muhammad Fadlu",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Fadlu",
+    "password": "VIII-5"
+  },
+  {
+    "id": "stu_muhammad_fadhil_p_662",
+    "no": 6,
+    "nama": "Muhammad Fadhil P",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Fadhil P",
+    "password": "VIII-6"
+  },
+  {
+    "id": "stu_nafiza_qurratu_ainhy_824",
+    "no": 7,
+    "nama": "Nafiza Qurratu Ainhy",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Nafiza Qurratu Ainhy",
+    "password": "VIII-7"
+  },
+  {
+    "id": "stu_nur_safira_wahyuni_781",
+    "no": 8,
+    "nama": "Nur Safira Wahyuni",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Nur Safira Wahyuni",
+    "password": "VIII-8"
+  },
+  {
+    "id": "stu_nabila_safira_359",
+    "no": 9,
+    "nama": "Nabila Safira",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Nabila Safira",
+    "password": "VIII-9"
+  },
+  {
+    "id": "stu_muhammad_rayyan_f_897",
+    "no": 10,
+    "nama": "Muhammad Rayyan F",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Rayyan F",
+    "password": "VIII-10"
+  },
+  {
+    "id": "stu_siti_asmanah_677",
+    "no": 11,
+    "nama": "Siti Asmanah",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Siti Asmanah",
+    "password": "VIII-11"
+  },
+  {
+    "id": "stu_muhammad_fauzan_57",
+    "no": 12,
+    "nama": "Muhammad Fauzan",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Fauzan",
+    "password": "VIII-12"
+  },
+  {
+    "id": "stu_muhammad_akbar_z_296",
+    "no": 13,
+    "nama": "Muhammad Akbar Z",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Akbar Z",
+    "password": "VIII-13"
+  },
+  {
+    "id": "stu_muhammad_akbar_67",
+    "no": 14,
+    "nama": "Muhammad Akbar",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Akbar",
+    "password": "VIII-14"
+  },
+  {
+    "id": "stu_muhammad_revano_182",
+    "no": 15,
+    "nama": "Muhammad Revano",
+    "kelas": "Kelas VIII",
+    "role": "STUDENT",
+    "username": "Muhammad Revano",
+    "password": "VIII-15"
+  },
+  {
+    "id": "stu_al_gezi_achmad_985",
+    "no": 1,
+    "nama": "Al Gezi Achmad",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Al Gezi Achmad",
+    "password": "IX-1"
+  },
+  {
+    "id": "stu_ashilah_azzahrah_603",
+    "no": 2,
+    "nama": "Ashilah Azzahrah",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Ashilah Azzahrah",
+    "password": "IX-2"
+  },
+  {
+    "id": "stu_m__darma_92",
+    "no": 3,
+    "nama": "M. Darma",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "M. Darma",
+    "password": "IX-3"
+  },
+  {
+    "id": "stu_muhammad_ramadhan_77",
+    "no": 4,
+    "nama": "Muhammad Ramadhan",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Muhammad Ramadhan",
+    "password": "IX-4"
+  },
+  {
+    "id": "stu_rido_105",
+    "no": 5,
+    "nama": "Rido",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Rido",
+    "password": "IX-5"
+  },
+  {
+    "id": "stu_rio_529",
+    "no": 6,
+    "nama": "Rio",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Rio",
+    "password": "IX-6"
+  },
+  {
+    "id": "stu_yuzarsyif_842",
+    "no": 7,
+    "nama": "Yuzarsyif",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Yuzarsyif",
+    "password": "IX-7"
+  },
+  {
+    "id": "stu_wulan_purnama_sari_383",
+    "no": 8,
+    "nama": "Wulan Purnama Sari",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Wulan Purnama Sari",
+    "password": "IX-8"
+  },
+  {
+    "id": "stu_muhammad_ikhsan_akbar_884",
+    "no": 9,
+    "nama": "Muhammad Ikhsan Akbar",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Muhammad Ikhsan Akbar",
+    "password": "IX-9"
+  },
+  {
+    "id": "stu_muhammad_syafri_977",
+    "no": 10,
+    "nama": "Muhammad Syafri",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Muhammad Syafri",
+    "password": "IX-10"
+  },
+  {
+    "id": "stu_muhammad_sair_605",
+    "no": 11,
+    "nama": "Muhammad Sair",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Muhammad Sair",
+    "password": "IX-11"
+  },
+  {
+    "id": "stu_rahmat_kurniawan_282",
+    "no": 12,
+    "nama": "Rahmat Kurniawan",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Rahmat Kurniawan",
+    "password": "IX-12"
+  },
+  {
+    "id": "stu_muhammad_ilham_nazar_571",
+    "no": 13,
+    "nama": "Muhammad Ilham Nazar",
+    "kelas": "Kelas IX",
+    "role": "STUDENT",
+    "username": "Muhammad Ilham Nazar",
+    "password": "IX-13"
+  }
+]
