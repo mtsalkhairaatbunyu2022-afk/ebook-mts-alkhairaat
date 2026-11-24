@@ -2213,42 +2213,9 @@
           liteUrl: resolved.liteUrl
         };
 
-        if (window.pdfjsLib && resolved.streamUrl) {
-          try {
-            updateTeacherFastModeBtn('native');
-            const probe = await probeTeacherDrivePdfStream(resolved.streamUrl);
-            const transport = createTeacherDriveRangeTransport(resolved.streamUrl, probe.totalLength, probe.initialData);
-            pdfZoomScale = 1.2;
-            document.getElementById('pdfZoomDisplay').textContent = '120%';
-            const loadingTask = pdfjsLib.getDocument({
-              range: transport,
-              length: probe.totalLength,
-              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
-              cMapPacked: true,
-              standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
-              disableAutoFetch: true,
-              disableStream: true,
-              rangeChunkSize: 65536
-            });
-            currentPdfDoc = await loadingTask.promise;
-            currentBookPageTotal = currentPdfDoc.numPages;
-            document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
-            spinner.classList.add('d-none');
-            if (readerViewMode === 'scroll') {
-              await initScrollDownView();
-            } else {
-              await renderModalPdfPage(1);
-            }
-            return;
-          } catch (driveStreamErr) {
-            console.warn('Native Drive PDF stream fallback to Google Viewer:', driveStreamErr);
-          }
-        }
-
         const fallbackEngine = resolved.liteUrl ? 'lite' : 'primary';
         const fallbackUrl = fallbackEngine === 'lite' ? resolved.liteUrl : resolved.primaryUrl;
         currentTeacherReaderState.engine = fallbackEngine;
-        updateTeacherFastModeBtn(fallbackEngine);
         if (modalBody) modalBody.classList.remove('py-3');
         if (iframeContainer) iframeContainer.style.display = 'block';
         const entry = getOrCreateReaderPooledIframe(fallbackUrl, fallbackEngine, true);

@@ -2813,23 +2813,9 @@
       const loadTitle = document.getElementById("pdfLoadingTitle");
       const loadDesc = document.getElementById("pdfLoadingDesc");
       if (loadTitle) loadTitle.innerText = "Membuka Lembar Buku...";
-      if (loadDesc) loadDesc.innerText = "Merender halaman jernih langsung di dalam aplikasi.";
+      if (loadDesc) loadDesc.innerText = "Memuat halaman buku langsung di dalam aplikasi.";
 
-      if (preferNative) {
-        if (loading) loading.classList.remove("d-none");
-        if (pdfLoadTimeout) clearTimeout(pdfLoadTimeout);
-        pdfLoadTimeout = setTimeout(() => {
-          if (slowHint) slowHint.classList.remove("d-none");
-        }, 4500);
-        renderNativePdfInApp(resolved, bookId || resolved.streamUrl, sessionToken).catch(() => {
-          if (currentPdfReaderState && currentPdfReaderState.sessionToken === sessionToken) {
-            switchPdfReaderEngine("lite");
-          }
-        });
-        pdfModal.show();
-        return;
-      }
-
+      // Use pooled iframe view directly for robust Google Drive embedding (bypasses CORS/range issues on mobile Chrome)
       switchPdfReaderEngine("primary");
       pdfModal.show();
     }
