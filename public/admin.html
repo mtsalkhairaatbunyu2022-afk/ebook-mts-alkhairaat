@@ -1038,8 +1038,15 @@
           <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-block" style="display: none;"></canvas>
           <!-- Continuous Scroll Down Container -->
           <div id="pdfScrollContainer" class="d-flex flex-column align-items-center gap-3 w-100 py-3" style="display: none;"></div>
-          <!-- Fallback Iframe -->
-          <iframe id="readerIframe" src="" class="w-100 h-100 border-0" style="display: none;"></iframe>
+          <!-- Fallback / Google Drive Iframe Container -->
+          <div id="readerIframeContainer" class="w-100 h-100 position-relative" style="display: none; flex: 1 1 auto; min-height: 0; overflow: hidden;">
+            <iframe id="readerIframe" src="" class="w-100 h-100 border-0" style="display: none;"></iframe>
+          </div>
+          <!-- Non-blocking hint toast for cross-origin Google Drive page buttons -->
+          <div id="iframeNavToast" class="position-fixed bottom-0 start-50 translate-middle-x mb-3 px-3 py-2 rounded-pill bg-dark text-warning border border-warning shadow-lg small fw-semibold d-none" style="z-index: 1080; max-width: 92vw;">
+            <i class="bi bi-info-circle-fill me-1"></i>
+            <span id="iframeNavToastText">Pratinjau Google Drive: gunakan gulir/tombol halaman di dalam area PDF. Zoom (+/-) &amp; Mode Tampilan tetap aktif.</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1080,10 +1087,59 @@
 
     let currentPdfDoc = null;
     let currentPdfPage = 1;
+    let currentBookPageTotal = 1;
     let pdfZoomScale = 1.2;
     let readerViewMode = 'scroll'; // Default to continuous scroll-down mode
     let scrollObserver = null;
     let renderedScrollPages = new Set();
+    let iframeToastTimer = null;
+
+    function isIframeReaderActive() {
+      const container = document.getElementById('readerIframeContainer');
+      const iframe = document.getElementById('readerIframe');
+      return !currentPdfDoc && container && container.style.display !== 'none' && iframe && iframe.style.display !== 'none';
+    }
+
+    function showIframeNavHint(message) {
+      const toast = document.getElementById('iframeNavToast');
+      const toastText = document.getElementById('iframeNavToastText');
+      if (!toast) return;
+      if (toastText && message) toastText.textContent = message;
+      toast.classList.remove('d-none');
+      if (iframeToastTimer) clearTimeout(iframeToastTimer);
+      iframeToastTimer = setTimeout(() => {
+        toast.classList.add('d-none');
+      }, 4000);
+    }
+
+    function applyIframeZoom() {
+      const iframe = document.getElementById('readerIframe');
+      if (!iframe || iframe.style.display === 'none') return;
+      const scale = Math.max(0.5, Math.min(2.4, pdfZoomScale));
+      iframe.style.width = `${(100 / scale).toFixed(4)}%`;
+      iframe.style.height = `${(100 / scale).toFixed(4)}%`;
+      iframe.style.transform = `scale(${scale})`;
+      iframe.style.transformOrigin = 'top left';
+      const zoomDisp = document.getElementById('pdfZoomDisplay');
+      if (zoomDisp) zoomDisp.textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    function applyIframeViewMode(mode) {
+      const container = document.getElementById('readerIframeContainer');
+      if (!container) return;
+      if (mode === 'single') {
+        container.style.maxWidth = '860px';
+        container.style.margin = '8px auto';
+        container.style.borderRadius = '8px';
+        container.style.boxShadow = '0 10px 30px rgba(0,0,0,0.6)';
+      } else {
+        container.style.maxWidth = '100%';
+        container.style.margin = '0';
+        container.style.borderRadius = '0';
+        container.style.boxShadow = 'none';
+      }
+      applyIframeZoom();
+    }
 
     async function renderModalPdfPage(num) {
       if (!currentPdfDoc) return;
@@ -1273,6 +1329,11 @@
           scrollBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
         }
 
+        if (isIframeReaderActive()) {
+          applyIframeViewMode('scroll');
+          return;
+        }
+
         if (singleCanvas) singleCanvas.style.display = 'none';
         initScrollDownView();
       } else {
@@ -1283,6 +1344,11 @@
         if (singleBtn) {
           singleBtn.classList.remove('btn-outline-light', 'text-white');
           singleBtn.classList.add('btn-warning', 'text-dark', 'fw-bold');
+        }
+
+        if (isIframeReaderActive()) {
+          applyIframeViewMode('single');
+          return;
         }
 
         if (scrollObserver) scrollObserver.disconnect();
@@ -1403,18 +1469,25 @@
       const spinner = document.getElementById('pdfLoadingSpinner');
       const canvas = document.getElementById('pdfViewerCanvas');
       const iframe = document.getElementById('readerIframe');
+      const iframeContainer = document.getElementById('readerIframeContainer');
       const errorCard = document.getElementById('pdfErrorCard');
+      const toast = document.getElementById('iframeNavToast');
+      if (toast) toast.classList.add('d-none');
 
       spinner.classList.remove('d-none');
       canvas.style.display = 'none';
       iframe.style.display = 'none';
+      if (iframeContainer) iframeContainer.style.display = 'none';
       const scrollContainer = document.getElementById('pdfScrollContainer');
       if (scrollContainer) {
         scrollContainer.style.display = 'none';
         scrollContainer.innerHTML = '';
       }
       const modalBody = document.getElementById('readerModalBody');
-      if (modalBody) modalBody.scrollTop = 0;
+      if (modalBody) {
+        modalBody.scrollTop = 0;
+        modalBody.classList.add('py-3');
+      }
       if (errorCard) errorCard.style.display = 'none';
 
       const modal = new bootstrap.Modal(document.getElementById('webReaderModal'));
@@ -1422,7 +1495,10 @@
 
       currentPdfDoc = null;
       currentPdfPage = 1;
-      pdfZoomScale = 1.2;
+      currentBookPageTotal = Math.max(1, parseInt(book.pageCount, 10) || 1);
+      pdfZoomScale = 1.0;
+      document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentBookPageTotal}`;
+      document.getElementById('pdfZoomDisplay').textContent = '100%';
 
       // Check IndexedDB first for local file uploaded from laptop
       let idbFile = await getPdfFromIDB(book.id);
@@ -1448,16 +1524,23 @@
           driveEmbedUrl = targetUrl.replace(/\/view.*$/, '/preview');
         }
         spinner.classList.add('d-none');
+        if (modalBody) modalBody.classList.remove('py-3');
+        if (iframeContainer) iframeContainer.style.display = 'block';
         iframe.src = driveEmbedUrl;
         iframe.style.display = 'block';
+        applyIframeViewMode(readerViewMode);
         return;
       }
 
       // Try rendering with PDF.js client-side
       if (window.pdfjsLib && targetUrl) {
         try {
+          pdfZoomScale = 1.2;
+          document.getElementById('pdfZoomDisplay').textContent = '120%';
           const loadingTask = pdfjsLib.getDocument(targetUrl);
           currentPdfDoc = await loadingTask.promise;
+          currentBookPageTotal = currentPdfDoc.numPages;
+          document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
           spinner.classList.add('d-none');
           if (readerViewMode === 'scroll') {
             await initScrollDownView();
@@ -1470,8 +1553,12 @@
           // If PDF.js canvas fetch fails on Blob, use native Blob iframe
           if (targetUrl && targetUrl.startsWith('blob:')) {
             spinner.classList.add('d-none');
+            if (modalBody) modalBody.classList.remove('py-3');
+            if (iframeContainer) iframeContainer.style.display = 'block';
             iframe.src = targetUrl;
             iframe.style.display = 'block';
+            pdfZoomScale = 1.0;
+            applyIframeViewMode(readerViewMode);
             return;
           }
         }
@@ -1497,6 +1584,10 @@
           } else {
             renderModalPdfPage(currentPdfPage);
           }
+        } else if (isIframeReaderActive()) {
+          const iframe = document.getElementById('readerIframe');
+          if (iframe) iframe.focus();
+          showIframeNavHint('Pratinjau Google Drive: gunakan gulir atau tombol panah di dalam area PDF untuk pindah halaman.');
         }
       });
 
@@ -1510,24 +1601,38 @@
           } else {
             renderModalPdfPage(currentPdfPage);
           }
+        } else if (isIframeReaderActive()) {
+          const iframe = document.getElementById('readerIframe');
+          if (iframe) iframe.focus();
+          showIframeNavHint('Pratinjau Google Drive: gunakan gulir atau tombol panah di dalam area PDF untuk pindah halaman.');
         }
       });
 
       document.getElementById('pdfZoomInBtn').addEventListener('click', () => {
-        pdfZoomScale += 0.2;
+        if (pdfZoomScale < 2.4) {
+          pdfZoomScale = Math.round((pdfZoomScale + 0.2) * 10) / 10;
+        }
         document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
-        if (readerViewMode === 'scroll') {
-          renderedScrollPages.clear();
-          initScrollDownView();
-        } else {
-          renderModalPdfPage(currentPdfPage);
+        if (isIframeReaderActive()) {
+          applyIframeZoom();
+        } else if (currentPdfDoc) {
+          if (readerViewMode === 'scroll') {
+            renderedScrollPages.clear();
+            initScrollDownView();
+          } else {
+            renderModalPdfPage(currentPdfPage);
+          }
         }
       });
 
       document.getElementById('pdfZoomOutBtn').addEventListener('click', () => {
-        if (pdfZoomScale > 0.4) {
-          pdfZoomScale -= 0.2;
-          document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
+        if (pdfZoomScale > 0.5) {
+          pdfZoomScale = Math.max(0.5, Math.round((pdfZoomScale - 0.2) * 10) / 10);
+        }
+        document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
+        if (isIframeReaderActive()) {
+          applyIframeZoom();
+        } else if (currentPdfDoc) {
           if (readerViewMode === 'scroll') {
             renderedScrollPages.clear();
             initScrollDownView();
@@ -1545,7 +1650,21 @@
 
       // Stop iframe loading and cleanup scroll observer when modal is closed
       document.getElementById('webReaderModal').addEventListener('hidden.bs.modal', function () {
-        document.getElementById('readerIframe').src = '';
+        const iframe = document.getElementById('readerIframe');
+        const iframeContainer = document.getElementById('readerIframeContainer');
+        const toast = document.getElementById('iframeNavToast');
+        if (iframe) {
+          iframe.src = '';
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.transform = 'none';
+        }
+        if (iframeContainer) {
+          iframeContainer.style.display = 'none';
+          iframeContainer.style.maxWidth = '100%';
+          iframeContainer.style.margin = '0';
+        }
+        if (toast) toast.classList.add('d-none');
         if (scrollObserver) scrollObserver.disconnect();
         const scrollContainer = document.getElementById('pdfScrollContainer');
         if (scrollContainer) scrollContainer.innerHTML = '';
