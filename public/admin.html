@@ -1072,7 +1072,7 @@
           </div>
         </div>
 
-        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex flex-column" style="flex: 1 1 auto; min-height: 0;">
+        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-hidden d-flex flex-column" style="flex: 1 1 auto; height: calc(100vh - 60px); min-height: 500px;">
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
@@ -1097,7 +1097,7 @@
           <!-- Continuous Scroll Down Container -->
           <div id="pdfScrollContainer" class="flex-column align-items-center gap-3 w-100 py-3 d-none" style="display: none;"></div>
           <!-- Fallback / Google Drive Pooled Iframe Container -->
-          <div id="readerIframeContainer" class="w-100 h-100 position-relative" style="display: none; flex: 1 1 auto; min-height: 0; overflow: hidden;"></div>
+          <div id="readerIframeContainer" class="w-100 h-100 position-relative bg-white" style="display: none; flex: 1 1 auto; width: 100%; height: 100%;"></div>
           <!-- Non-blocking hint toast for cross-origin Google Drive page buttons -->
           <div id="iframeNavToast" class="position-fixed bottom-0 start-50 translate-middle-x mb-3 px-3 py-2 rounded-pill bg-dark text-warning border border-warning shadow-lg small fw-semibold d-none" style="z-index: 1080; max-width: 92vw;">
             <i class="bi bi-info-circle-fill me-1"></i>
