@@ -105,7 +105,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // Search and Filters Flows
     val searchQueryState = MutableStateFlow("")
     val selectedGradeFilterState = MutableStateFlow("")
-    val selectedCategoryFilterState = MutableStateFlow("")
+    val selectedCategoryFilterState = MutableStateFlow("Buku")
 
     var searchQuery: String
         get() = searchQueryState.value

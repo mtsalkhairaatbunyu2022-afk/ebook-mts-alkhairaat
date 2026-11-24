@@ -247,109 +247,147 @@ class Repository(
         }
     }
 
+    private fun buildCandidateJsonUrls(baseUrl: String, fileName: String): List<String> {
+        val candidateUrls = mutableListOf<String>()
+        val trimmedBase = baseUrl.trim()
+        if (trimmedBase.isNotBlank()) {
+            val cleanRoot = trimmedBase
+                .removeSuffix("/catalog.json")
+                .removeSuffix("/video.json")
+                .trimEnd('/')
+            if (cleanRoot.isNotBlank()) {
+                candidateUrls.add("$cleanRoot/$fileName")
+            }
+        }
+        val cloudflareUrl = "https://ebook-mts-alkhairaat.pages.dev/$fileName"
+        if (!candidateUrls.contains(cloudflareUrl)) {
+            candidateUrls.add(cloudflareUrl)
+        }
+        val studioUrl = "https://ais-dev-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app/$fileName"
+        if (!candidateUrls.contains(studioUrl)) {
+            candidateUrls.add(studioUrl)
+        }
+        return candidateUrls
+    }
+
+    private fun fetchJsonArrayWithFallback(baseUrl: String, fileName: String, arrayKey: String): Pair<JSONArray?, String> {
+        val candidateUrls = buildCandidateJsonUrls(baseUrl, fileName)
+        var jsonString: String? = null
+        var sourceUsed = ""
+
+        for (targetUrl in candidateUrls) {
+            try {
+                Log.d("Repository", "Mencoba ambil $fileName dari: $targetUrl")
+                val url = URL(targetUrl)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                    requestMethod = "GET"
+                    setRequestProperty("Accept", "application/json")
+                }
+                if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                    jsonString = conn.inputStream.bufferedReader().use { it.readText() }
+                    sourceUsed = targetUrl
+                    break
+                }
+            } catch (netErr: Exception) {
+                Log.d("Repository", "Koneksi ke $targetUrl gagal: ${netErr.message}")
+            }
+        }
+
+        if (jsonString.isNullOrBlank()) {
+            try {
+                jsonString = context.assets.open(fileName).bufferedReader().use { it.readText() }
+                sourceUsed = "assets/$fileName"
+                Log.d("Repository", "Menggunakan fallback offline $fileName dari assets")
+            } catch (_: Exception) {
+                Log.d("Repository", "Asset $fileName tidak ditemukan atau kosong")
+            }
+        }
+
+        if (jsonString.isNullOrBlank()) {
+            return null to ""
+        }
+
+        val parsedArray = if (jsonString.trim().startsWith("[")) {
+            JSONArray(jsonString)
+        } else {
+            val jsonObject = JSONObject(jsonString)
+            jsonObject.optJSONArray(arrayKey) ?: JSONArray()
+        }
+        return parsedArray to sourceUsed
+    }
+
     suspend fun syncRemoteCatalog(baseUrl: String): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val candidateUrls = mutableListOf<String>()
-            val trimmedBase = baseUrl.trim()
-            if (trimmedBase.isNotBlank()) {
-                val normalized = when {
-                    trimmedBase.endsWith("/catalog.json") -> trimmedBase
-                    trimmedBase.endsWith("/") -> "${trimmedBase}catalog.json"
-                    else -> "$trimmedBase/catalog.json"
-                }
-                candidateUrls.add(normalized)
-            }
-            if (!candidateUrls.contains("https://ebook-mts-alkhairaat.pages.dev/catalog.json")) {
-                candidateUrls.add("https://ebook-mts-alkhairaat.pages.dev/catalog.json")
-            }
-            if (!candidateUrls.contains("https://ais-dev-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app/catalog.json")) {
-                candidateUrls.add("https://ais-dev-yvu574sk4ihganlp4r7znz-70058559819.asia-southeast1.run.app/catalog.json")
-            }
+            val (catalogArray, catalogSource) = fetchJsonArrayWithFallback(baseUrl, "catalog.json", "books")
+            val (videoArray, videoSource) = fetchJsonArrayWithFallback(baseUrl, "video.json", "videos")
 
-            var jsonString: String? = null
-            var sourceUsed = ""
-
-            for (targetUrl in candidateUrls) {
-                try {
-                    Log.d("Repository", "Mencoba ambil catalog dari: $targetUrl")
-                    val url = URL(targetUrl)
-                    val conn = (url.openConnection() as HttpURLConnection).apply {
-                        connectTimeout = 4000
-                        readTimeout = 4000
-                        requestMethod = "GET"
-                        setRequestProperty("Accept", "application/json")
-                    }
-                    if (conn.responseCode == HttpURLConnection.HTTP_OK) {
-                        jsonString = conn.inputStream.bufferedReader().use { it.readText() }
-                        sourceUsed = targetUrl
-                        break
-                    }
-                } catch (netErr: Exception) {
-                    Log.d("Repository", "Koneksi ke $targetUrl gagal: ${netErr.message}")
-                }
-            }
-
-            // If network fails (e.g. offline/airplane mode/emulator network block), fallback to asset catalog.json
-            if (jsonString.isNullOrBlank()) {
-                try {
-                    jsonString = context.assets.open("catalog.json").bufferedReader().use { it.readText() }
-                    sourceUsed = "assets/catalog.json"
-                    Log.d("Repository", "Menggunakan fallback offline catalog dari assets")
-                } catch (assetErr: Exception) {
-                    Log.d("Repository", "Asset catalog.json tidak ditemukan atau kosong")
-                }
-            }
-
-            if (jsonString.isNullOrBlank()) {
+            if (catalogArray == null && videoArray == null) {
                 return@withContext Result.failure(Exception("Tidak dapat terhubung ke server katalog."))
             }
 
-            val jsonArray = if (jsonString.trim().startsWith("[")) {
-                JSONArray(jsonString)
-            } else {
-                val jsonObject = JSONObject(jsonString)
-                jsonObject.optJSONArray("books") ?: JSONArray()
-            }
-
             val deletedIds = getDeletedBookIds()
-            val remoteBookIds = mutableSetOf<String>()
+            val remoteCatalogIds = mutableSetOf<String>()
+            val remoteVideoIds = mutableSetOf<String>()
             var syncedCount = 0
 
-            for (i in 0 until jsonArray.length()) {
-                val item = jsonArray.getJSONObject(i)
-                val bookId = item.optString("id", "").trim()
-                if (bookId.isNotBlank()) {
-                    if (deletedIds.contains(bookId)) {
-                        continue
+            suspend fun upsertFromArray(jsonArray: JSONArray, defaultCategory: String, defaultTitle: String, defaultDesc: String, idCollector: MutableSet<String>) {
+                for (i in 0 until jsonArray.length()) {
+                    val item = jsonArray.getJSONObject(i)
+                    val bookId = item.optString("id", "").trim()
+                    if (bookId.isNotBlank()) {
+                        if (deletedIds.contains(bookId)) {
+                            continue
+                        }
+                        idCollector.add(bookId)
+                        val existing = bookDao.getBookByIdSync(bookId)
+                        val book = BookEntity(
+                            id = bookId,
+                            title = item.optString("title", defaultTitle),
+                            author = item.optString("author", "MTs Al-Khairaat Bunyu"),
+                            subject = item.optString("subject", "Mata Pelajaran"),
+                            gradeClass = item.optString("gradeClass", "Kelas VII"),
+                            teacherOwner = item.optString("teacherOwner", "Guru Sekolah"),
+                            year = item.optString("year", "2026"),
+                            fileUrl = item.optString("fileUrl", ""),
+                            localFilePath = existing?.localFilePath,
+                            isDownloaded = existing?.isDownloaded ?: false,
+                            fileSize = item.optLong("fileSize", 0L),
+                            pageCount = item.optInt("pageCount", if (defaultCategory == "Video") 1 else 100),
+                            category = item.optString("category", defaultCategory).ifBlank { defaultCategory },
+                            description = item.optString("description", defaultDesc),
+                            isOcrReady = true
+                        )
+                        bookDao.insertBook(book)
+                        syncedCount++
                     }
-                    remoteBookIds.add(bookId)
-                    val existing = bookDao.getBookByIdSync(bookId)
-                    val book = BookEntity(
-                        id = bookId,
-                        title = item.optString("title", "Buku Baru"),
-                        author = item.optString("author", "MTs Al-Khairaat Bunyu"),
-                        subject = item.optString("subject", "Mata Pelajaran"),
-                        gradeClass = item.optString("gradeClass", "Kelas VII"),
-                        teacherOwner = item.optString("teacherOwner", "Guru Sekolah"),
-                        year = item.optString("year", "2026"),
-                        fileUrl = item.optString("fileUrl", ""),
-                        localFilePath = existing?.localFilePath,
-                        isDownloaded = existing?.isDownloaded ?: false,
-                        fileSize = item.optLong("fileSize", 0L),
-                        pageCount = item.optInt("pageCount", 100),
-                        category = item.optString("category", "mp"),
-                        description = item.optString("description", "Buku Bacaan Siswa"),
-                        isOcrReady = true
-                    )
-                    bookDao.insertBook(book)
-                    syncedCount++
                 }
             }
 
-            // Remove local books that are not in the remote catalog (unless created manually via app upload)
+            val catalogLoaded = catalogArray != null
+            val videoLoaded = videoArray != null
+
+            if (catalogArray != null) {
+                upsertFromArray(catalogArray, "mp", "Buku Baru", "Buku Bacaan Siswa", remoteCatalogIds)
+            }
+            if (videoArray != null) {
+                upsertFromArray(videoArray, "Video", "Video Pembelajaran", "Video Pembelajaran Siswa", remoteVideoIds)
+            }
+
+            // Remove stale local items ONLY within their own source (catalog.json vs video.json) so books & videos never wipe each other out
             val currentBooks = bookDao.getAllBooks().firstOrNull() ?: emptyList()
             for (cb in currentBooks) {
-                if (!cb.id.startsWith("custom_") && !remoteBookIds.contains(cb.id)) {
+                if (cb.id.startsWith("custom_")) continue
+                val isVideo = cb.category.equals("Video", ignoreCase = true) ||
+                    cb.fileUrl.contains("youtube.com", ignoreCase = true) ||
+                    cb.fileUrl.contains("youtu.be", ignoreCase = true)
+                val shouldDelete = if (isVideo) {
+                    videoLoaded && !remoteVideoIds.contains(cb.id) && !remoteCatalogIds.contains(cb.id)
+                } else {
+                    catalogLoaded && !remoteCatalogIds.contains(cb.id)
+                }
+                if (shouldDelete) {
                     bookDao.deleteBookById(cb.id)
                     try {
                         val f = File(context.filesDir, "${cb.id}.pdf")
@@ -358,7 +396,8 @@ class Repository(
                 }
             }
 
-            logAudit("system", "Sinkronisasi Server", "SYNC_KATALOG", "Sinkronisasi berhasil: $syncedCount buku diperbarui dari $sourceUsed.")
+            val sources = listOf(catalogSource, videoSource).filter { it.isNotBlank() }.joinToString(" + ")
+            logAudit("system", "Sinkronisasi Server", "SYNC_KATALOG", "Sinkronisasi berhasil: $syncedCount materi diperbarui dari $sources.")
             Result.success(syncedCount)
         } catch (e: Exception) {
             Log.w("Repository", "Gagal sinkronisasi katalog: ${e.message}")

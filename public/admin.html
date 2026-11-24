@@ -326,11 +326,16 @@
 
   <div class="container my-4">
 
-    <!-- Top Navigation Tabs: 1. Kelola Katalog, 2. Impor Massal Siswa, 3. Ruang Baca Guru -->
+    <!-- Top Navigation Tabs: 1. Kelola Katalog Buku, 2. Kelola Video, 3. Impor Massal Siswa, 4. Impor Massal Guru, 5. Ruang Baca Guru -->
     <ul class="nav nav-tabs mb-4 bg-white p-2 rounded-3 shadow-sm" id="guruTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active fs-6" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalogSection" type="button" role="tab">
           <i class="bi bi-gear-wide-connected text-primary me-2 fs-5"></i>Kelola Katalog (catalog.json)
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fs-6" id="videos-tab" data-bs-toggle="tab" data-bs-target="#videosSection" type="button" role="tab">
+          <i class="bi bi-camera-reels-fill text-danger me-2 fs-5"></i>Kelola Video (video.json)
         </button>
       </li>
       <li class="nav-item" role="presentation">
@@ -488,6 +493,185 @@
               </div>
             </div>
 
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 1B: KELOLA VIDEO PEMBELAJARAN (video.json) -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="videosSection" role="tabpanel">
+
+        <!-- Top Action Bar for video.json Sync & Import -->
+        <div class="card card-custom p-3 mb-4 bg-white border-start border-danger border-4">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-camera-reels-fill text-danger me-2"></i>Kelola &amp; Buat File <code>video.json</code> (Terpisah dari Buku)</h6>
+              <p class="text-muted small mb-0">Salin atau unduh kode <code>video.json</code> di sini lalu tempel ke file <code>public/video.json</code> di GitHub agar buku pelajaran di <code>catalog.json</code> tidak ikut tertimpa.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button id="fetchLiveVideoBtn" class="btn btn-outline-danger btn-sm fw-bold">
+                <i class="bi bi-cloud-download me-1"></i> Muat Dari Cloudflare Live
+              </button>
+              <label class="btn btn-outline-secondary btn-sm fw-bold mb-0">
+                <i class="bi bi-upload me-1"></i> Impor File video.json
+                <input type="file" id="importVideoJsonFile" accept=".json" class="d-none">
+              </label>
+              <button id="resetVideoCatalogBtn" class="btn btn-outline-danger btn-sm fw-bold">
+                <i class="bi bi-trash3 me-1"></i> Kosongkan &amp; Buat Baru
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+
+          <!-- Left Column: Tambah Video Cepat + Batch Excel / Paste -->
+          <div class="col-lg-6">
+            <!-- Form Tambah 1 Video Cepat -->
+            <div class="card card-custom p-4 bg-white border border-danger border-2 mb-4">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-play-btn-fill text-danger fs-3"></i>
+                <h5 class="fw-bold mb-0 text-dark">Tambah 1 Video Pembelajaran</h5>
+              </div>
+              <p class="text-muted small mb-3">Mendukung tautan <strong>YouTube</strong>, <strong>Google Drive</strong>, atau link video langsung (<code>.mp4</code>).</p>
+
+              <div class="mb-2">
+                <label for="singleVideoTitle" class="form-label fw-semibold small mb-1">Judul Video Pembelajaran</label>
+                <input type="text" id="singleVideoTitle" class="form-control form-control-sm" placeholder="Contoh: Video: Percakapan Bahasa Arab Kelas VIII">
+              </div>
+
+              <div class="row g-2 mb-2">
+                <div class="col-sm-6">
+                  <label for="singleVideoSubject" class="form-label fw-semibold small mb-1">Mata Pelajaran</label>
+                  <input type="text" id="singleVideoSubject" class="form-control form-control-sm" placeholder="Contoh: Bahasa Arab">
+                </div>
+                <div class="col-sm-6">
+                  <label for="singleVideoGrade" class="form-label fw-semibold small mb-1">Jenjang Kelas</label>
+                  <select id="singleVideoGrade" class="form-select form-select-sm">
+                    <option value="Kelas VII">Kelas VII</option>
+                    <option value="Kelas VIII" selected>Kelas VIII</option>
+                    <option value="Kelas IX">Kelas IX</option>
+                    <option value="Semua Kelas">Semua Kelas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <label for="singleVideoAuthor" class="form-label fw-semibold small mb-1">Guru / Penyusun</label>
+                <input type="text" id="singleVideoAuthor" class="form-control form-control-sm" value="Guru MTs Al-Khairaat Bunyu" placeholder="Nama Guru / Sumber Video">
+              </div>
+
+              <div class="mb-3">
+                <label for="singleVideoUrl" class="form-label fw-semibold small mb-1">Link URL Video (YouTube / Google Drive / MP4)</label>
+                <input type="url" id="singleVideoUrl" class="form-control form-control-sm" placeholder="https://www.youtube.com/watch?v=...">
+              </div>
+
+              <button id="addSingleVideoBtn" type="button" class="btn btn-danger w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-plus-circle-fill"></i>
+                <span>Tambahkan Video ke video.json</span>
+              </button>
+            </div>
+
+            <!-- Form Tambah Video Massal (Excel / Paste) -->
+            <div class="card card-custom p-4 bg-white border border-secondary-subtle">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-collection-play-fill text-danger fs-4"></i>
+                <h5 class="fw-bold mb-0 text-dark">Tambah Video Massal (Excel / Paste)</h5>
+              </div>
+              <p class="text-muted small">Unggah Excel (<code>.xlsx</code>) atau paste daftar video sekaligus dengan urutan kolom:</p>
+              <div class="alert alert-light border font-monospace fs-8 mb-3 py-2 bg-light">
+                Judul Video | Mata Pelajaran | Jenjang Kelas | Guru/Penyusun | Link Video
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold text-secondary small">1. Unduh Format Template:</span>
+                <button id="btnDownloadVideoTemplate" type="button" class="btn btn-outline-danger btn-sm fw-bold shadow-sm" onclick="downloadVideoTemplateExcel()">
+                  <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Template Excel Video (.xlsx)
+                </button>
+              </div>
+
+              <div class="upload-excel-box mb-3 py-3" onclick="document.getElementById('excelVideoFileInput').click()">
+                <i class="bi bi-file-earmark-excel-fill text-danger fs-2"></i>
+                <h6 class="fw-bold text-dark mt-2 mb-1" id="excelVideoUploadTitle">2. Unggah File Excel Video (.xlsx / .csv)</h6>
+                <p class="text-muted fs-8 mb-0" id="excelVideoUploadDesc">Kolom: Judul Video | Mata Pelajaran | Jenjang | Guru | Link YouTube/Drive</p>
+                <input type="file" id="excelVideoFileInput" accept=".xlsx, .xls, .csv" class="d-none">
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-semibold text-secondary small">Atau Paste Daftar Video (Multi-Baris):</span>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-danger" onclick="loadSampleVideoData()">Isi Contoh Format</button>
+              </div>
+
+              <div class="mb-3">
+                <textarea id="multiVideoInput" class="form-control fs-7 font-monospace" rows="4" placeholder="Judul Video | Mapel | Kelas | Guru | Link YouTube/Drive&#10;Video: Percakapan Bahasa Arab | bahasa arab | VIII | Guru MTs Al-Khairaat | https://www.youtube.com/watch?v=0h9g9_3H-X4"></textarea>
+              </div>
+
+              <button id="processMultiVideoBtn" type="button" class="btn btn-outline-danger w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+                <span>Proses &amp; Tambahkan Semua Video ke video.json</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Output Kode video.json & Daftar Video -->
+          <div class="col-lg-6">
+            <div class="card card-custom p-4 bg-white mb-4 shadow-sm border border-danger border-2">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-filetype-json text-danger fs-3"></i>
+                  <h5 class="fw-bold mb-0 text-dark">Hasil Kode <code>video.json</code></h5>
+                </div>
+                <span id="videoCountBadge" class="badge bg-danger fs-6 px-3 py-2 rounded-pill">0 Video Tersimpan</span>
+              </div>
+              <p class="text-muted small mb-3">Salin kode di bawah ini lalu paste ke file <code>public/video.json</code> di GitHub.</p>
+
+              <button id="generateVideoJsonNowBtn" type="button" class="btn btn-warning text-dark w-100 py-2 mb-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>⚡ Buat / Refresh Kode video.json Sekarang</span>
+              </button>
+
+              <pre id="videoJsonViewer" class="json-output p-3 mb-3"></pre>
+
+              <div class="d-flex gap-2">
+                <button id="copyVideoJsonBtn" type="button" class="btn btn-danger flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-clipboard-check fs-5"></i>
+                  <span>Salin Kode video.json</span>
+                </button>
+                <button id="downloadVideoJsonBtn" type="button" class="btn btn-dark flex-fill py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-download fs-5"></i>
+                  <span>Unduh File video.json</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Daftar Video Terdaftar -->
+            <div class="card card-custom p-4 bg-white mb-4">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-film text-danger fs-4"></i>
+                  <h5 class="fw-bold mb-0 text-dark">Daftar Video Terdaftar dalam video.json</h5>
+                </div>
+              </div>
+
+              <div class="table-responsive" style="max-height: 240px; overflow-y: auto;">
+                <table class="table table-hover align-middle fs-7 mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Judul Video</th>
+                      <th>Mata Pelajaran</th>
+                      <th>Kelas</th>
+                      <th>Sumber</th>
+                      <th class="text-end">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="videoTableBody">
+                    <!-- Row items rendered by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -866,8 +1050,16 @@
     // Initialize PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // Initial catalog (starts empty as requested)
+    // Initial catalog & video states + live server snapshots to prevent accidental data loss
       let catalog = [];
+      let liveCatalogSnapshot = [];
+      let explicitlyDeletedIds = new Set();
+      let catalogExplicitlyReset = false;
+
+      let videoCatalog = [];
+      let liveVideosSnapshot = [];
+      let explicitlyDeletedVideoIds = new Set();
+      let videoCatalogExplicitlyReset = false;
 
       function enterMainApp() {
         document.getElementById('landingPageView').classList.add('d-none');
@@ -1391,6 +1583,13 @@
     // =====================================
     // CATALOG GURU VIEW FUNCTIONS
     // =====================================
+    function isVideoCatalogItem(item) {
+      if (!item) return false;
+      const cat = (item.category || '').toString().toLowerCase();
+      const url = (item.fileUrl || '').toString().toLowerCase();
+      return cat === 'video' || url.includes('youtube.com') || url.includes('youtu.be');
+    }
+
     function updateView() {
       const jsonViewer = document.getElementById('jsonViewer');
       const bookCountBadge = document.getElementById('bookCountBadge');
@@ -1405,7 +1604,11 @@
       }
 
       jsonViewer.textContent = JSON.stringify(catalog, null, 2);
-      bookCountBadge.textContent = `${catalog.length} Buku Tersimpan`;
+      const videoCount = catalog.filter(isVideoCatalogItem).length;
+      const bookCount = catalog.length - videoCount;
+      bookCountBadge.textContent = videoCount > 0
+        ? `${bookCount} Buku • ${videoCount} Video`
+        : `${catalog.length} Buku Tersimpan`;
 
       // Render Table Rows in Guru tab
       bookTableBody.innerHTML = '';
@@ -1413,12 +1616,16 @@
         bookTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada buku dalam katalog. Silakan isi form di sebelah kiri.</td></tr>`;
       } else {
         catalog.forEach((book, index) => {
+          const isVid = isVideoCatalogItem(book);
+          const typeBadge = isVid
+            ? `<span class="badge bg-danger-subtle text-danger ms-1">🎬 Video</span>`
+            : `<span class="badge bg-primary-subtle text-primary ms-1">📚 Buku</span>`;
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td class="fw-semibold text-dark">${book.title}</td>
+            <td class="fw-semibold text-dark">${book.title} ${typeBadge}</td>
             <td><span class="badge bg-light text-dark border">${book.subject}</span></td>
             <td><span class="badge bg-info-subtle text-info-emphasis">${book.gradeClass}</span></td>
-            <td>${book.pageCount} hlm</td>
+            <td>${isVid ? 'Video' : (book.pageCount + ' hlm')}</td>
             <td class="text-end">
               <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteBook(${index})">
                 <i class="bi bi-trash"></i>
@@ -1435,8 +1642,67 @@
 
     function deleteBook(index) {
       if (confirm(`Hapus "${catalog[index].title}" dari katalog?`)) {
-        catalog.splice(index, 1);
+        const removed = catalog.splice(index, 1)[0];
+        if (removed && removed.id) explicitlyDeletedIds.add(removed.id);
         updateView();
+      }
+    }
+
+    // =====================================
+    // VIDEO CATALOG (video.json) VIEW FUNCTIONS
+    // =====================================
+    function getVideoSourceLabel(url) {
+      const u = (url || '').toLowerCase();
+      if (u.includes('youtube.com') || u.includes('youtu.be')) return 'YouTube';
+      if (u.includes('drive.google.com') || u.includes('docs.google.com')) return 'Google Drive';
+      if (/\.(mp4|webm|ogg)($|\?)/i.test(u)) return 'Video MP4';
+      return 'Link Video';
+    }
+
+    function updateVideoView() {
+      const jsonViewer = document.getElementById('videoJsonViewer');
+      const videoCountBadge = document.getElementById('videoCountBadge');
+      const videoTableBody = document.getElementById('videoTableBody');
+      if (!jsonViewer || !videoCountBadge || !videoTableBody) return;
+
+      try {
+        localStorage.setItem('guru_videos_override', JSON.stringify(videoCatalog));
+        localStorage.setItem('guru_videos_has_saved', 'true');
+      } catch (e) {
+        console.warn('Gagal menyimpan daftar video ke localStorage:', e);
+      }
+
+      jsonViewer.textContent = JSON.stringify(videoCatalog, null, 2);
+      videoCountBadge.textContent = `${videoCatalog.length} Video Tersimpan`;
+
+      videoTableBody.innerHTML = '';
+      if (videoCatalog.length === 0) {
+        videoTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada video dalam <code>video.json</code>. Silakan tambah melalui form di sebelah kiri.</td></tr>`;
+      } else {
+        videoCatalog.forEach((vid, index) => {
+          const tr = document.createElement('tr');
+          const sourceLabel = getVideoSourceLabel(vid.fileUrl);
+          tr.innerHTML = `
+            <td class="fw-semibold text-dark">${vid.title} <span class="badge bg-danger-subtle text-danger ms-1">🎬 Video</span></td>
+            <td><span class="badge bg-light text-dark border">${vid.subject}</span></td>
+            <td><span class="badge bg-info-subtle text-info-emphasis">${vid.gradeClass}</span></td>
+            <td><span class="badge bg-secondary-subtle text-secondary-emphasis">${sourceLabel}</span></td>
+            <td class="text-end">
+              <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteVideo(${index})">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          `;
+          videoTableBody.appendChild(tr);
+        });
+      }
+    }
+
+    function deleteVideo(index) {
+      if (confirm(`Hapus "${videoCatalog[index].title}" dari daftar video.json?`)) {
+        const removed = videoCatalog.splice(index, 1)[0];
+        if (removed && removed.id) explicitlyDeletedVideoIds.add(removed.id);
+        updateVideoView();
       }
     }
 
@@ -2000,22 +2266,91 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       reader.readAsArrayBuffer(file);
     });
 
+    function getCatalogItemKey(item) {
+      if (!item) return '';
+      if (item.id) return `id:${String(item.id).trim()}`;
+      return `meta:${(item.title || '').trim().toLowerCase()}|${(item.gradeClass || '').trim().toLowerCase()}|${(item.fileUrl || '').trim()}`;
+    }
+
+    function mergeCatalogItems(baseItems, incomingItems) {
+      const merged = [];
+      const seenIds = new Set();
+      const seenMeta = new Set();
+
+      const addIfNew = (item) => {
+        if (!item || typeof item !== 'object') return;
+        const idKey = item.id ? String(item.id).trim() : '';
+        const metaKey = `${(item.title || '').trim().toLowerCase()}|${(item.gradeClass || '').trim().toLowerCase()}|${(item.fileUrl || '').trim()}`;
+        if ((idKey && seenIds.has(idKey)) || seenMeta.has(metaKey)) return;
+        if (idKey) seenIds.add(idKey);
+        seenMeta.add(metaKey);
+        merged.push(item);
+      };
+
+      (Array.isArray(baseItems) ? baseItems : []).forEach(addIfNew);
+      (Array.isArray(incomingItems) ? incomingItems : []).forEach(addIfNew);
+      return merged;
+    }
+
+    async function ensureLiveBooksNotLostBeforeExport() {
+      if (catalogExplicitlyReset) return;
+      // Refresh live snapshot if empty
+      if (!Array.isArray(liveCatalogSnapshot) || liveCatalogSnapshot.length === 0) {
+        try {
+          const res = await fetch('/catalog.json?t=' + Date.now(), { cache: 'no-store' });
+          if (res.ok) {
+            const liveData = await res.json();
+            if (Array.isArray(liveData)) liveCatalogSnapshot = liveData;
+          }
+        } catch (_) {}
+      }
+      if (!Array.isArray(liveCatalogSnapshot) || liveCatalogSnapshot.length === 0) return;
+
+      const currentKeys = new Set(catalog.map(getCatalogItemKey));
+      const missingLiveItems = liveCatalogSnapshot.filter(item => {
+        if (item.id && explicitlyDeletedIds.has(item.id)) return false;
+        const idMatch = item.id && catalog.some(c => c.id === item.id);
+        const metaMatch = currentKeys.has(getCatalogItemKey(item));
+        const sameContentMatch = catalog.some(c =>
+          (c.title || '').trim().toLowerCase() === (item.title || '').trim().toLowerCase() &&
+          (c.gradeClass || '').trim().toLowerCase() === (item.gradeClass || '').trim().toLowerCase() &&
+          (c.fileUrl || '').trim() === (item.fileUrl || '').trim()
+        );
+        return !idMatch && !metaMatch && !sameContentMatch;
+      });
+
+      if (missingLiveItems.length > 0) {
+        const missingBooksCount = missingLiveItems.filter(i => !isVideoCatalogItem(i)).length;
+        const missingVideosCount = missingLiveItems.length - missingBooksCount;
+        const msg =
+          `⚠️ PERHATIAN: Terdapat ${missingLiveItems.length} materi yang sudah ada di server (${missingBooksCount} Buku, ${missingVideosCount} Video) tetapi belum masuk di daftar catalog.json ini.\n\n` +
+          `Jika tidak digabungkan, buku-buku yang sudah ada akan TERHAPUS saat catalog.json ini dimasukkan ke GitHub!\n\n` +
+          `Klik OK untuk MENGGABUNGKAN otomatis buku lama + materi baru sekarang.\nKlik Batal jika Anda memang sengaja ingin menghapusnya.`;
+        if (confirm(msg)) {
+          catalog = mergeCatalogItems(missingLiveItems, catalog);
+          updateView();
+        }
+      }
+    }
+
     // Explicit Button: Refresh JSON
     document.getElementById('generateJsonNowBtn').addEventListener('click', function() {
       updateView();
-      alert(`✨ Kode catalog.json berhasil dibuat dan diperbarui! Total: ${catalog.length} buku.`);
+      alert(`✨ Kode catalog.json berhasil dibuat dan diperbarui! Total: ${catalog.length} materi.`);
     });
 
     // Copy JSON Button
-    document.getElementById('copyJsonBtn').addEventListener('click', function() {
+    document.getElementById('copyJsonBtn').addEventListener('click', async function() {
+      await ensureLiveBooksNotLostBeforeExport();
       const jsonText = JSON.stringify(catalog, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
-        alert('📋 Kode catalog.json berhasil disalin ke clipboard!');
+        alert(`📋 Kode catalog.json berhasil disalin (${catalog.length} materi)!`);
       });
     });
 
     // Download JSON Button
-    document.getElementById('downloadJsonBtn').addEventListener('click', function() {
+    document.getElementById('downloadJsonBtn').addEventListener('click', async function() {
+      await ensureLiveBooksNotLostBeforeExport();
       const jsonText = JSON.stringify(catalog, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -2032,6 +2367,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     document.getElementById('resetCatalogBtn').addEventListener('click', function() {
       if (confirm('Apakah Anda yakin ingin mengosongkan katalog dan membuat dari awal?')) {
         catalog = [];
+        catalogExplicitlyReset = true;
         updateView();
       }
     });
@@ -2046,12 +2382,19 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         try {
           const imported = JSON.parse(evt.target.result);
           if (Array.isArray(imported)) {
-            catalog = imported;
+            if (catalog.length > 0 && confirm(`Di daftar saat ini sudah ada ${catalog.length} materi. Gabungkan dengan ${imported.length} materi dari file JSON agar tidak saling menimpa?\n\nOK = Gabungkan (Merge)\nBatal = Ganti Total dengan Isi File`)) {
+              catalog = mergeCatalogItems(imported, catalog);
+            } else {
+              catalog = imported;
+            }
+            catalogExplicitlyReset = false;
             updateView();
-            alert('Berhasil mengimpor ' + imported.length + ' buku!');
+            alert('Berhasil memuat ' + catalog.length + ' materi ke katalog!');
           }
         } catch (err) {
           alert('Gagal membaca file JSON: ' + err.message);
+        } finally {
+          e.target.value = '';
         }
       };
       reader.readAsText(file);
@@ -2060,19 +2403,447 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
     // Fetch Live Catalog from Cloudflare
     document.getElementById('fetchLiveCatalogBtn').addEventListener('click', async function() {
       try {
-        const res = await fetch('/catalog.json');
+        const res = await fetch('/catalog.json?t=' + Date.now(), { cache: 'no-store' });
         if (res.ok) {
           const liveData = await res.json();
-          catalog = liveData;
+          if (!Array.isArray(liveData)) return;
+          liveCatalogSnapshot = liveData;
+          if (catalog.length > 0 && confirm(`Di daftar saat ini sudah ada ${catalog.length} materi. Gabungkan dengan ${liveData.length} materi dari Cloudflare Live agar materi baru & lama tersimpan semua?\n\nOK = Gabungkan (Pertahankan Semua)\nBatal = Ganti Total dengan Data Cloudflare Live`)) {
+            catalog = mergeCatalogItems(liveData, catalog);
+          } else {
+            catalog = liveData;
+          }
+          catalogExplicitlyReset = false;
+          explicitlyDeletedIds.clear();
           localStorage.setItem('guru_catalog_override', JSON.stringify(catalog));
           localStorage.setItem('guru_catalog_has_saved', 'true');
           updateView();
-          alert('Berhasil memuat katalog terbaru dari Cloudflare! Total: ' + liveData.length + ' buku.');
+          alert(`✅ Katalog berhasil dimuat & disinkronkan! Total saat ini: ${catalog.length} materi.`);
         }
       } catch (err) {
         alert('Gagal mengambil catalog.json live: ' + err.message);
       }
     });
+
+    // =====================================
+    // DEDICATED VIDEO CATALOG (video.json) LOGIC
+    // =====================================
+    function buildVideoCatalogObject({ title, subject, gradeRaw, author, fileUrl }) {
+      const cleanTitle = (title || 'Video Pembelajaran').toString().trim();
+      const cleanSubject = (subject || cleanTitle).toString().trim();
+      const gradeClass = normalizeBookGradeClass(gradeRaw, cleanTitle);
+      const cleanAuthor = (author || 'Guru MTs Al-Khairaat Bunyu').toString().trim();
+      const cleanUrl = normalizeBookFileUrl(fileUrl);
+      const id = 'video_' + cleanSubject.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4) + '_' + Math.floor(Math.random() * 1000);
+
+      return {
+        id: id,
+        title: cleanTitle,
+        author: cleanAuthor || 'Guru MTs Al-Khairaat Bunyu',
+        subject: cleanSubject,
+        gradeClass: gradeClass,
+        teacherOwner: 'Guru MTs Al-Khairaat Bunyu',
+        year: '2026',
+        fileUrl: cleanUrl,
+        localBlobUrl: '',
+        isDownloaded: false,
+        fileSize: 15000000,
+        pageCount: 1,
+        category: 'Video',
+        description: `Video Pembelajaran ${cleanSubject} untuk ${gradeClass} MTs Al-Khairaat Bunyu.`
+      };
+    }
+
+    function downloadVideoTemplateExcel() {
+      const templateData = [
+        {
+          'Judul Video': 'Video: Percakapan Bahasa Arab Kelas VIII',
+          'Mata Pelajaran': 'bahasa arab',
+          'Jenjang Kelas': 'VIII',
+          'Guru / Penyusun': 'Guru MTs Al-Khairaat Bunyu',
+          'Link URL Video (YouTube / Google Drive)': 'https://www.youtube.com/watch?v=0h9g9_3H-X4'
+        },
+        {
+          'Judul Video': 'Video: Pengenalan Informatika Kelas VII',
+          'Mata Pelajaran': 'informatika',
+          'Jenjang Kelas': 'VII',
+          'Guru / Penyusun': 'Guru MTs Al-Khairaat Bunyu',
+          'Link URL Video (YouTube / Google Drive)': 'https://youtu.be/dQw4w9WgXcQ'
+        }
+      ];
+
+      const csvRows = [
+        ['Judul Video', 'Mata Pelajaran', 'Jenjang Kelas', 'Guru / Penyusun', 'Link URL Video (YouTube / Google Drive)'],
+        ['Video: Percakapan Bahasa Arab Kelas VIII', 'bahasa arab', 'VIII', 'Guru MTs Al-Khairaat Bunyu', 'https://www.youtube.com/watch?v=0h9g9_3H-X4'],
+        ['Video: Pengenalan Informatika Kelas VII', 'informatika', 'VII', 'Guru MTs Al-Khairaat Bunyu', 'https://youtu.be/dQw4w9WgXcQ']
+      ];
+
+      if (typeof XLSX !== 'undefined' && XLSX.utils) {
+        try {
+          const worksheet = XLSX.utils.json_to_sheet(templateData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Video');
+          downloadExcelWorkbook(workbook, 'Template_Impor_Video_MTs_AlKhairaat.xlsx', csvRows);
+          return;
+        } catch (e) {
+          console.warn('XLSX export failed for video template:', e);
+        }
+      }
+      downloadCsvFallback(csvRows, 'Template_Impor_Video_MTs_AlKhairaat.csv');
+    }
+
+    function loadSampleVideoData() {
+      const input = document.getElementById('multiVideoInput');
+      if (input) {
+        input.value =
+`Video: Percakapan Bahasa Arab Kelas VIII\tbahasa arab\tVIII\tGuru MTs Al-Khairaat Bunyu\thttps://www.youtube.com/watch?v=0h9g9_3H-X4
+Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\thttps://youtu.be/0h9g9_3H-X4`;
+      }
+    }
+
+    // Add single video quickly
+    const addSingleVideoBtn = document.getElementById('addSingleVideoBtn');
+    if (addSingleVideoBtn) {
+      addSingleVideoBtn.addEventListener('click', () => {
+        const title = document.getElementById('singleVideoTitle').value.trim();
+        const subject = document.getElementById('singleVideoSubject').value.trim();
+        const gradeRaw = document.getElementById('singleVideoGrade').value;
+        const author = document.getElementById('singleVideoAuthor').value.trim();
+        const fileUrl = document.getElementById('singleVideoUrl').value.trim();
+
+        if (!title) {
+          alert('Judul video wajib diisi.');
+          return;
+        }
+        if (!fileUrl) {
+          alert('Link URL video wajib diisi (YouTube / Google Drive / MP4).');
+          return;
+        }
+
+        videoCatalog.push(buildVideoCatalogObject({
+          title,
+          subject: subject || title,
+          gradeRaw,
+          author,
+          fileUrl
+        }));
+        videoCatalogExplicitlyReset = false;
+        updateVideoView();
+
+        document.getElementById('singleVideoTitle').value = '';
+        document.getElementById('singleVideoSubject').value = '';
+        document.getElementById('singleVideoUrl').value = '';
+        alert('✅ Video berhasil ditambahkan ke video.json! Selanjutnya klik "Salin Kode video.json".');
+      });
+    }
+
+    // Batch paste videos
+    const processMultiVideoBtn = document.getElementById('processMultiVideoBtn');
+    if (processMultiVideoBtn) {
+      processMultiVideoBtn.addEventListener('click', () => {
+        const text = document.getElementById('multiVideoInput').value.trim();
+        if (!text) {
+          alert('Silakan masukkan daftar video atau upload file Excel video terlebih dahulu.');
+          return;
+        }
+
+        const lines = text.split('\n');
+        let count = 0;
+
+        lines.forEach((line, idx) => {
+          if (!line.trim()) return;
+          let parts = [];
+          if (line.includes('\t')) parts = line.split('\t').map(p => p.trim());
+          else if (line.includes('|')) parts = line.split('|').map(p => p.trim());
+          else if (line.includes(';')) parts = line.split(';').map(p => p.trim());
+          else parts = line.split(',').map(p => p.trim());
+
+          if (idx === 0 && parts[0] && parts[0].toLowerCase().includes('judul') && parts[1] && parts[1].toLowerCase().includes('pelajaran')) {
+            return;
+          }
+
+          if (parts.length >= 2) {
+            const title = parts[0] || 'Video Pembelajaran';
+            const subject = parts[1] || title;
+            const gradeRaw = parts[2] || '';
+            let author = parts[3] || 'Guru MTs Al-Khairaat Bunyu';
+            let fileUrl = parts[4] || '';
+
+            if (!fileUrl && /^https?:\/\//i.test(author)) {
+              fileUrl = author;
+              author = 'Guru MTs Al-Khairaat Bunyu';
+            } else if (!fileUrl) {
+              const urlPart = parts.find(p => /^https?:\/\//i.test(p));
+              if (urlPart) fileUrl = urlPart;
+            }
+
+            videoCatalog.push(buildVideoCatalogObject({ title, subject, gradeRaw, author, fileUrl }));
+            count++;
+          }
+        });
+
+        if (count > 0) {
+          videoCatalogExplicitlyReset = false;
+          updateVideoView();
+          document.getElementById('multiVideoInput').value = '';
+          alert(`✅ Berhasil! ${count} video telah ditambahkan ke video.json.`);
+        } else {
+          alert('Format tidak valid. Pastikan menggunakan format copy-paste dari Excel (Tab) atau pemisah | (pipe).');
+        }
+      });
+    }
+
+    // Batch Excel upload for videos
+    const excelVideoFileInput = document.getElementById('excelVideoFileInput');
+    if (excelVideoFileInput) {
+      excelVideoFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        document.getElementById('excelVideoUploadTitle').textContent = file.name;
+        document.getElementById('excelVideoUploadDesc').textContent = 'Membaca file Excel video...';
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const ref = worksheet['!ref'];
+
+            if (!ref) {
+              alert('File Excel kosong.');
+              return;
+            }
+
+            const range = XLSX.utils.decode_range(ref);
+            const rowsMatrix = [];
+
+            for (let r = range.s.r; r <= range.e.r; r++) {
+              const rowCells = [];
+              let hasAnyContent = false;
+              for (let c = range.s.c; c <= range.e.c; c++) {
+                const cellInfo = extractCellTextAndLink(worksheet, r, c);
+                if (cellInfo.text || cellInfo.link) hasAnyContent = true;
+                rowCells.push(cellInfo);
+              }
+              if (hasAnyContent && rowCells.length === 1 && rowCells[0].text.includes(';')) {
+                rowsMatrix.push(rowCells[0].text.split(';').map(p => ({ text: p.trim(), link: '' })));
+              } else if (hasAnyContent) {
+                rowsMatrix.push(rowCells);
+              }
+            }
+
+            if (rowsMatrix.length === 0) {
+              alert('Tidak ditemukan data video yang valid di file Excel.');
+              return;
+            }
+
+            const firstRowTexts = rowsMatrix[0].map(c => c.text);
+            const headerMap = detectBookHeaderMap(firstRowTexts);
+            const startIdx = headerMap ? 1 : 0;
+
+            const defaultMap = (() => {
+              if (headerMap) return headerMap;
+              const sample = rowsMatrix[startIdx] || [];
+              const firstIsNo = sample[0] && /^\d+$/.test(sample[0].text);
+              const offset = firstIsNo ? 1 : 0;
+              return {
+                title: offset + 0,
+                subject: offset + 1,
+                grade: offset + 2,
+                author: offset + 3,
+                fileUrl: offset + 4
+              };
+            })();
+
+            let count = 0;
+            for (let i = startIdx; i < rowsMatrix.length; i++) {
+              const row = rowsMatrix[i];
+              const getCell = (colIdx) => (colIdx >= 0 && colIdx < row.length) ? row[colIdx] : { text: '', link: '' };
+
+              const title = getCell(defaultMap.title).text;
+              const subject = getCell(defaultMap.subject).text || title;
+              if (!title && !subject) continue;
+
+              const gradeRaw = getCell(defaultMap.grade).text;
+              const author = getCell(defaultMap.author).text || 'Guru MTs Al-Khairaat Bunyu';
+              const urlCell = getCell(defaultMap.fileUrl);
+
+              let rawUrl = '';
+              if (urlCell.link && /^https?:\/\//i.test(urlCell.link)) rawUrl = urlCell.link;
+              else if (urlCell.text && /^https?:\/\//i.test(urlCell.text)) rawUrl = urlCell.text;
+              else if (urlCell.link || urlCell.text) rawUrl = urlCell.link || urlCell.text;
+              else {
+                const foundUrlCell = row.find(c => /^https?:\/\//i.test(c.link) || /^https?:\/\//i.test(c.text));
+                if (foundUrlCell) rawUrl = /^https?:\/\//i.test(foundUrlCell.link) ? foundUrlCell.link : foundUrlCell.text;
+              }
+
+              videoCatalog.push(buildVideoCatalogObject({ title, subject, gradeRaw, author, fileUrl: rawUrl }));
+              count++;
+            }
+
+            if (count > 0) {
+              videoCatalogExplicitlyReset = false;
+              updateVideoView();
+              document.getElementById('excelVideoUploadDesc').textContent = `Berhasil membaca ${count} video dari Excel!`;
+              alert(`✅ Berhasil mengimpor ${count} video dari file Excel "${file.name}" ke video.json!`);
+            } else {
+              alert('Tidak ditemukan data video yang valid di file Excel.');
+            }
+          } catch (err) {
+            alert('Gagal membaca file Excel video: ' + err.message);
+          } finally {
+            e.target.value = '';
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function ensureLiveVideosNotLostBeforeExport() {
+      if (videoCatalogExplicitlyReset) return;
+      if (!Array.isArray(liveVideosSnapshot) || liveVideosSnapshot.length === 0) {
+        try {
+          const res = await fetch('/video.json?t=' + Date.now(), { cache: 'no-store' });
+          if (res.ok) {
+            const liveData = await res.json();
+            if (Array.isArray(liveData)) liveVideosSnapshot = liveData;
+          }
+        } catch (_) {}
+      }
+      if (!Array.isArray(liveVideosSnapshot) || liveVideosSnapshot.length === 0) return;
+
+      const currentKeys = new Set(videoCatalog.map(getCatalogItemKey));
+      const missingLiveVideos = liveVideosSnapshot.filter(item => {
+        if (item.id && explicitlyDeletedVideoIds.has(item.id)) return false;
+        const idMatch = item.id && videoCatalog.some(v => v.id === item.id);
+        const metaMatch = currentKeys.has(getCatalogItemKey(item));
+        const sameContentMatch = videoCatalog.some(v =>
+          (v.title || '').trim().toLowerCase() === (item.title || '').trim().toLowerCase() &&
+          (v.gradeClass || '').trim().toLowerCase() === (item.gradeClass || '').trim().toLowerCase() &&
+          (v.fileUrl || '').trim() === (item.fileUrl || '').trim()
+        );
+        return !idMatch && !metaMatch && !sameContentMatch;
+      });
+
+      if (missingLiveVideos.length > 0) {
+        const msg =
+          `⚠️ PERHATIAN: Terdapat ${missingLiveVideos.length} video yang sudah ada di server tetapi belum masuk di daftar video.json ini.\n\n` +
+          `Klik OK untuk MENGGABUNGKAN video lama + video baru sekarang agar video lama tidak hilang.\nKlik Batal jika Anda memang sengaja ingin menghapusnya.`;
+        if (confirm(msg)) {
+          videoCatalog = mergeCatalogItems(missingLiveVideos, videoCatalog);
+          updateVideoView();
+        }
+      }
+    }
+
+    const generateVideoJsonNowBtn = document.getElementById('generateVideoJsonNowBtn');
+    if (generateVideoJsonNowBtn) {
+      generateVideoJsonNowBtn.addEventListener('click', function() {
+        updateVideoView();
+        alert(`✨ Kode video.json berhasil dibuat dan diperbarui! Total: ${videoCatalog.length} video.`);
+      });
+    }
+
+    const copyVideoJsonBtn = document.getElementById('copyVideoJsonBtn');
+    if (copyVideoJsonBtn) {
+      copyVideoJsonBtn.addEventListener('click', async function() {
+        await ensureLiveVideosNotLostBeforeExport();
+        const jsonText = JSON.stringify(videoCatalog, null, 2);
+        navigator.clipboard.writeText(jsonText).then(() => {
+          alert(`📋 Kode video.json berhasil disalin (${videoCatalog.length} video)! Silakan tempel ke file public/video.json di GitHub.`);
+        });
+      });
+    }
+
+    const downloadVideoJsonBtn = document.getElementById('downloadVideoJsonBtn');
+    if (downloadVideoJsonBtn) {
+      downloadVideoJsonBtn.addEventListener('click', async function() {
+        await ensureLiveVideosNotLostBeforeExport();
+        const jsonText = JSON.stringify(videoCatalog, null, 2);
+        const blob = new Blob([jsonText], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'video.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    const resetVideoCatalogBtn = document.getElementById('resetVideoCatalogBtn');
+    if (resetVideoCatalogBtn) {
+      resetVideoCatalogBtn.addEventListener('click', function() {
+        if (confirm('Apakah Anda yakin ingin mengosongkan daftar video.json dan membuat dari awal?')) {
+          videoCatalog = [];
+          videoCatalogExplicitlyReset = true;
+          updateVideoView();
+        }
+      });
+    }
+
+    const importVideoJsonFile = document.getElementById('importVideoJsonFile');
+    if (importVideoJsonFile) {
+      importVideoJsonFile.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const imported = JSON.parse(evt.target.result);
+            if (Array.isArray(imported)) {
+              const normalized = imported.map(item => ({ ...item, category: 'Video' }));
+              if (videoCatalog.length > 0 && confirm(`Di daftar saat ini sudah ada ${videoCatalog.length} video. Gabungkan dengan ${normalized.length} video dari file JSON?\n\nOK = Gabungkan (Merge)\nBatal = Ganti Total dengan Isi File`)) {
+                videoCatalog = mergeCatalogItems(normalized, videoCatalog);
+              } else {
+                videoCatalog = normalized;
+              }
+              videoCatalogExplicitlyReset = false;
+              updateVideoView();
+              alert('Berhasil memuat ' + videoCatalog.length + ' video ke video.json!');
+            }
+          } catch (err) {
+            alert('Gagal membaca file video.json: ' + err.message);
+          } finally {
+            e.target.value = '';
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    const fetchLiveVideoBtn = document.getElementById('fetchLiveVideoBtn');
+    if (fetchLiveVideoBtn) {
+      fetchLiveVideoBtn.addEventListener('click', async function() {
+        try {
+          const res = await fetch('/video.json?t=' + Date.now(), { cache: 'no-store' });
+          if (res.ok) {
+            const liveData = await res.json();
+            if (!Array.isArray(liveData)) return;
+            liveVideosSnapshot = liveData;
+            if (videoCatalog.length > 0 && confirm(`Di daftar saat ini sudah ada ${videoCatalog.length} video. Gabungkan dengan ${liveData.length} video dari Cloudflare Live?\n\nOK = Gabungkan (Pertahankan Semua)\nBatal = Ganti Total dengan Data Cloudflare Live`)) {
+              videoCatalog = mergeCatalogItems(liveData, videoCatalog);
+            } else {
+              videoCatalog = liveData;
+            }
+            videoCatalogExplicitlyReset = false;
+            explicitlyDeletedVideoIds.clear();
+            localStorage.setItem('guru_videos_override', JSON.stringify(videoCatalog));
+            localStorage.setItem('guru_videos_has_saved', 'true');
+            updateVideoView();
+            alert(`✅ Daftar video.json berhasil dimuat & disinkronkan! Total saat ini: ${videoCatalog.length} video.`);
+          } else {
+            alert('File /video.json belum ditemukan di server live. Pastikan sudah di-push ke GitHub & Cloudflare.');
+          }
+        } catch (err) {
+          alert('Gagal mengambil video.json live: ' + err.message);
+        }
+      });
+    }
 
 
 
@@ -2722,25 +3493,71 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
 
     // Auto load live catalog & student/teacher data on initial start
     (async function init() {
-      // 1. Load Catalog
+      // 1. Always fetch live catalog snapshot (bypass cache)
+      try {
+        const res = await fetch('/catalog.json?t=' + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+          const liveData = await res.json();
+          if (Array.isArray(liveData)) {
+            liveCatalogSnapshot = liveData;
+          }
+        }
+      } catch (e) {}
+
+      // Load saved local catalog, or restore from live snapshot if local is missing/empty
       const hasSavedCatalog = localStorage.getItem('guru_catalog_has_saved');
+      let loadedLocal = false;
       if (hasSavedCatalog === 'true') {
         try {
           const stored = localStorage.getItem('guru_catalog_override');
-          if (stored) catalog = JSON.parse(stored);
-        } catch (e) { console.warn('Gagal membaca catalog:', e); }
-      } else {
-        try {
-          const res = await fetch('/catalog.json');
-          if (res.ok) {
-            const liveData = await res.json();
-            if (Array.isArray(liveData)) {
-              catalog = liveData;
-              localStorage.setItem('guru_catalog_override', JSON.stringify(catalog));
-              localStorage.setItem('guru_catalog_has_saved', 'true');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              catalog = parsed;
+              loadedLocal = true;
             }
           }
-        } catch (e) {}
+        } catch (e) { console.warn('Gagal membaca catalog:', e); }
+      }
+      if (!loadedLocal && liveCatalogSnapshot.length > 0) {
+        catalog = [...liveCatalogSnapshot];
+        localStorage.setItem('guru_catalog_override', JSON.stringify(catalog));
+        localStorage.setItem('guru_catalog_has_saved', 'true');
+      }
+
+      // 1b. Always fetch live video.json snapshot (bypass cache), fallback to legacy videos in catalog.json
+      try {
+        const resVid = await fetch('/video.json?t=' + Date.now(), { cache: 'no-store' });
+        if (resVid.ok) {
+          const liveVideoData = await resVid.json();
+          if (Array.isArray(liveVideoData)) {
+            liveVideosSnapshot = liveVideoData;
+          }
+        }
+      } catch (e) {}
+
+      if (liveVideosSnapshot.length === 0 && liveCatalogSnapshot.length > 0) {
+        liveVideosSnapshot = liveCatalogSnapshot.filter(isVideoCatalogItem);
+      }
+
+      const hasSavedVideos = localStorage.getItem('guru_videos_has_saved');
+      let loadedLocalVideos = false;
+      if (hasSavedVideos === 'true') {
+        try {
+          const storedVideos = localStorage.getItem('guru_videos_override');
+          if (storedVideos) {
+            const parsedVideos = JSON.parse(storedVideos);
+            if (Array.isArray(parsedVideos) && parsedVideos.length > 0) {
+              videoCatalog = parsedVideos;
+              loadedLocalVideos = true;
+            }
+          }
+        } catch (e) { console.warn('Gagal membaca videoCatalog:', e); }
+      }
+      if (!loadedLocalVideos && liveVideosSnapshot.length > 0) {
+        videoCatalog = [...liveVideosSnapshot];
+        localStorage.setItem('guru_videos_override', JSON.stringify(videoCatalog));
+        localStorage.setItem('guru_videos_has_saved', 'true');
       }
 
       // 2. Load Students
@@ -2752,7 +3569,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         } catch (e) {}
       } else {
         try {
-          const res = await fetch('/students.json');
+          const res = await fetch('/students.json?t=' + Date.now(), { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
             importedStudents = Array.isArray(data) ? data.filter(u => u.role === 'STUDENT') : [];
@@ -2770,14 +3587,14 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
         } catch (e) {}
       } else {
         try {
-          const res = await fetch('/teachers.json');
+          const res = await fetch('/teachers.json?t=' + Date.now(), { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
             importedTeachers = Array.isArray(data) ? data.filter(u => u.role === 'TEACHER') : [];
             saveTeachersToStorage();
           } else {
             // Fallback for first time or if teachers.json doesn't exist yet
-            const resStu = await fetch('/students.json');
+            const resStu = await fetch('/students.json?t=' + Date.now(), { cache: 'no-store' });
             if (resStu.ok) {
               const data = await resStu.json();
               importedTeachers = Array.isArray(data) ? data.filter(u => u.role === 'TEACHER') : [];
@@ -2788,6 +3605,7 @@ informatika kelas VIII\tinformatika\tVIII\tMTs Alkhairaat Bunyu\thttps://drive.g
       }
 
       updateView();
+      updateVideoView();
       renderStudentTable();
       renderTeacherTable();
     })();
