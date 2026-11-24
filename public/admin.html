@@ -1014,7 +1014,7 @@
           </div>
         </div>
 
-        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex flex-column py-3" style="height: calc(100vh - 65px);">
+        <div id="readerModalBody" class="modal-body p-0 bg-dark position-relative overflow-auto d-flex flex-column" style="flex: 1 1 auto; min-height: 0;">
           <!-- Loading Spinner -->
           <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-center text-white z-3">
             <div class="spinner-border text-warning mb-2" role="status"></div>
@@ -1035,9 +1035,9 @@
             </div>
           </div>
           <!-- Native PDF Canvas View (Single Page) -->
-          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-block" style="display: none;"></canvas>
+          <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-none" style="display: none;"></canvas>
           <!-- Continuous Scroll Down Container -->
-          <div id="pdfScrollContainer" class="d-flex flex-column align-items-center gap-3 w-100 py-3" style="display: none;"></div>
+          <div id="pdfScrollContainer" class="flex-column align-items-center gap-3 w-100 py-3 d-none" style="display: none;"></div>
           <!-- Fallback / Google Drive Iframe Container -->
           <div id="readerIframeContainer" class="w-100 h-100 position-relative" style="display: none; flex: 1 1 auto; min-height: 0; overflow: hidden;">
             <iframe id="readerIframe" src="" class="w-100 h-100 border-0" style="display: none;"></iframe>
@@ -1128,9 +1128,9 @@
       const container = document.getElementById('readerIframeContainer');
       if (!container) return;
       if (mode === 'single') {
-        container.style.maxWidth = '860px';
-        container.style.margin = '8px auto';
-        container.style.borderRadius = '8px';
+        container.style.maxWidth = '1120px';
+        container.style.margin = '0 auto';
+        container.style.borderRadius = '6px';
         container.style.boxShadow = '0 10px 30px rgba(0,0,0,0.6)';
       } else {
         container.style.maxWidth = '100%';
@@ -1163,8 +1163,14 @@
           viewport: viewport
         }).promise;
 
+        canvas.classList.remove('d-none');
         canvas.style.display = 'block';
-        document.getElementById('pdfScrollContainer').style.display = 'none';
+        const scrollCont = document.getElementById('pdfScrollContainer');
+        if (scrollCont) {
+          scrollCont.classList.remove('d-flex');
+          scrollCont.classList.add('d-none');
+          scrollCont.style.display = 'none';
+        }
       } catch (err) {
         console.error("Gagal merender halaman PDF:", err);
       }
@@ -1177,7 +1183,10 @@
       if (!currentPdfDoc) return;
       const container = document.getElementById('pdfScrollContainer');
       const singleCanvas = document.getElementById('pdfViewerCanvas');
+      singleCanvas.classList.add('d-none');
       singleCanvas.style.display = 'none';
+      container.classList.remove('d-none');
+      container.classList.add('d-flex');
       container.style.display = 'flex';
       container.innerHTML = '';
       renderedScrollPages.clear();
@@ -1334,7 +1343,10 @@
           return;
         }
 
-        if (singleCanvas) singleCanvas.style.display = 'none';
+        if (singleCanvas) {
+          singleCanvas.classList.add('d-none');
+          singleCanvas.style.display = 'none';
+        }
         initScrollDownView();
       } else {
         if (scrollBtn) {
@@ -1355,8 +1367,15 @@
         const modalBody = document.getElementById('readerModalBody');
         if (modalBody) modalBody.removeEventListener('scroll', handleModalScrollCheck);
 
-        if (scrollContainer) scrollContainer.style.display = 'none';
-        if (singleCanvas) singleCanvas.style.display = 'block';
+        if (scrollContainer) {
+          scrollContainer.classList.remove('d-flex');
+          scrollContainer.classList.add('d-none');
+          scrollContainer.style.display = 'none';
+        }
+        if (singleCanvas) {
+          singleCanvas.classList.remove('d-none');
+          singleCanvas.style.display = 'block';
+        }
         renderModalPdfPage(currentPdfPage || 1);
       }
     }
@@ -1475,18 +1494,21 @@
       if (toast) toast.classList.add('d-none');
 
       spinner.classList.remove('d-none');
+      canvas.classList.add('d-none');
       canvas.style.display = 'none';
       iframe.style.display = 'none';
       if (iframeContainer) iframeContainer.style.display = 'none';
       const scrollContainer = document.getElementById('pdfScrollContainer');
       if (scrollContainer) {
+        scrollContainer.classList.remove('d-flex');
+        scrollContainer.classList.add('d-none');
         scrollContainer.style.display = 'none';
         scrollContainer.innerHTML = '';
       }
       const modalBody = document.getElementById('readerModalBody');
       if (modalBody) {
         modalBody.scrollTop = 0;
-        modalBody.classList.add('py-3');
+        modalBody.classList.remove('py-3');
       }
       if (errorCard) errorCard.style.display = 'none';
 
@@ -1666,8 +1688,18 @@
         }
         if (toast) toast.classList.add('d-none');
         if (scrollObserver) scrollObserver.disconnect();
+        const canvas = document.getElementById('pdfViewerCanvas');
+        if (canvas) {
+          canvas.classList.add('d-none');
+          canvas.style.display = 'none';
+        }
         const scrollContainer = document.getElementById('pdfScrollContainer');
-        if (scrollContainer) scrollContainer.innerHTML = '';
+        if (scrollContainer) {
+          scrollContainer.classList.remove('d-flex');
+          scrollContainer.classList.add('d-none');
+          scrollContainer.style.display = 'none';
+          scrollContainer.innerHTML = '';
+        }
         renderedScrollPages.clear();
         currentPdfDoc = null;
       });
