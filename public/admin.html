@@ -3,11 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
   <title>Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu - Guru</title>
   <!-- Favicon / Logo Sekolah di Tab Browser -->
   <link rel="icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
   <link rel="shortcut icon" type="image/jpeg" href="/logo_alkhairaat.jpg">
   <link rel="apple-touch-icon" href="/logo_alkhairaat.jpg">
+  <!-- High Speed Network Preconnect for Google Drive & CDN Assets -->
+  <link rel="preconnect" href="https://drive.google.com" crossorigin>
+  <link rel="preconnect" href="https://docs.google.com" crossorigin>
+  <link rel="preconnect" href="https://drive.usercontent.google.com" crossorigin>
+  <link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ssl.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://drive.google.com">
+  <link rel="dns-prefetch" href="https://docs.google.com">
+  <link rel="dns-prefetch" href="https://drive.usercontent.google.com">
+  <link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <!-- PDF.js for automatic PDF metadata & page count extraction -->
@@ -954,19 +967,32 @@
                 Perpustakaan Digital Guru & Pengajar
               </h4>
               <p class="text-muted mb-0">
-                Akses seluruh buku pelajaran yang diunggah sekolah (Kelas VII, VIII, IX) langsung di layar laptop. Siap disambungkan ke <strong>Proyektor / Smart TV Kelas</strong> untuk mengajar!
+                Akses seluruh buku pelajaran dan video pembelajaran sekolah (Kelas VII, VIII, IX) langsung di layar laptop. Siap disambungkan ke <strong>Proyektor / Smart TV Kelas</strong> untuk mengajar!
               </p>
             </div>
             <div class="d-flex gap-2">
               <button id="refreshTeacherBooksBtn" class="btn btn-outline-primary btn-sm fw-bold">
-                <i class="bi bi-arrow-clockwise me-1"></i> Perbarui Rak Buku
+                <i class="bi bi-arrow-clockwise me-1"></i> Perbarui Rak Buku &amp; Video
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Filter & Search Bar for Books -->
+        <!-- Category Switcher (Buku Pelajaran vs Video Pembelajaran) + Filter & Search Bar -->
         <div class="card card-custom p-3 bg-white mb-4">
+          <div class="d-flex flex-wrap align-items-center gap-2 pb-3 mb-3 border-bottom">
+            <button id="teacherCatBookBtn" type="button" class="btn btn-sm btn-primary fw-bold px-3 py-2 d-flex align-items-center gap-2" onclick="setTeacherCategory('Buku')">
+              <i class="bi bi-book-half"></i>
+              <span>📚 Buku Pelajaran</span>
+              <span id="teacherBookCategoryCount" class="badge bg-light text-dark">0</span>
+            </button>
+            <button id="teacherCatVideoBtn" type="button" class="btn btn-sm btn-outline-danger fw-semibold px-3 py-2 d-flex align-items-center gap-2" onclick="setTeacherCategory('Video')">
+              <i class="bi bi-play-circle-fill"></i>
+              <span>🎬 Video Pembelajaran</span>
+              <span id="teacherVideoCategoryCount" class="badge bg-danger-subtle text-danger">0</span>
+            </button>
+          </div>
+
           <div class="row g-3 align-items-center">
             <div class="col-md-6">
               <div class="input-group">
@@ -976,8 +1002,7 @@
             </div>
             <div class="col-md-6">
               <div class="d-flex flex-wrap gap-2 justify-content-md-end">
-                <button class="btn btn-sm btn-primary fw-bold filter-grade-btn" data-grade="ALL">Semua Kelas</button>
-                <button class="btn btn-sm btn-outline-secondary fw-semibold filter-grade-btn" data-grade="Kelas VII">Kelas VII</button>
+                <button class="btn btn-sm btn-primary fw-bold filter-grade-btn" data-grade="Kelas VII">Kelas VII</button>
                 <button class="btn btn-sm btn-outline-secondary fw-semibold filter-grade-btn" data-grade="Kelas VIII">Kelas VIII</button>
                 <button class="btn btn-sm btn-outline-secondary fw-semibold filter-grade-btn" data-grade="Kelas IX">Kelas IX</button>
               </div>
@@ -985,7 +1010,7 @@
           </div>
         </div>
 
-        <!-- Books Grid Container -->
+        <!-- Books & Videos Grid Container -->
         <div class="row g-4" id="teacherBooksGrid">
           <!-- Dynamically populated by JS -->
         </div>
@@ -1035,6 +1060,9 @@
                 <i class="bi bi-file-earmark-text me-1"></i> Per Halaman
               </button>
             </div>
+            <button id="readerFastModeBtn" type="button" class="btn btn-sm btn-outline-info fw-bold py-1 px-2 d-none" onclick="toggleTeacherReaderEngine()" title="Beralih ke mode render ringan di dalam aplikasi">
+              <i class="bi bi-lightning-charge-fill me-1"></i> Mode Ringan
+            </button>
           </div>
 
           <div class="d-flex align-items-center gap-2">
@@ -1071,15 +1099,46 @@
           <canvas id="pdfViewerCanvas" class="shadow-lg my-3 rounded mx-auto d-none" style="display: none;"></canvas>
           <!-- Continuous Scroll Down Container -->
           <div id="pdfScrollContainer" class="flex-column align-items-center gap-3 w-100 py-3 d-none" style="display: none;"></div>
-          <!-- Fallback / Google Drive Iframe Container -->
-          <div id="readerIframeContainer" class="w-100 h-100 position-relative" style="display: none; flex: 1 1 auto; min-height: 0; overflow: hidden;">
-            <iframe id="readerIframe" src="" class="w-100 h-100 border-0" style="display: none;"></iframe>
-          </div>
+          <!-- Fallback / Google Drive Pooled Iframe Container -->
+          <div id="readerIframeContainer" class="w-100 h-100 position-relative" style="display: none; flex: 1 1 auto; min-height: 0; overflow: hidden;"></div>
           <!-- Non-blocking hint toast for cross-origin Google Drive page buttons -->
           <div id="iframeNavToast" class="position-fixed bottom-0 start-50 translate-middle-x mb-3 px-3 py-2 rounded-pill bg-dark text-warning border border-warning shadow-lg small fw-semibold d-none" style="z-index: 1080; max-width: 92vw;">
             <i class="bi bi-info-circle-fill me-1"></i>
             <span id="iframeNavToastText">Pratinjau Google Drive: gunakan gulir/tombol halaman di dalam area PDF. Zoom (+/-) &amp; Mode Tampilan tetap aktif.</span>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: PEMUTAR VIDEO PEMBELAJARAN GURU     -->
+  <!-- ========================================== -->
+  <div class="modal fade" id="teacherVideoModal" tabindex="-1" aria-labelledby="teacherVideoModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-custom">
+      <div class="modal-content bg-black text-white">
+        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex align-items-center gap-2 text-truncate">
+            <i class="bi bi-play-circle-fill text-danger fs-5"></i>
+            <div class="text-truncate">
+              <h6 class="modal-title mb-0 fw-bold text-truncate" id="teacherVideoModalTitle">Memutar Video Pembelajaran</h6>
+              <small class="text-white-50" id="teacherVideoModalSubtitle">Mode Presentasi Kelas</small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <button id="teacherVideoFullscreenBtn" type="button" class="btn btn-outline-warning btn-sm fw-bold" onclick="toggleTeacherVideoFullscreen()">
+              <i class="bi bi-arrows-fullscreen me-1"></i> Layar Penuh
+            </button>
+            <a id="teacherVideoOpenNewTabBtn" href="#" target="_blank" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Buka Link Asli
+            </a>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal" onclick="stopTeacherVideoPlayer()">
+              <i class="bi bi-x-lg me-1"></i> Tutup
+            </button>
+          </div>
+        </div>
+        <div id="teacherVideoStage" class="modal-body p-0 bg-black position-relative d-flex align-items-center justify-content-center" style="flex: 1 1 auto; min-height: 0; overflow: hidden;">
+          <div id="teacherVideoContainer" class="w-100 h-100 d-flex align-items-center justify-content-center bg-black"></div>
         </div>
       </div>
     </div>
@@ -1121,7 +1180,8 @@
     let importedStudents = [];
     let currentStudentFilterGrade = 'ALL';
     let importedTeachers = [];
-    let currentTeacherFilterGrade = 'ALL';
+    let currentTeacherCategory = 'Buku';
+    let currentTeacherFilterGrade = 'Kelas VII';
     let currentTeacherSearchQuery = '';
 
     let currentPdfDoc = null;
@@ -1133,10 +1193,293 @@
     let renderedScrollPages = new Set();
     let iframeToastTimer = null;
 
+    const READER_IFRAME_POOL_MAX = 4;
+    const readerIframePool = new Map();
+    const teacherDriveProbeCache = new Map();
+    let activeReaderPoolKey = null;
+    let currentTeacherReaderState = null;
+    let teacherScrollQueue = [];
+    let teacherRenderingPages = new Set();
+    let teacherActiveWorkers = 0;
+
+    function resolveTeacherReaderUrls(rawUrl) {
+      const url = (rawUrl || '').trim();
+      if (!url) return { kind: 'empty', streamUrl: '', primaryUrl: '', liteUrl: '' };
+      if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
+        const fileIdMatch = url.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          const id = fileIdMatch[1];
+          return {
+            kind: 'drive',
+            streamUrl: `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
+            primaryUrl: `https://drive.google.com/file/d/${id}/preview`,
+            liteUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`
+          };
+        }
+        const previewUrl = url.endsWith('/preview') ? url : url.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
+        return {
+          kind: 'drive',
+          streamUrl: '',
+          primaryUrl: previewUrl,
+          liteUrl: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
+        };
+      }
+      return {
+        kind: 'generic',
+        streamUrl: '',
+        primaryUrl: url,
+        liteUrl: ''
+      };
+    }
+
+    function probeTeacherDrivePdfStream(streamUrl) {
+      if (!streamUrl) return Promise.reject(new Error('Empty streamUrl'));
+      const existing = teacherDriveProbeCache.get(streamUrl);
+      if (existing && (Date.now() - existing.ts < 600000)) {
+        return existing.promise;
+      }
+      const promise = (async () => {
+        const [headRes, firstRes] = await Promise.all([
+          fetch(streamUrl, { method: 'HEAD', mode: 'cors' }),
+          fetch(streamUrl, { method: 'GET', mode: 'cors', headers: { Range: 'bytes=0-65535' } })
+        ]);
+        if (!headRes.ok || (!firstRes.ok && firstRes.status !== 206)) {
+          throw new Error(`Drive stream unavailable (${headRes.status}/${firstRes.status})`);
+        }
+        const totalLength = parseInt(headRes.headers.get('content-length') || '0', 10);
+        const buf = await firstRes.arrayBuffer();
+        const initialData = new Uint8Array(buf);
+        const isPdfMagic = initialData.length >= 5 &&
+          initialData[0] === 0x25 && initialData[1] === 0x50 && initialData[2] === 0x44 && initialData[3] === 0x46 && initialData[4] === 0x2D;
+        if (!isPdfMagic || !totalLength) {
+          throw new Error('Drive file is not a direct streamable PDF');
+        }
+        return { totalLength, initialData };
+      })().catch(err => {
+        teacherDriveProbeCache.delete(streamUrl);
+        throw err;
+      });
+      teacherDriveProbeCache.set(streamUrl, { ts: Date.now(), promise });
+      return promise;
+    }
+
+    function createTeacherDriveRangeTransport(streamUrl, totalLength, initialData) {
+      const progressiveDone = initialData && initialData.byteLength >= totalLength;
+      const transport = new pdfjsLib.PDFDataRangeTransport(totalLength, initialData, progressiveDone);
+      transport._aborted = false;
+      transport.requestDataRange = function(begin, end) {
+        if (this._aborted) return;
+        const clampedBegin = Math.max(0, begin);
+        const clampedEnd = Math.min(this.length, end);
+        if (clampedBegin >= clampedEnd) {
+          this.onDataRange(clampedBegin, new Uint8Array(0));
+          return;
+        }
+        const fetchWithRetry = async (attempt) => {
+          if (this._aborted) return;
+          try {
+            const res = await fetch(streamUrl, {
+              method: 'GET',
+              mode: 'cors',
+              headers: { Range: `bytes=${clampedBegin}-${clampedEnd - 1}` }
+            });
+            if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status}`);
+            const buf = await res.arrayBuffer();
+            if (!this._aborted) {
+              this.onDataRange(clampedBegin, new Uint8Array(buf));
+            }
+          } catch (err) {
+            if (!this._aborted && attempt < 2) {
+              setTimeout(() => fetchWithRetry(attempt + 1), 250 * (attempt + 1));
+            }
+          }
+        };
+        fetchWithRetry(0);
+      };
+      transport.abort = function() {
+        this._aborted = true;
+      };
+      return transport;
+    }
+
+    function getActiveReaderIframe() {
+      if (!activeReaderPoolKey || !readerIframePool.has(activeReaderPoolKey)) return null;
+      return readerIframePool.get(activeReaderPoolKey).iframe || null;
+    }
+
+    function hideAllReaderPooledFrames() {
+      readerIframePool.forEach(entry => {
+        if (entry && entry.iframe) {
+          entry.iframe.style.visibility = 'hidden';
+          entry.iframe.style.pointerEvents = 'none';
+          entry.iframe.style.zIndex = '0';
+        }
+      });
+    }
+
+    function evictOldestReaderFrameIfNeeded(protectedKey) {
+      while (readerIframePool.size >= READER_IFRAME_POOL_MAX) {
+        let evicted = false;
+        for (const [key, entry] of readerIframePool.entries()) {
+          if (key === protectedKey || key === activeReaderPoolKey) continue;
+          if (entry && entry.iframe && entry.iframe.parentNode) {
+            entry.iframe.parentNode.removeChild(entry.iframe);
+          }
+          readerIframePool.delete(key);
+          evicted = true;
+          break;
+        }
+        if (!evicted) break;
+      }
+    }
+
+    function getOrCreateReaderPooledIframe(embedUrl, engine, activateNow) {
+      const container = document.getElementById('readerIframeContainer');
+      if (!container || !embedUrl) return null;
+      const poolKey = `${engine}::${embedUrl}`;
+
+      if (activateNow) {
+        hideAllReaderPooledFrames();
+        activeReaderPoolKey = poolKey;
+      }
+
+      if (readerIframePool.has(poolKey)) {
+        const existing = readerIframePool.get(poolKey);
+        readerIframePool.delete(poolKey);
+        existing.touchedAt = Date.now();
+        readerIframePool.set(poolKey, existing);
+        if (activateNow && existing.iframe) {
+          existing.iframe.style.visibility = 'visible';
+          existing.iframe.style.pointerEvents = 'auto';
+          existing.iframe.style.zIndex = '2';
+        }
+        return existing;
+      }
+
+      evictOldestReaderFrameIfNeeded(poolKey);
+
+      const iframe = document.createElement('iframe');
+      iframe.className = 'border-0 position-absolute top-0 start-0 bg-light';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.visibility = activateNow ? 'visible' : 'hidden';
+      iframe.style.pointerEvents = activateNow ? 'auto' : 'none';
+      iframe.style.zIndex = activateNow ? '2' : '0';
+      iframe.setAttribute('loading', 'eager');
+      iframe.setAttribute('allow', 'fullscreen');
+
+      const entry = { iframe, url: embedUrl, engine, loaded: false, touchedAt: Date.now() };
+      iframe.onload = () => {
+        entry.loaded = true;
+        if (activeReaderPoolKey === poolKey) {
+          const sp = document.getElementById('pdfLoadingSpinner');
+          if (sp) sp.classList.add('d-none');
+        }
+      };
+
+      readerIframePool.set(poolKey, entry);
+      container.appendChild(iframe);
+      iframe.src = embedUrl;
+      return entry;
+    }
+
+    function prewarmTeacherBook(bookId) {
+      const book = catalog.find(b => b.id === bookId);
+      if (!book || !book.fileUrl || isVideoCatalogItem(book)) return;
+      const resolved = resolveTeacherReaderUrls(book.fileUrl);
+      if (resolved.kind === 'drive' && resolved.streamUrl) {
+        probeTeacherDrivePdfStream(resolved.streamUrl).catch(() => {});
+      }
+    }
+
+    function updateTeacherFastModeBtn(engine) {
+      const btn = document.getElementById('readerFastModeBtn');
+      if (!btn) return;
+      if (!currentTeacherReaderState || (!currentTeacherReaderState.liteUrl && !currentTeacherReaderState.primaryUrl)) {
+        btn.classList.add('d-none');
+        return;
+      }
+      btn.classList.remove('d-none');
+      if (engine === 'native') {
+        btn.classList.remove('btn-info', 'text-dark');
+        btn.classList.add('btn-outline-info');
+        btn.innerHTML = '<i class="bi bi-eye-fill me-1"></i> Mode Viewer';
+      } else if (engine === 'lite') {
+        btn.classList.remove('btn-outline-info');
+        btn.classList.add('btn-info', 'text-dark');
+        btn.innerHTML = currentTeacherReaderState.streamUrl
+          ? '<i class="bi bi-file-earmark-check-fill me-1"></i> Mode PDF Jelas'
+          : '<i class="bi bi-stars me-1"></i> Mode Standar';
+      } else {
+        btn.classList.remove('btn-info', 'text-dark');
+        btn.classList.add('btn-outline-info');
+        btn.innerHTML = '<i class="bi bi-lightning-charge-fill me-1"></i> Mode Ringan';
+      }
+    }
+
+    async function toggleTeacherReaderEngine() {
+      if (!currentTeacherReaderState) return;
+      const spinner = document.getElementById('pdfLoadingSpinner');
+      const canvas = document.getElementById('pdfViewerCanvas');
+      const scrollContainer = document.getElementById('pdfScrollContainer');
+      const iframeContainer = document.getElementById('readerIframeContainer');
+      const modalBody = document.getElementById('readerModalBody');
+
+      let nextEngine = 'lite';
+      if (currentTeacherReaderState.engine === 'native') {
+        nextEngine = 'lite';
+      } else if (currentTeacherReaderState.streamUrl) {
+        nextEngine = 'native';
+      } else {
+        nextEngine = currentTeacherReaderState.engine === 'lite' ? 'primary' : 'lite';
+      }
+
+      if (nextEngine === 'native' && currentTeacherReaderState.bookId) {
+        await openWebReader(currentTeacherReaderState.bookId);
+        return;
+      }
+
+      if (currentPdfDoc) {
+        try { currentPdfDoc.destroy(); } catch (_) {}
+        currentPdfDoc = null;
+      }
+      if (scrollObserver) scrollObserver.disconnect();
+      teacherScrollQueue = [];
+      teacherRenderingPages.clear();
+      renderedScrollPages.clear();
+      if (canvas) {
+        canvas.classList.add('d-none');
+        canvas.style.display = 'none';
+      }
+      if (scrollContainer) {
+        scrollContainer.classList.remove('d-flex');
+        scrollContainer.classList.add('d-none');
+        scrollContainer.style.display = 'none';
+        scrollContainer.innerHTML = '';
+      }
+
+      currentTeacherReaderState.engine = nextEngine;
+      updateTeacherFastModeBtn(nextEngine);
+
+      const targetUrl = nextEngine === 'lite'
+        ? (currentTeacherReaderState.liteUrl || currentTeacherReaderState.primaryUrl)
+        : currentTeacherReaderState.primaryUrl;
+
+      if (modalBody) modalBody.classList.remove('py-3');
+      if (iframeContainer) iframeContainer.style.display = 'block';
+      const entry = getOrCreateReaderPooledIframe(targetUrl, nextEngine, true);
+      if (entry && entry.loaded) {
+        if (spinner) spinner.classList.add('d-none');
+      } else if (spinner) {
+        spinner.classList.remove('d-none');
+      }
+      applyIframeViewMode(readerViewMode);
+    }
+
     function isIframeReaderActive() {
       const container = document.getElementById('readerIframeContainer');
-      const iframe = document.getElementById('readerIframe');
-      return !currentPdfDoc && container && container.style.display !== 'none' && iframe && iframe.style.display !== 'none';
+      const iframe = getActiveReaderIframe();
+      return !currentPdfDoc && container && container.style.display !== 'none' && Boolean(iframe);
     }
 
     function showIframeNavHint(message) {
@@ -1152,8 +1495,8 @@
     }
 
     function applyIframeZoom() {
-      const iframe = document.getElementById('readerIframe');
-      if (!iframe || iframe.style.display === 'none') return;
+      const iframe = getActiveReaderIframe();
+      if (!iframe) return;
       const scale = Math.max(0.5, Math.min(2.4, pdfZoomScale));
       iframe.style.width = `${(100 / scale).toFixed(4)}%`;
       iframe.style.height = `${(100 / scale).toFixed(4)}%`;
@@ -1185,7 +1528,7 @@
       try {
         const page = await currentPdfDoc.getPage(num);
         const canvas = document.getElementById('pdfViewerCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
 
         const dpr = window.devicePixelRatio || 1;
         const viewport = page.getViewport({ scale: pdfZoomScale * dpr });
@@ -1193,13 +1536,18 @@
         canvas.width = viewport.width;
         canvas.style.width = `${Math.round(viewport.width / dpr)}px`;
         canvas.style.height = `${Math.round(viewport.height / dpr)}px`;
+        canvas.style.background = '#ffffff';
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${num} / ${currentPdfDoc.numPages}`;
         document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
 
         await page.render({
           canvasContext: ctx,
-          viewport: viewport
+          viewport: viewport,
+          background: 'rgb(255,255,255)'
         }).promise;
 
         canvas.classList.remove('d-none');
@@ -1229,6 +1577,9 @@
       container.style.display = 'flex';
       container.innerHTML = '';
       renderedScrollPages.clear();
+      teacherRenderingPages.clear();
+      teacherScrollQueue = [];
+      teacherActiveWorkers = 0;
 
       if (scrollObserver) {
         scrollObserver.disconnect();
@@ -1244,30 +1595,38 @@
         estHeight = Math.round(initialViewport.height);
       } catch (e) {}
 
-      // Create lightweight placeholder wrappers for all pages
+      // Create lightweight white-paper placeholder wrappers for all pages
+      const frag = document.createDocumentFragment();
       for (let i = 1; i <= currentPdfDoc.numPages; i++) {
         const wrapper = document.createElement('div');
         wrapper.id = `pdfPageWrapper_${i}`;
-        wrapper.className = 'pdf-scroll-page shadow-lg my-2 rounded overflow-hidden bg-white text-center';
+        wrapper.className = 'pdf-scroll-page shadow-lg my-2 rounded overflow-hidden bg-white text-center position-relative';
         wrapper.setAttribute('data-page-num', i);
         wrapper.style.width = `${estWidth}px`;
         wrapper.style.minHeight = `${estHeight}px`;
         wrapper.style.maxWidth = '98%';
+        wrapper.style.background = '#ffffff';
+
+        const ph = document.createElement('div');
+        ph.id = `pdfScrollPh_${i}`;
+        ph.className = 'position-absolute top-50 start-50 translate-middle text-secondary small fw-semibold';
+        ph.innerHTML = `<div class="spinner-border spinner-border-sm text-primary me-1"></div> Halaman ${i} / ${currentPdfDoc.numPages}`;
 
         const canvas = document.createElement('canvas');
         canvas.id = `pdfScrollCanvas_${i}`;
         canvas.style.display = 'block';
         canvas.style.width = '100%';
+        canvas.style.background = '#ffffff';
 
+        wrapper.appendChild(ph);
         wrapper.appendChild(canvas);
-        container.appendChild(wrapper);
+        frag.appendChild(wrapper);
       }
+      container.appendChild(frag);
 
-      // Preload first 3 pages immediately
-      const initialBatch = Math.min(3, currentPdfDoc.numPages);
-      for (let p = 1; p <= initialBatch; p++) {
-        await renderScrollPage(p);
-      }
+      // Render Page 1 immediately, then prioritize nearby pages
+      await renderScrollPage(1);
+      enqueueTeacherScrollPages([2, 3], true);
 
       // Modal body scroll handler for smooth page loading & counter tracking
       const modalBody = document.getElementById('readerModalBody');
@@ -1276,22 +1635,24 @@
         modalBody.addEventListener('scroll', handleModalScrollCheck, { passive: true });
       }
 
-      // IntersectionObserver for fast, lazy rendering while scrolling
+      // IntersectionObserver for prioritized lazy rendering while scrolling
       scrollObserver = new IntersectionObserver((entries) => {
+        const hits = [];
         entries.forEach(entry => {
-          const pageNum = parseInt(entry.target.getAttribute('data-page-num'));
-          if (entry.isIntersecting) {
-            if (!renderedScrollPages.has(pageNum)) {
-              renderScrollPage(pageNum);
-            }
+          const pageNum = parseInt(entry.target.getAttribute('data-page-num'), 10);
+          if (entry.isIntersecting && pageNum) {
+            hits.push(pageNum);
             document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${pageNum} / ${currentPdfDoc.numPages}`;
             currentPdfPage = pageNum;
           }
         });
+        if (hits.length > 0) {
+          enqueueTeacherScrollPages(hits, true);
+        }
       }, {
         root: modalBody,
-        rootMargin: '800px 0px 800px 0px',
-        threshold: 0.05
+        rootMargin: '1000px 0px 1000px 0px',
+        threshold: 0.02
       });
 
       for (let i = 1; i <= currentPdfDoc.numPages; i++) {
@@ -1301,7 +1662,41 @@
 
       if (currentPdfPage > 1) {
         const targetEl = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
-        if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+        if (targetEl) targetEl.scrollIntoView({ behavior: 'auto' });
+        enqueueTeacherScrollPages([currentPdfPage - 1, currentPdfPage, currentPdfPage + 1], true);
+      }
+    }
+
+    function enqueueTeacherScrollPages(pageList, highPriority) {
+      if (!currentPdfDoc) return;
+      const list = highPriority ? [...pageList].reverse() : pageList;
+      for (const num of list) {
+        if (num < 1 || num > currentPdfDoc.numPages) continue;
+        if (renderedScrollPages.has(num) || teacherRenderingPages.has(num)) continue;
+        const idx = teacherScrollQueue.indexOf(num);
+        if (idx !== -1) {
+          if (highPriority) {
+            teacherScrollQueue.splice(idx, 1);
+            teacherScrollQueue.unshift(num);
+          }
+        } else {
+          if (highPriority) teacherScrollQueue.unshift(num);
+          else teacherScrollQueue.push(num);
+        }
+      }
+      pumpTeacherScrollQueue();
+    }
+
+    function pumpTeacherScrollQueue() {
+      if (!currentPdfDoc) return;
+      while (teacherActiveWorkers < 2 && teacherScrollQueue.length > 0) {
+        const nextPage = teacherScrollQueue.shift();
+        if (renderedScrollPages.has(nextPage) || teacherRenderingPages.has(nextPage)) continue;
+        teacherActiveWorkers++;
+        renderScrollPage(nextPage).finally(() => {
+          teacherActiveWorkers--;
+          pumpTeacherScrollQueue();
+        });
       }
     }
 
@@ -1311,15 +1706,16 @@
       if (!modalBody) return;
       const scrollTop = modalBody.scrollTop;
       const scrollBottom = scrollTop + modalBody.clientHeight;
+      const visible = [];
 
       for (let i = 1; i <= currentPdfDoc.numPages; i++) {
         const wrapper = document.getElementById(`pdfPageWrapper_${i}`);
         if (!wrapper) continue;
         const top = wrapper.offsetTop;
         const bottom = top + wrapper.offsetHeight;
-        if (bottom >= scrollTop - 800 && top <= scrollBottom + 800) {
+        if (bottom >= scrollTop - 900 && top <= scrollBottom + 1100) {
           if (!renderedScrollPages.has(i)) {
-            renderScrollPage(i);
+            visible.push(i);
           }
         }
         if (top <= scrollTop + modalBody.clientHeight / 2 && bottom >= scrollTop + modalBody.clientHeight / 2) {
@@ -1327,18 +1723,24 @@
           currentPdfPage = i;
         }
       }
+      if (visible.length > 0) {
+        enqueueTeacherScrollPages(visible, true);
+      }
     }
 
     async function renderScrollPage(num) {
-      if (!currentPdfDoc || renderedScrollPages.has(num)) return;
+      if (!currentPdfDoc || renderedScrollPages.has(num) || teacherRenderingPages.has(num)) return;
+      teacherRenderingPages.add(num);
+      const docRef = currentPdfDoc;
       try {
-        renderedScrollPages.add(num);
-        const page = await currentPdfDoc.getPage(num);
+        const page = await docRef.getPage(num);
+        if (currentPdfDoc !== docRef) return;
         const canvas = document.getElementById(`pdfScrollCanvas_${num}`);
         const wrapper = document.getElementById(`pdfPageWrapper_${num}`);
+        const ph = document.getElementById(`pdfScrollPh_${num}`);
         if (!canvas || !wrapper) return;
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         const dpr = window.devicePixelRatio || 1;
         const viewport = page.getViewport({ scale: pdfZoomScale * dpr });
 
@@ -1347,16 +1749,30 @@
         canvas.style.width = `${Math.round(viewport.width / dpr)}px`;
         canvas.style.height = `${Math.round(viewport.height / dpr)}px`;
         canvas.style.maxWidth = '100%';
+        canvas.style.background = '#ffffff';
         wrapper.style.width = `${Math.round(viewport.width / dpr)}px`;
         wrapper.style.minHeight = `${Math.round(viewport.height / dpr)}px`;
 
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         await page.render({
           canvasContext: ctx,
-          viewport: viewport
+          viewport: viewport,
+          background: 'rgb(255,255,255)'
         }).promise;
+
+        if (currentPdfDoc !== docRef) return;
+        renderedScrollPages.add(num);
+        if (ph) ph.style.display = 'none';
       } catch (err) {
         console.warn(`Gagal merender halaman scroll ${num}:`, err);
-        renderedScrollPages.delete(num);
+        const ph = document.getElementById(`pdfScrollPh_${num}`);
+        if (ph) {
+          ph.innerHTML = `<button type="button" class="btn btn-sm btn-outline-primary fw-semibold" onclick="enqueueTeacherScrollPages([${num}], true)">Muat Ulang Halaman ${num}</button>`;
+        }
+      } finally {
+        teacherRenderingPages.delete(num);
       }
     }
 
@@ -1424,11 +1840,19 @@
     // =====================================
     async function renderPdfCoverThumbnail(pdfUrl, canvasId) {
       if (!pdfUrl || !window.pdfjsLib) return;
+      // Skip Google Drive / Docs HTML preview pages so we never congest sockets with failing PDF fetches
+      if (pdfUrl.includes('drive.google.com') || pdfUrl.includes('docs.google.com')) return;
+      const isRenderablePdf = pdfUrl.startsWith('blob:') || /\.pdf($|\?)/i.test(pdfUrl) || pdfUrl.includes('/books/');
+      if (!isRenderablePdf) return;
       try {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
 
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const loadingTask = pdfjsLib.getDocument({
+          url: pdfUrl,
+          disableAutoFetch: true,
+          rangeChunkSize: 65536
+        });
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
 
@@ -1448,29 +1872,141 @@
       }
     }
 
+    function getTeacherBooksList() {
+      return catalog.filter(item => !isVideoCatalogItem(item));
+    }
+
+    function getTeacherMergedVideos() {
+      const merged = [];
+      const seen = new Set();
+      const pushUnique = (vid) => {
+        if (!vid || typeof vid !== 'object') return;
+        const key = vid.id
+          ? `id:${String(vid.id).trim()}`
+          : `meta:${(vid.title || '').trim().toLowerCase()}|${(vid.gradeClass || '').trim().toLowerCase()}|${(vid.fileUrl || '').trim()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(vid);
+      };
+      (Array.isArray(videoCatalog) ? videoCatalog : []).forEach(pushUnique);
+      (Array.isArray(catalog) ? catalog.filter(isVideoCatalogItem) : []).forEach(pushUnique);
+      return merged;
+    }
+
+    function setTeacherCategory(category) {
+      currentTeacherCategory = (category === 'Video') ? 'Video' : 'Buku';
+      const bookBtn = document.getElementById('teacherCatBookBtn');
+      const videoBtn = document.getElementById('teacherCatVideoBtn');
+      const searchInput = document.getElementById('teacherBookSearch');
+
+      if (bookBtn && videoBtn) {
+        if (currentTeacherCategory === 'Video') {
+          bookBtn.classList.remove('btn-primary', 'fw-bold');
+          bookBtn.classList.add('btn-outline-primary', 'fw-semibold');
+          videoBtn.classList.remove('btn-outline-danger', 'fw-semibold');
+          videoBtn.classList.add('btn-danger', 'fw-bold');
+        } else {
+          videoBtn.classList.remove('btn-danger', 'fw-bold');
+          videoBtn.classList.add('btn-outline-danger', 'fw-semibold');
+          bookBtn.classList.remove('btn-outline-primary', 'fw-semibold');
+          bookBtn.classList.add('btn-primary', 'fw-bold');
+        }
+      }
+      if (searchInput) {
+        searchInput.placeholder = currentTeacherCategory === 'Video'
+          ? 'Cari judul video, mata pelajaran, atau pengampu...'
+          : 'Cari judul buku, mata pelajaran, atau penulis...';
+      }
+      renderTeacherBookshelf();
+    }
+
     function renderTeacherBookshelf() {
       const grid = document.getElementById('teacherBooksGrid');
+      if (!grid) return;
       grid.innerHTML = '';
 
-      const filtered = catalog.filter(book => {
-        const matchesGrade = (currentTeacherFilterGrade === 'ALL') || 
-                             (book.gradeClass === currentTeacherFilterGrade) || 
-                             (book.gradeClass === 'Semua Kelas');
-        const query = currentTeacherSearchQuery.toLowerCase();
-        const matchesQuery = book.title.toLowerCase().includes(query) ||
-                             book.subject.toLowerCase().includes(query) ||
-                             book.author.toLowerCase().includes(query);
+      const booksOnly = getTeacherBooksList();
+      const videosOnly = getTeacherMergedVideos();
+
+      const bookCountEl = document.getElementById('teacherBookCategoryCount');
+      const videoCountEl = document.getElementById('teacherVideoCategoryCount');
+      if (bookCountEl) bookCountEl.textContent = booksOnly.length;
+      if (videoCountEl) videoCountEl.textContent = videosOnly.length;
+
+      const sourceList = (currentTeacherCategory === 'Video') ? videosOnly : booksOnly;
+      const query = (currentTeacherSearchQuery || '').toLowerCase();
+
+      const filtered = sourceList.filter(item => {
+        const itemGrade = (item.gradeClass || '').trim().toLowerCase();
+        const filterGrade = (currentTeacherFilterGrade || 'ALL').trim().toLowerCase();
+        const matchesGrade = (currentTeacherFilterGrade === 'ALL') ||
+                             (itemGrade === filterGrade) ||
+                             (itemGrade === 'semua kelas');
+        const matchesQuery = !query ||
+                             (item.title || '').toLowerCase().includes(query) ||
+                             (item.subject || '').toLowerCase().includes(query) ||
+                             (item.author || '').toLowerCase().includes(query);
         return matchesGrade && matchesQuery;
       });
 
       if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-12 text-center py-5">
-            <i class="bi bi-journal-x fs-1 text-muted"></i>
-            <h5 class="fw-bold mt-2 text-dark">Buku Tidak Ditemukan</h5>
-            <p class="text-muted small">Belum ada buku dalam katalog atau ganti saringan kelas.</p>
-          </div>
-        `;
+        if (currentTeacherCategory === 'Video') {
+          grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <i class="bi bi-camera-reels fs-1 text-danger opacity-75"></i>
+              <h5 class="fw-bold mt-2 text-dark">Video Pembelajaran Tidak Ditemukan</h5>
+              <p class="text-muted small">Belum ada video untuk saringan kelas/pencarian ini. Tambahkan video melalui tab <strong>Kelola Video (video.json)</strong>.</p>
+            </div>
+          `;
+        } else {
+          grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <i class="bi bi-journal-x fs-1 text-muted"></i>
+              <h5 class="fw-bold mt-2 text-dark">Buku Tidak Ditemukan</h5>
+              <p class="text-muted small">Belum ada buku dalam katalog atau ganti saringan kelas.</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (currentTeacherCategory === 'Video') {
+        filtered.forEach((vid) => {
+          const col = document.createElement('div');
+          col.className = 'col-md-6 col-lg-4 col-xl-3';
+          const sourceLabel = getVideoSourceLabel(vid.fileUrl);
+
+          col.innerHTML = `
+            <div class="card book-card h-100 shadow-sm overflow-hidden border-danger-subtle">
+              <div class="position-relative overflow-hidden d-flex flex-column align-items-center justify-content-center p-3 text-center" style="min-height: 180px; cursor: pointer; background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);" onclick="openTeacherVideoPlayer('${escapeStudentHtml(vid.id)}')">
+                <span class="badge bg-white text-danger fw-bold position-absolute top-0 start-0 m-2">${escapeStudentHtml(vid.gradeClass)}</span>
+                <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-2">${escapeStudentHtml(sourceLabel)}</span>
+                <div class="position-relative z-1 text-center w-100 mt-3">
+                  <i class="bi bi-play-circle-fill fs-1 text-white mb-2 d-block"></i>
+                  <h6 class="fw-bold mb-1 text-white text-truncate w-100 px-2" title="${escapeStudentHtml(vid.title)}">${escapeStudentHtml(vid.title)}</h6>
+                  <span class="badge bg-light text-danger fw-semibold">${escapeStudentHtml(vid.subject || 'Video')}</span>
+                </div>
+              </div>
+              <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-danger-subtle text-danger">${escapeStudentHtml(vid.gradeClass)}</span>
+                    <small class="text-muted"><i class="bi bi-film me-1"></i>${escapeStudentHtml(sourceLabel)}</small>
+                  </div>
+                  <p class="text-secondary small mb-1"><strong>Pengampu:</strong> ${escapeStudentHtml(vid.author || 'Guru MTs Al-Khairaat Bunyu')}</p>
+                  <p class="text-muted fs-7 mb-3 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${escapeStudentHtml(vid.description || '')}">
+                    ${escapeStudentHtml(vid.description || 'Video Pembelajaran MTs Al-Khairaat Bunyu.')}
+                  </p>
+                </div>
+                <button class="btn btn-danger text-white w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" onclick="openTeacherVideoPlayer('${escapeStudentHtml(vid.id)}')">
+                  <i class="bi bi-play-fill fs-5"></i>
+                  <span>Putar Video Pembelajaran</span>
+                </button>
+              </div>
+            </div>
+          `;
+          grid.appendChild(col);
+        });
         return;
       }
 
@@ -1480,27 +2016,27 @@
         const canvasId = `pdf_cover_canvas_${index}`;
 
         col.innerHTML = `
-          <div class="card book-card h-100 shadow-sm overflow-hidden">
-            <div class="book-cover position-relative overflow-hidden d-flex flex-column align-items-center justify-content-center p-3 text-center" style="min-height: 180px; cursor: pointer;" onclick="openWebReader('${book.id}')">
+          <div class="card book-card h-100 shadow-sm overflow-hidden" onpointerdown="prewarmTeacherBook('${escapeStudentHtml(book.id)}')" onmouseenter="prewarmTeacherBook('${escapeStudentHtml(book.id)}')">
+            <div class="book-cover position-relative overflow-hidden d-flex flex-column align-items-center justify-content-center p-3 text-center" style="min-height: 180px; cursor: pointer;" onclick="openWebReader('${escapeStudentHtml(book.id)}')">
               <canvas id="${canvasId}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0.9; display: none;"></canvas>
               <div class="position-relative z-1 text-center w-100">
                 <i class="bi bi-book-fill fs-1 text-warning mb-2 d-block"></i>
-                <h6 class="fw-bold mb-1 text-white text-truncate w-100 px-2" title="${book.title}">${book.title}</h6>
-                <span class="badge bg-light text-dark fw-semibold">${book.subject}</span>
+                <h6 class="fw-bold mb-1 text-white text-truncate w-100 px-2" title="${escapeStudentHtml(book.title)}">${escapeStudentHtml(book.title)}</h6>
+                <span class="badge bg-light text-dark fw-semibold">${escapeStudentHtml(book.subject)}</span>
               </div>
             </div>
             <div class="card-body p-3 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="badge bg-primary-subtle text-primary-emphasis">${book.gradeClass}</span>
+                  <span class="badge bg-primary-subtle text-primary-emphasis">${escapeStudentHtml(book.gradeClass)}</span>
                   <small class="text-muted"><i class="bi bi-file-earmark-text me-1"></i>${book.pageCount} Hal</small>
                 </div>
-                <p class="text-secondary small mb-1"><strong>Penulis:</strong> ${book.author}</p>
-                <p class="text-muted fs-7 mb-3 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${book.description}">
-                  ${book.description}
+                <p class="text-secondary small mb-1"><strong>Penulis:</strong> ${escapeStudentHtml(book.author)}</p>
+                <p class="text-muted fs-7 mb-3 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${escapeStudentHtml(book.description || '')}">
+                  ${escapeStudentHtml(book.description || '')}
                 </p>
               </div>
-              <button class="btn btn-primary-custom text-white w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" onclick="openWebReader('${book.id}')">
+              <button class="btn btn-primary-custom text-white w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" onclick="openWebReader('${escapeStudentHtml(book.id)}')">
                 <i class="bi bi-eye-fill"></i>
                 <span>Pratinjau & Baca Buku</span>
               </button>
@@ -1515,7 +2051,91 @@
       });
     }
 
-    // Open Web Reader Modal with Native PDF.js Rendering & Instant Local Blob Support
+    function resolveTeacherVideoEmbedUrl(rawUrl) {
+      const url = (rawUrl || '').trim();
+      if (!url) return { type: 'iframe', embedUrl: '' };
+
+      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+      if (ytMatch && ytMatch[1]) {
+        return {
+          type: 'iframe',
+          embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1&rel=0&modestbranding=1`
+        };
+      }
+
+      if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
+        const fileIdMatch = url.match(/\/(?:file\/d\/|document\/d\/)([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          return {
+            type: 'iframe',
+            embedUrl: `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`
+          };
+        }
+      }
+
+      if (/\.(mp4|webm|ogg)($|\?)/i.test(url)) {
+        return { type: 'video', embedUrl: url };
+      }
+
+      return { type: 'iframe', embedUrl: url };
+    }
+
+    function openTeacherVideoPlayer(videoId) {
+      const vid = getTeacherMergedVideos().find(v => v.id === videoId);
+      if (!vid) return;
+
+      document.getElementById('teacherVideoModalTitle').textContent = vid.title || 'Video Pembelajaran';
+      document.getElementById('teacherVideoModalSubtitle').textContent = `${vid.subject || 'Materi Video'} • ${vid.gradeClass || ''} • ${vid.author || 'Guru MTs Al-Khairaat Bunyu'}`;
+      document.getElementById('teacherVideoOpenNewTabBtn').href = vid.fileUrl || '#';
+
+      const container = document.getElementById('teacherVideoContainer');
+      const resolved = resolveTeacherVideoEmbedUrl(vid.fileUrl);
+
+      if (resolved.type === 'video') {
+        container.innerHTML = `
+          <video controls autoplay playsinline class="w-100 h-100" style="object-fit: contain; background: #000;">
+            <source src="${escapeStudentHtml(resolved.embedUrl)}" type="video/mp4">
+            Browser Anda tidak mendukung tag video HTML5.
+          </video>
+        `;
+      } else {
+        container.innerHTML = `
+          <iframe src="${escapeStudentHtml(resolved.embedUrl)}" class="w-100 h-100 border-0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+        `;
+      }
+
+      const modalEl = document.getElementById('teacherVideoModal');
+      if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      }
+    }
+
+    function stopTeacherVideoPlayer() {
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (_) {}
+      const container = document.getElementById('teacherVideoContainer');
+      if (container) container.innerHTML = '';
+    }
+
+    function toggleTeacherVideoFullscreen() {
+      const stage = document.getElementById('teacherVideoStage');
+      if (!stage) return;
+      try {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        } else if (stage.requestFullscreen) {
+          stage.requestFullscreen().catch(() => {});
+        } else if (stage.webkitRequestFullscreen) {
+          stage.webkitRequestFullscreen();
+        }
+      } catch (_) {}
+    }
+
+    // Open Web Reader Modal with Native PDF.js Streaming, Pooled Drive Iframe & Instant Local Blob Support
     async function openWebReader(bookId) {
       const book = catalog.find(b => b.id === bookId);
       if (!book) return;
@@ -1526,7 +2146,6 @@
 
       const spinner = document.getElementById('pdfLoadingSpinner');
       const canvas = document.getElementById('pdfViewerCanvas');
-      const iframe = document.getElementById('readerIframe');
       const iframeContainer = document.getElementById('readerIframeContainer');
       const errorCard = document.getElementById('pdfErrorCard');
       const toast = document.getElementById('iframeNavToast');
@@ -1535,7 +2154,7 @@
       spinner.classList.remove('d-none');
       canvas.classList.add('d-none');
       canvas.style.display = 'none';
-      iframe.style.display = 'none';
+      hideAllReaderPooledFrames();
       if (iframeContainer) iframeContainer.style.display = 'none';
       const scrollContainer = document.getElementById('pdfScrollContainer');
       if (scrollContainer) {
@@ -1551,9 +2170,20 @@
       }
       if (errorCard) errorCard.style.display = 'none';
 
-      const modal = new bootstrap.Modal(document.getElementById('webReaderModal'));
+      currentTeacherReaderState = null;
+      updateTeacherFastModeBtn('primary');
+
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('webReaderModal'));
       modal.show();
 
+      if (scrollObserver) scrollObserver.disconnect();
+      if (currentPdfDoc) {
+        try { currentPdfDoc.destroy(); } catch (_) {}
+      }
+      teacherScrollQueue = [];
+      teacherRenderingPages.clear();
+      teacherActiveWorkers = 0;
+      renderedScrollPages.clear();
       currentPdfDoc = null;
       currentPdfPage = 1;
       currentBookPageTotal = Math.max(1, parseInt(book.pageCount, 10) || 1);
@@ -1575,30 +2205,76 @@
 
       document.getElementById('readerOpenNewTabBtn').href = targetUrl || '#';
 
-      // Handle Google Drive / Google Docs links via /preview iframe
+      // Handle Google Drive / Google Docs links: try native PDF.js Range Streaming first (guarantees crisp white pages 1..N), fallback to Google Viewer
       if (targetUrl && (targetUrl.includes('drive.google.com') || targetUrl.includes('docs.google.com'))) {
-        let driveEmbedUrl = targetUrl;
-        const fileIdMatch = targetUrl.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
-        if (fileIdMatch && fileIdMatch[1]) {
-          driveEmbedUrl = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
-        } else if (!targetUrl.endsWith('/preview')) {
-          driveEmbedUrl = targetUrl.replace(/\/view.*$/, '/preview');
+        const resolved = resolveTeacherReaderUrls(targetUrl);
+        currentTeacherReaderState = {
+          bookId: book.id,
+          engine: resolved.streamUrl ? 'native' : 'primary',
+          streamUrl: resolved.streamUrl,
+          primaryUrl: resolved.primaryUrl,
+          liteUrl: resolved.liteUrl
+        };
+
+        if (window.pdfjsLib && resolved.streamUrl) {
+          try {
+            updateTeacherFastModeBtn('native');
+            const probe = await probeTeacherDrivePdfStream(resolved.streamUrl);
+            const transport = createTeacherDriveRangeTransport(resolved.streamUrl, probe.totalLength, probe.initialData);
+            pdfZoomScale = 1.2;
+            document.getElementById('pdfZoomDisplay').textContent = '120%';
+            const loadingTask = pdfjsLib.getDocument({
+              range: transport,
+              length: probe.totalLength,
+              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+              cMapPacked: true,
+              standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+              disableAutoFetch: true,
+              disableStream: true,
+              rangeChunkSize: 65536
+            });
+            currentPdfDoc = await loadingTask.promise;
+            currentBookPageTotal = currentPdfDoc.numPages;
+            document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
+            spinner.classList.add('d-none');
+            if (readerViewMode === 'scroll') {
+              await initScrollDownView();
+            } else {
+              await renderModalPdfPage(1);
+            }
+            return;
+          } catch (driveStreamErr) {
+            console.warn('Native Drive PDF stream fallback to Google Viewer:', driveStreamErr);
+          }
         }
-        spinner.classList.add('d-none');
+
+        const fallbackEngine = resolved.liteUrl ? 'lite' : 'primary';
+        const fallbackUrl = fallbackEngine === 'lite' ? resolved.liteUrl : resolved.primaryUrl;
+        currentTeacherReaderState.engine = fallbackEngine;
+        updateTeacherFastModeBtn(fallbackEngine);
         if (modalBody) modalBody.classList.remove('py-3');
         if (iframeContainer) iframeContainer.style.display = 'block';
-        iframe.src = driveEmbedUrl;
-        iframe.style.display = 'block';
+        const entry = getOrCreateReaderPooledIframe(fallbackUrl, fallbackEngine, true);
+        if (entry && entry.loaded) {
+          spinner.classList.add('d-none');
+        }
         applyIframeViewMode(readerViewMode);
         return;
       }
 
-      // Try rendering with PDF.js client-side
+      // Try rendering with streaming PDF.js client-side (page 1 renders fast via range chunks)
       if (window.pdfjsLib && targetUrl) {
         try {
           pdfZoomScale = 1.2;
           document.getElementById('pdfZoomDisplay').textContent = '120%';
-          const loadingTask = pdfjsLib.getDocument(targetUrl);
+          const loadingTask = pdfjsLib.getDocument({
+            url: targetUrl,
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+            cMapPacked: true,
+            standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+            disableAutoFetch: true,
+            rangeChunkSize: 65536
+          });
           currentPdfDoc = await loadingTask.promise;
           currentBookPageTotal = currentPdfDoc.numPages;
           document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
@@ -1611,13 +2287,12 @@
           return;
         } catch (pdfErr) {
           console.warn("PDF.js client fetch failed:", pdfErr);
-          // If PDF.js canvas fetch fails on Blob, use native Blob iframe
+          // If PDF.js canvas fetch fails on Blob, use pooled Blob iframe
           if (targetUrl && targetUrl.startsWith('blob:')) {
             spinner.classList.add('d-none');
             if (modalBody) modalBody.classList.remove('py-3');
             if (iframeContainer) iframeContainer.style.display = 'block';
-            iframe.src = targetUrl;
-            iframe.style.display = 'block';
+            getOrCreateReaderPooledIframe(targetUrl, 'blob', true);
             pdfZoomScale = 1.0;
             applyIframeViewMode(readerViewMode);
             return;
@@ -1646,7 +2321,7 @@
             renderModalPdfPage(currentPdfPage);
           }
         } else if (isIframeReaderActive()) {
-          const iframe = document.getElementById('readerIframe');
+          const iframe = getActiveReaderIframe();
           if (iframe) iframe.focus();
           showIframeNavHint('Pratinjau Google Drive: gunakan gulir atau tombol panah di dalam area PDF untuk pindah halaman.');
         }
@@ -1663,7 +2338,7 @@
             renderModalPdfPage(currentPdfPage);
           }
         } else if (isIframeReaderActive()) {
-          const iframe = document.getElementById('readerIframe');
+          const iframe = getActiveReaderIframe();
           if (iframe) iframe.focus();
           showIframeNavHint('Pratinjau Google Drive: gunakan gulir atau tombol panah di dalam area PDF untuk pindah halaman.');
         }
@@ -1709,17 +2384,20 @@
       if (singleBtn) singleBtn.addEventListener('click', () => setReaderViewMode('single'));
       if (scrollBtn) scrollBtn.addEventListener('click', () => setReaderViewMode('scroll'));
 
-      // Stop iframe loading and cleanup scroll observer when modal is closed
+      // Keep pooled iframes cached on modal close for instant 0ms reopen, while resetting active view state
       document.getElementById('webReaderModal').addEventListener('hidden.bs.modal', function () {
-        const iframe = document.getElementById('readerIframe');
+        const iframe = getActiveReaderIframe();
         const iframeContainer = document.getElementById('readerIframeContainer');
         const toast = document.getElementById('iframeNavToast');
         if (iframe) {
-          iframe.src = '';
           iframe.style.width = '100%';
           iframe.style.height = '100%';
           iframe.style.transform = 'none';
         }
+        hideAllReaderPooledFrames();
+        activeReaderPoolKey = null;
+        currentTeacherReaderState = null;
+        updateTeacherFastModeBtn('primary');
         if (iframeContainer) {
           iframeContainer.style.display = 'none';
           iframeContainer.style.maxWidth = '100%';
@@ -1727,6 +2405,8 @@
         }
         if (toast) toast.classList.add('d-none');
         if (scrollObserver) scrollObserver.disconnect();
+        const modalBody = document.getElementById('readerModalBody');
+        if (modalBody) modalBody.removeEventListener('scroll', handleModalScrollCheck);
         const canvas = document.getElementById('pdfViewerCanvas');
         if (canvas) {
           canvas.classList.add('d-none');
@@ -1739,6 +2419,12 @@
           scrollContainer.style.display = 'none';
           scrollContainer.innerHTML = '';
         }
+        if (currentPdfDoc) {
+          try { currentPdfDoc.destroy(); } catch (_) {}
+        }
+        teacherScrollQueue = [];
+        teacherRenderingPages.clear();
+        teacherActiveWorkers = 0;
         renderedScrollPages.clear();
         currentPdfDoc = null;
       });
@@ -1748,11 +2434,11 @@
     document.querySelectorAll('.filter-grade-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         document.querySelectorAll('.filter-grade-btn').forEach(b => {
-          b.classList.remove('btn-primary');
-          b.classList.add('btn-outline-secondary');
+          b.classList.remove('btn-primary', 'fw-bold');
+          b.classList.add('btn-outline-secondary', 'fw-semibold');
         });
-        this.classList.remove('btn-outline-secondary');
-        this.classList.add('btn-primary');
+        this.classList.remove('btn-outline-secondary', 'fw-semibold');
+        this.classList.add('btn-primary', 'fw-bold');
 
         currentTeacherFilterGrade = this.getAttribute('data-grade');
         renderTeacherBookshelf();
@@ -1767,8 +2453,13 @@
 
     document.getElementById('refreshTeacherBooksBtn').addEventListener('click', function() {
       renderTeacherBookshelf();
-      alert('Rak buku guru berhasil diperbarui!');
+      alert('Rak buku & video guru berhasil diperbarui!');
     });
+
+    const teacherVideoModalEl = document.getElementById('teacherVideoModal');
+    if (teacherVideoModalEl) {
+      teacherVideoModalEl.addEventListener('hidden.bs.modal', stopTeacherVideoPlayer);
+    }
 
     // =====================================
     // CATALOG GURU VIEW FUNCTIONS
@@ -1886,6 +2577,8 @@
           videoTableBody.appendChild(tr);
         });
       }
+
+      renderTeacherBookshelf();
     }
 
     function deleteVideo(index) {

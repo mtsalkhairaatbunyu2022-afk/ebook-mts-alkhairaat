@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="light">
   <title>Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu</title>
 
   <!-- PWA Web App Manifest & Fullscreen Display Rules -->
@@ -21,10 +22,20 @@
   <!-- High Speed Network Preconnect & DNS-Prefetch for Fast Document & Video Opening -->
   <link rel="preconnect" href="https://drive.google.com" crossorigin>
   <link rel="preconnect" href="https://docs.google.com" crossorigin>
+  <link rel="preconnect" href="https://drive.usercontent.google.com" crossorigin>
+  <link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ssl.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
   <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
   <link rel="dns-prefetch" href="https://drive.google.com">
   <link rel="dns-prefetch" href="https://docs.google.com">
+  <link rel="dns-prefetch" href="https://drive.usercontent.google.com">
+  <link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <link rel="dns-prefetch" href="https://ssl.gstatic.com">
   <link rel="dns-prefetch" href="https://www.youtube-nocookie.com">
   <link rel="dns-prefetch" href="https://www.youtube.com">
   <link rel="dns-prefetch" href="https://i.ytimg.com">
@@ -246,14 +257,171 @@
     /* Fullscreen PDF Modal */
     .pdf-modal-dialog {
       max-width: 100%;
+      width: 100%;
       margin: 0;
       height: 100vh;
+      height: 100dvh;
     }
     .pdf-modal-content {
       height: 100vh;
+      height: 100dvh;
       border-radius: 0;
       background: #0f172a;
       flex-direction: column;
+    }
+    .pdf-pooled-frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #f8fafc;
+    }
+    .pdf-native-stage {
+      background: #334155;
+      padding: 12px 8px 76px 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .pdf-page-sheet {
+      background: #ffffff !important;
+      color: #334155;
+      position: relative;
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
+      margin: 0 auto 12px auto;
+      overflow: hidden;
+    }
+    .pdf-page-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #ffffff;
+      color: #475569;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 1;
+      padding: 12px;
+    }
+    .pdf-native-nav {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 14;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(6px);
+      max-width: 95vw;
+    }
+    .pdf-page-jump-input {
+      width: 48px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 2px 4px;
+    }
+
+    /* Adaptive Full-Viewport Video Player Modal */
+    .video-modal-dialog {
+      max-width: 100%;
+      width: 100%;
+      margin: 0;
+      height: 100vh;
+      height: 100dvh;
+    }
+    .video-modal-content {
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+      background: #000000;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .video-stage {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #videoPlayerContainer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+    }
+    #videoPlayerContainer iframe,
+    #videoPlayerContainer video {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000000;
+      object-fit: contain;
+    }
+    .video-floating-bar {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      z-index: 30;
+      display: none;
+      gap: 6px;
+      align-items: center;
+    }
+    #videoPlayerModal.video-theater-max .video-modal-header,
+    #videoPlayerModal.video-theater-max .video-modal-footer {
+      display: none !important;
+    }
+    #videoPlayerModal.video-theater-max .video-floating-bar,
+    #videoPlayerModal.video-rotated-landscape .video-floating-bar {
+      display: flex;
+    }
+    #videoPlayerModal.video-rotated-landscape .video-modal-header,
+    #videoPlayerModal.video-rotated-landscape .video-modal-footer {
+      display: none !important;
+    }
+    #videoPlayerModal.video-rotated-landscape .video-stage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 100vh;
+      width: 100dvh;
+      height: 100vw;
+      transform: translate(-50%, -50%) rotate(90deg);
+      transform-origin: center center;
+      z-index: 1090;
+      background: #000000;
+    }
+    @media (orientation: landscape) and (max-height: 540px) {
+      #videoPlayerModal .video-modal-header,
+      #videoPlayerModal .video-modal-footer {
+        display: none !important;
+      }
+      #videoPlayerModal .video-floating-bar {
+        display: flex;
+      }
     }
 
     .overflow-x-auto {
@@ -678,48 +846,78 @@
   <div class="modal fade" id="pdfReaderModal" tabindex="-1">
     <div class="modal-dialog pdf-modal-dialog">
       <div class="modal-content pdf-modal-content">
-        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
-            <div>
-              <h6 class="modal-title fw-bold mb-0 fs-7" id="pdfBookTitle">Judul Buku Pelajaran</h6>
+        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2 px-3 gap-2">
+          <div class="d-flex align-items-center gap-2 text-truncate me-auto">
+            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5 flex-shrink-0"></i>
+            <div class="text-truncate">
+              <h6 class="modal-title fw-bold mb-0 fs-7 text-truncate" id="pdfBookTitle">Judul Buku Pelajaran</h6>
               <span class="badge bg-warning text-dark fs-8" id="pdfBookGrade">Kelas VIII</span>
             </div>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <a id="btnExternalPdfLink" href="#" target="_blank" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark shadow-sm" style="font-size: 0.75rem;" title="Buka langsung di tab baru">
-              <i class="bi bi-box-arrow-up-right me-1"></i> Buka Langsung
-            </a>
-            <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="addNoteFromCurrentPdf()">
-              <i class="bi bi-pencil-square"></i> Buat Catatan
+          <div class="d-flex align-items-center gap-1 flex-shrink-0">
+            <button id="btnTogglePdfEngine" type="button" class="btn btn-outline-info btn-sm fw-bold py-1 px-2 d-none" style="font-size: 0.72rem;" onclick="togglePdfReaderEngine()" title="Ganti mode tampilan buku di dalam aplikasi">
+              <i class="bi bi-eye-fill"></i> <span class="d-none d-sm-inline">Mode Viewer</span>
             </button>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <a id="btnExternalPdfLink" href="#" target="_blank" class="btn btn-warning btn-sm fw-bold py-1 px-2 text-dark shadow-sm" style="font-size: 0.72rem;" title="Buka langsung di tab baru">
+              <i class="bi bi-box-arrow-up-right"></i> <span class="d-none d-sm-inline">Tab Baru</span>
+            </a>
+            <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.72rem;" onclick="addNoteFromCurrentPdf()">
+              <i class="bi bi-pencil-square"></i> <span class="d-none d-sm-inline">Catatan</span>
+            </button>
+            <button type="button" class="btn-close btn-close-white ms-1" data-bs-dismiss="modal"></button>
           </div>
         </div>
-        <div class="modal-body p-0 bg-secondary position-relative flex-grow-1" style="overflow: hidden;">
-          <!-- Loading Spinner for PDF with Fast Fallback -->
-          <div id="pdfLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white p-3 rounded" style="z-index: 10; max-width: 90%;">
+        <div class="modal-body p-0 bg-light position-relative flex-grow-1" style="overflow: hidden;">
+          <!-- Loading Spinner for PDF with Fast In-App Fallback -->
+          <div id="pdfLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white p-3 rounded-4 bg-dark bg-opacity-75 shadow" style="z-index: 15; max-width: 90%; backdrop-filter: blur(4px);">
             <div class="spinner-border text-warning" role="status"></div>
-            <p class="mt-2 fw-bold small mb-1">Membuka Berkas Buku...</p>
-            <p class="text-white-50 mb-0" style="font-size: 0.75rem;">Mengakses pratinjau Google Drive berkecepatan tinggi.</p>
-            <div id="slowNetworkHint" class="mt-2 d-none">
-              <a id="btnDirectDownloadPdf" href="#" target="_blank" class="btn btn-sm btn-light fw-bold px-3 py-1 text-primary shadow">
-                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Klik Di Sini untuk Buka Cepat
+            <p class="mt-2 fw-bold small mb-1" id="pdfLoadingTitle">Membuka Lembar Buku...</p>
+            <p class="text-white-50 mb-0" id="pdfLoadingDesc" style="font-size: 0.75rem;">Merender halaman jelas langsung di dalam aplikasi.</p>
+            <div id="slowNetworkHint" class="mt-2 d-none d-flex flex-wrap justify-content-center gap-2">
+              <button id="btnSwitchPdfFastMode" type="button" class="btn btn-sm btn-warning fw-bold px-3 py-1 text-dark shadow" onclick="switchPdfReaderEngine('lite')">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Muat Mode Ringan
+              </button>
+              <a id="btnDirectDownloadPdf" href="#" target="_blank" class="btn btn-sm btn-outline-light fw-bold px-2 py-1">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Tab Baru
               </a>
             </div>
           </div>
-          <iframe id="pdfFrame" src="" loading="eager" fetchpriority="high" importance="high" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade" style="width: 100%; height: 100%; border: none; display: block;" onload="handlePdfLoaded()"></iframe>
+          <!-- Pooled Iframe Stage (Light Fallback Viewer Inside App) -->
+          <div id="pdfFrameStage" class="w-100 h-100 position-relative bg-light" style="overflow: hidden;"></div>
+          <!-- Streaming Native PDF Canvas Stage (Crisp White Paper for All Pages 1..N) -->
+          <div id="pdfNativeStage" class="w-100 h-100 position-absolute top-0 start-0 overflow-auto d-none pdf-native-stage text-center" style="z-index: 5;"></div>
+          <!-- Floating Page Jump & Zoom Controls for Native PDF Mode -->
+          <div id="pdfNativeControls" class="pdf-native-nav d-none">
+            <button type="button" class="btn btn-sm btn-outline-light border-0 rounded-circle py-0 px-2" onclick="studentPdfStepPage(-1)" title="Halaman Sebelumnya">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="d-flex align-items-center gap-1 text-white" style="font-size: 0.75rem;">
+              <span class="text-white-50 d-none d-sm-inline">Hal</span>
+              <input id="studentPdfPageInput" type="number" min="1" value="1" class="pdf-page-jump-input" onchange="studentPdfJumpToPage(this.value)" aria-label="Nomor Halaman">
+              <span id="studentPdfPageTotal" class="text-white-50 fw-semibold">/ 1</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light border-0 rounded-circle py-0 px-2" onclick="studentPdfStepPage(1)" title="Halaman Berikutnya">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <div class="vr bg-secondary mx-1" style="height: 16px;"></div>
+            <button type="button" class="btn btn-sm btn-outline-light border-0 rounded-circle py-0 px-2" onclick="studentPdfZoom(-0.2)" title="Perkecil">
+              <i class="bi bi-dash-lg"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-light border-0 rounded-circle py-0 px-2" onclick="studentPdfZoom(0.2)" title="Perbesar">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
 
-  <!-- MODAL 3B: VIDEO PLAYER MODAL -->
+  <!-- MODAL 3B: ADAPTIVE FULLSCREEN VIDEO PLAYER MODAL -->
   <div class="modal fade" id="videoPlayerModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content border-0 shadow-lg overflow-hidden">
-        <div class="modal-header bg-dark text-white border-bottom border-secondary py-2">
+    <div class="modal-dialog video-modal-dialog">
+      <div class="modal-content video-modal-content border-0 shadow-lg">
+        <div class="modal-header video-modal-header bg-dark text-white border-bottom border-secondary py-2 px-3">
           <div class="d-flex align-items-center gap-2 text-truncate me-2">
             <i class="bi bi-play-circle-fill text-danger fs-5"></i>
             <div class="text-truncate">
@@ -730,31 +928,46 @@
               </div>
             </div>
           </div>
-          <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.75rem;" onclick="addNoteFromCurrentVideo()">
-              <i class="bi bi-pencil-square"></i> Buat Catatan
+          <div class="d-flex align-items-center gap-1 flex-shrink-0">
+            <button id="btnToggleVideoRotate" type="button" class="btn btn-outline-light btn-sm fw-bold py-1 px-2" style="font-size: 0.72rem;" onclick="toggleVideoLandscapeMode()" title="Putar layar 90° agar video lebar di HP">
+              <i class="bi bi-phone-landscape"></i> <span class="d-none d-sm-inline">Putar 90°</span>
             </button>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopVideoPlayer()"></button>
+            <button id="btnToggleVideoFullscreen" type="button" class="btn btn-danger btn-sm fw-bold py-1 px-2" style="font-size: 0.72rem;" onclick="toggleVideoFullscreen()" title="Tampilan Layar Penuh dalam aplikasi">
+              <i class="bi bi-arrows-fullscreen"></i> <span class="d-none d-sm-inline">Layar Penuh</span>
+            </button>
+            <button type="button" class="btn btn-outline-warning btn-sm fw-bold py-1 px-2" style="font-size: 0.72rem;" onclick="addNoteFromCurrentVideo()" title="Buat catatan materi video">
+              <i class="bi bi-pencil-square"></i> <span class="d-none d-sm-inline">Catatan</span>
+            </button>
+            <button type="button" class="btn-close btn-close-white ms-1" data-bs-dismiss="modal" onclick="stopVideoPlayer()"></button>
           </div>
         </div>
-        <div class="modal-body p-0 bg-black position-relative" style="min-height: 280px;">
+        <div id="videoPlayerStage" class="modal-body video-stage p-0">
+          <!-- Floating Overlay Controls for Theater / Landscape Mode -->
+          <div id="videoFloatingBar" class="video-floating-bar">
+            <button type="button" class="btn btn-dark btn-sm bg-opacity-75 border border-secondary text-white fw-bold px-2 py-1" style="font-size: 0.72rem;" onclick="resetVideoViewModes()" title="Kembalikan tampilan normal">
+              <i class="bi bi-fullscreen-exit me-1"></i> Normal
+            </button>
+            <button type="button" class="btn btn-danger btn-sm fw-bold px-2 py-1" style="font-size: 0.72rem;" data-bs-dismiss="modal" onclick="stopVideoPlayer()" title="Tutup pemutar video">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
           <!-- Loading Spinner -->
           <div id="videoLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white" style="z-index: 10;">
             <div class="spinner-border text-danger" role="status"></div>
             <p class="mt-2 fw-bold small">Memuat Video Pembelajaran...</p>
           </div>
-          <!-- Video Container -->
-          <div id="videoPlayerContainer" class="ratio ratio-16x9 w-100" style="min-height: 280px; max-height: 70vh;">
-            <iframe id="videoIframe" src="" loading="eager" fetchpriority="high" importance="high" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" style="border: none;" onload="handleVideoLoaded()"></iframe>
+          <!-- Video Container (Full Adaptive Area) -->
+          <div id="videoPlayerContainer">
+            <iframe id="videoIframe" src="" loading="eager" fetchpriority="high" importance="high" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" onload="handleVideoLoaded()"></iframe>
           </div>
         </div>
-        <div class="modal-footer bg-light py-2 d-flex justify-content-between align-items-center">
-          <span class="text-muted fs-8"><i class="bi bi-shield-check text-success me-1"></i> Sumber Belajar Madrasah</span>
-          <div class="d-flex gap-2">
-            <a id="btnExternalVideoLink" href="#" target="_blank" class="btn btn-outline-secondary btn-sm fs-8">
-              <i class="bi bi-box-arrow-up-right me-1"></i> Buka Link Asli
+        <div class="modal-footer video-modal-footer bg-dark text-white-50 border-top border-secondary py-2 px-3 d-flex justify-content-between align-items-center">
+          <span class="fs-9"><i class="bi bi-phone-landscape text-warning me-1"></i> Putar HP atau klik <strong>Putar 90° / Layar Penuh</strong> untuk tampilan lebar</span>
+          <div class="d-flex gap-2 flex-shrink-0">
+            <a id="btnExternalVideoLink" href="#" target="_blank" class="btn btn-outline-light btn-sm fs-8 py-1">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Link Asli
             </a>
-            <button type="button" class="btn btn-secondary btn-sm fs-8" data-bs-dismiss="modal" onclick="stopVideoPlayer()">Tutup</button>
+            <button type="button" class="btn btn-secondary btn-sm fs-8 py-1" data-bs-dismiss="modal" onclick="stopVideoPlayer()">Tutup</button>
           </div>
         </div>
       </div>
@@ -1011,7 +1224,20 @@
 
       if (sEl) studentModal = new bootstrap.Modal(sEl);
       if (tEl) teacherModal = new bootstrap.Modal(tEl);
-      if (pEl) pdfModal = new bootstrap.Modal(pEl);
+      if (pEl) {
+        pdfModal = new bootstrap.Modal(pEl);
+        pEl.addEventListener("hidden.bs.modal", () => {
+          if (pdfLoadTimeout) {
+            clearTimeout(pdfLoadTimeout);
+            pdfLoadTimeout = null;
+          }
+          activePdfPoolKey = null;
+          currentPdfReaderState = null;
+          if (typeof teardownStudentNativePdfSession === "function") {
+            teardownStudentNativePdfSession();
+          }
+        });
+      }
       if (vEl) {
         videoModal = new bootstrap.Modal(vEl);
         vEl.addEventListener("hidden.bs.modal", () => {
@@ -1567,7 +1793,7 @@
 
         return `
           <div class="col-6 col-sm-6">
-            <div class="book-card" onmouseenter="warmUpResource('${escapeHtml(b.fileUrl)}')" ontouchstart="warmUpResource('${escapeHtml(b.fileUrl)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
+            <div class="book-card" onpointerdown="prewarmBookPdf('${escapeHtml(b.id)}')" onmouseenter="prewarmBookPdf('${escapeHtml(b.id)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
               <div class="book-cover">
                 <span class="badge bg-warning text-dark fw-bold align-self-start fs-8">${escapeHtml(b.gradeClass)}</span>
                 <div class="text-white">
@@ -1585,13 +1811,17 @@
           </div>
         `;
       }).join("");
+
+      if (!isVideoMode && filtered.length > 0) {
+        scheduleIdleBookPrewarm(filtered[0]);
+      }
     }
 
     const warmedOrigins = new Set();
     function warmUpResource(url) {
       if (!url) return;
       try {
-        const origin = new URL(url).origin;
+        const origin = new URL(url, window.location.origin).origin;
         if (warmedOrigins.has(origin)) return;
         warmedOrigins.add(origin);
         const link = document.createElement("link");
@@ -1602,7 +1832,208 @@
       } catch (_) {}
     }
 
+    const PDF_IFRAME_POOL_MAX = 4;
+    const pdfIframePool = new Map();
+    const driveStreamProbeCache = new Map();
+    let activePdfPoolKey = null;
+    let currentPdfReaderState = null;
     let pdfLoadTimeout = null;
+    let idlePrewarmScheduledFor = "";
+    let pdfJsLoaderPromise = null;
+    let studentNativeScrollObserver = null;
+    let studentNativeSession = null;
+
+    function resolveBookReaderUrls(rawUrl) {
+      const url = (rawUrl || "").trim();
+      if (!url) {
+        return { kind: "empty", streamUrl: "", primaryUrl: "", liteUrl: "", directUrl: "#" };
+      }
+
+      if (url.includes("drive.google.com") || url.includes("docs.google.com")) {
+        const fileIdMatch = url.match(/\/(?:file\/d\/|document\/d\/|spreadsheets\/d\/|presentation\/d\/)([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          const id = fileIdMatch[1];
+          return {
+            kind: "drive",
+            fileId: id,
+            streamUrl: `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
+            primaryUrl: `https://drive.google.com/file/d/${id}/preview`,
+            liteUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`,
+            directUrl: url
+          };
+        }
+        const previewUrl = url.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
+        return {
+          kind: "drive",
+          fileId: "",
+          streamUrl: "",
+          primaryUrl: previewUrl,
+          liteUrl: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`,
+          directUrl: url
+        };
+      }
+
+      const isDirectPdf = url.startsWith("blob:") || /\.pdf($|\?)/i.test(url) || url.includes("/books/");
+      if (isDirectPdf) {
+        const absUrl = url.startsWith("http") || url.startsWith("blob:")
+          ? url
+          : new URL(url, window.location.origin).href;
+        return {
+          kind: "direct-pdf",
+          streamUrl: url,
+          primaryUrl: url,
+          liteUrl: url.startsWith("blob:") ? url : `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(absUrl)}`,
+          directUrl: url
+        };
+      }
+
+      return {
+        kind: "iframe",
+        streamUrl: "",
+        primaryUrl: url,
+        liteUrl: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`,
+        directUrl: url
+      };
+    }
+
+    function probeDrivePdfStream(streamUrl) {
+      if (!streamUrl) return Promise.reject(new Error("Empty streamUrl"));
+      const existing = driveStreamProbeCache.get(streamUrl);
+      if (existing && (Date.now() - existing.ts < 600000)) {
+        return existing.promise;
+      }
+      const promise = (async () => {
+        const [headRes, firstRes] = await Promise.all([
+          fetch(streamUrl, { method: "HEAD", mode: "cors" }),
+          fetch(streamUrl, { method: "GET", mode: "cors", headers: { Range: "bytes=0-65535" } })
+        ]);
+        if (!headRes.ok || (!firstRes.ok && firstRes.status !== 206)) {
+          throw new Error(`Drive stream unavailable (${headRes.status}/${firstRes.status})`);
+        }
+        const totalLength = parseInt(headRes.headers.get("content-length") || "0", 10);
+        const buf = await firstRes.arrayBuffer();
+        const initialData = new Uint8Array(buf);
+        const isPdfMagic = initialData.length >= 5 &&
+          initialData[0] === 0x25 && initialData[1] === 0x50 && initialData[2] === 0x44 && initialData[3] === 0x46 && initialData[4] === 0x2D;
+        if (!isPdfMagic || !totalLength) {
+          throw new Error("Drive file is not a direct streamable PDF");
+        }
+        return { totalLength, initialData };
+      })().catch(err => {
+        driveStreamProbeCache.delete(streamUrl);
+        throw err;
+      });
+
+      driveStreamProbeCache.set(streamUrl, { ts: Date.now(), promise });
+      return promise;
+    }
+
+    function hideAllPooledPdfFrames() {
+      pdfIframePool.forEach(entry => {
+        if (entry && entry.iframe) {
+          entry.iframe.style.visibility = "hidden";
+          entry.iframe.style.pointerEvents = "none";
+          entry.iframe.style.zIndex = "0";
+        }
+      });
+    }
+
+    function evictOldestPdfIframeIfNeeded(protectedKey) {
+      while (pdfIframePool.size >= PDF_IFRAME_POOL_MAX) {
+        let evicted = false;
+        for (const [key, entry] of pdfIframePool.entries()) {
+          if (key === protectedKey || key === activePdfPoolKey) continue;
+          if (entry && entry.iframe && entry.iframe.parentNode) {
+            entry.iframe.parentNode.removeChild(entry.iframe);
+          }
+          pdfIframePool.delete(key);
+          evicted = true;
+          break;
+        }
+        if (!evicted) break;
+      }
+    }
+
+    function getOrCreatePooledPdfIframe(embedUrl, engine, activateNow) {
+      const stage = document.getElementById("pdfFrameStage");
+      if (!stage || !embedUrl) return null;
+      const poolKey = `${engine}::${embedUrl}`;
+
+      if (activateNow) {
+        hideAllPooledPdfFrames();
+        activePdfPoolKey = poolKey;
+      }
+
+      if (pdfIframePool.has(poolKey)) {
+        const existing = pdfIframePool.get(poolKey);
+        pdfIframePool.delete(poolKey);
+        existing.touchedAt = Date.now();
+        pdfIframePool.set(poolKey, existing);
+        if (activateNow && existing.iframe) {
+          existing.iframe.style.visibility = "visible";
+          existing.iframe.style.pointerEvents = "auto";
+          existing.iframe.style.zIndex = "2";
+        }
+        return existing;
+      }
+
+      evictOldestPdfIframeIfNeeded(poolKey);
+
+      const iframe = document.createElement("iframe");
+      iframe.className = "pdf-pooled-frame";
+      iframe.setAttribute("loading", "eager");
+      iframe.setAttribute("fetchpriority", activateNow ? "high" : "low");
+      iframe.setAttribute("allow", "fullscreen");
+      iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+      iframe.style.visibility = activateNow ? "visible" : "hidden";
+      iframe.style.pointerEvents = activateNow ? "auto" : "none";
+      iframe.style.zIndex = activateNow ? "2" : "0";
+
+      const entry = { iframe, url: embedUrl, engine, loaded: false, touchedAt: Date.now() };
+      iframe.onload = () => {
+        entry.loaded = true;
+        if (activePdfPoolKey === poolKey) {
+          handlePdfLoaded();
+        }
+      };
+
+      pdfIframePool.set(poolKey, entry);
+      stage.appendChild(iframe);
+      iframe.src = embedUrl;
+      return entry;
+    }
+
+    function prewarmBookPdf(bookId) {
+      const b = allBooks.find(item => item.id === bookId);
+      if (!b || !b.fileUrl || isVideoItem(b)) return;
+      warmUpResource(b.fileUrl);
+      const resolved = resolveBookReaderUrls(b.fileUrl);
+      if (resolved.kind === "drive" && resolved.streamUrl) {
+        warmUpResource("https://drive.usercontent.google.com");
+        warmUpResource("https://cdn.jsdelivr.net");
+        ensurePdfJsLoaded().catch(() => {});
+        probeDrivePdfStream(resolved.streamUrl).catch(() => {});
+      }
+    }
+
+    function scheduleIdleBookPrewarm(book) {
+      if (!book || !book.id || !book.fileUrl || isVideoItem(book)) return;
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn && (conn.saveData || conn.effectiveType === "2g" || conn.effectiveType === "slow-2g")) return;
+      if (idlePrewarmScheduledFor === book.id) return;
+      idlePrewarmScheduledFor = book.id;
+
+      const run = () => {
+        if (!currentPdfReaderState && currentDashboardTab === "books" && currentCategoryFilter === "Buku") {
+          prewarmBookPdf(book.id);
+        }
+      };
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(run, { timeout: 1800 });
+      } else {
+        setTimeout(run, 900);
+      }
+    }
 
     function handlePdfLoaded() {
       if (pdfLoadTimeout) {
@@ -1624,7 +2055,7 @@
       if (isVideoItem(b) || allVideos.some(v => v.id === bookId)) {
         openVideoPlayer(b.title, b.gradeClass, b.subject, b.fileUrl);
       } else {
-        openPdfReader(b.title, b.gradeClass, b.fileUrl);
+        openPdfReader(b.title, b.gradeClass, b.fileUrl, b.id);
       }
     }
 
@@ -1671,7 +2102,96 @@
       };
     }
 
+    function updateVideoViewButtons() {
+      const modalEl = document.getElementById("videoPlayerModal");
+      const btnRotate = document.getElementById("btnToggleVideoRotate");
+      const btnFs = document.getElementById("btnToggleVideoFullscreen");
+      const isRotated = modalEl && modalEl.classList.contains("video-rotated-landscape");
+      const isTheater = modalEl && modalEl.classList.contains("video-theater-max");
+      if (btnRotate) {
+        btnRotate.classList.toggle("btn-warning", Boolean(isRotated));
+        btnRotate.classList.toggle("text-dark", Boolean(isRotated));
+        btnRotate.classList.toggle("btn-outline-light", !isRotated);
+      }
+      if (btnFs) {
+        btnFs.innerHTML = isTheater
+          ? '<i class="bi bi-fullscreen-exit"></i> <span class="d-none d-sm-inline">Normal</span>'
+          : '<i class="bi bi-arrows-fullscreen"></i> <span class="d-none d-sm-inline">Layar Penuh</span>';
+      }
+    }
+
+    function resetVideoViewModes() {
+      const modalEl = document.getElementById("videoPlayerModal");
+      if (modalEl) {
+        modalEl.classList.remove("video-theater-max", "video-rotated-landscape");
+      }
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (_) {}
+      try {
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      } catch (_) {}
+      updateVideoViewButtons();
+    }
+
+    async function toggleVideoFullscreen() {
+      const modalEl = document.getElementById("videoPlayerModal");
+      const stageEl = document.getElementById("videoPlayerStage");
+      if (!modalEl || !stageEl) return;
+
+      const isAlreadyMax = modalEl.classList.contains("video-theater-max") || Boolean(document.fullscreenElement);
+      if (isAlreadyMax) {
+        resetVideoViewModes();
+        return;
+      }
+
+      modalEl.classList.remove("video-rotated-landscape");
+      modalEl.classList.add("video-theater-max");
+      updateVideoViewButtons();
+
+      try {
+        if (stageEl.requestFullscreen) {
+          await stageEl.requestFullscreen();
+        } else if (stageEl.webkitRequestFullscreen) {
+          stageEl.webkitRequestFullscreen();
+        }
+      } catch (_) {}
+
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock("landscape");
+        }
+      } catch (_) {}
+    }
+
+    function toggleVideoLandscapeMode() {
+      const modalEl = document.getElementById("videoPlayerModal");
+      if (!modalEl) return;
+
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (_) {}
+
+      modalEl.classList.remove("video-theater-max");
+      modalEl.classList.toggle("video-rotated-landscape");
+      updateVideoViewButtons();
+    }
+
+    document.addEventListener("fullscreenchange", () => {
+      const modalEl = document.getElementById("videoPlayerModal");
+      if (!document.fullscreenElement && modalEl && modalEl.classList.contains("video-theater-max")) {
+        updateVideoViewButtons();
+      }
+    });
+
     function openVideoPlayer(title, grade, subject, url) {
+      resetVideoViewModes();
       currentPlayingVideo = { title, grade, subject, url };
       document.getElementById("videoModalTitle").innerText = title;
       document.getElementById("videoModalGrade").innerText = grade;
@@ -1687,14 +2207,14 @@
 
       if (resolved.type === "video") {
         container.innerHTML = `
-          <video controls autoplay class="w-100 h-100 rounded" style="max-height: 70vh; background: #000;" onloadeddata="handleVideoLoaded()">
+          <video controls autoplay playsinline class="w-100 h-100" style="object-fit: contain; background: #000;" onloadeddata="handleVideoLoaded()">
             <source src="${resolved.embedUrl}" type="video/mp4">
             Browser Anda tidak mendukung tag video HTML5.
           </video>
         `;
       } else {
         container.innerHTML = `
-          <iframe id="videoIframe" src="${resolved.embedUrl}" loading="eager" fetchpriority="high" importance="high" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" style="width: 100%; height: 100%; border: none; min-height: 320px;" onload="handleVideoLoaded()"></iframe>
+          <iframe id="videoIframe" src="${resolved.embedUrl}" loading="eager" fetchpriority="high" importance="high" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" style="width: 100%; height: 100%; border: none;" onload="handleVideoLoaded()"></iframe>
         `;
       }
 
@@ -1704,6 +2224,7 @@
     }
 
     function stopVideoPlayer() {
+      resetVideoViewModes();
       const container = document.getElementById("videoPlayerContainer");
       if (container) {
         container.innerHTML = "";
@@ -1721,39 +2242,600 @@
       }, 350);
     }
 
-    function openPdfReader(title, grade, url) {
-      document.getElementById("pdfBookTitle").innerText = title;
-      document.getElementById("pdfBookGrade").innerText = grade;
-      
-      let viewUrl = url || "";
-      let directUrl = url || "#";
-      if (viewUrl.includes("drive.google.com")) {
-        viewUrl = viewUrl.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
+    function ensurePdfJsLoaded() {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        return Promise.resolve(window.pdfjsLib);
+      }
+      if (pdfJsLoaderPromise) return pdfJsLoaderPromise;
+      pdfJsLoaderPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        script.onload = () => {
+          if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+            resolve(window.pdfjsLib);
+          } else {
+            reject(new Error("PDF.js tidak termuat"));
+          }
+        };
+        script.onerror = () => {
+          pdfJsLoaderPromise = null;
+          reject(new Error("Gagal memuat PDF.js"));
+        };
+        document.head.appendChild(script);
+      });
+      return pdfJsLoaderPromise;
+    }
+
+    function openStudentPdfCacheDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error("No IndexedDB"));
+        const req = indexedDB.open("MtsStudentPdfCacheDB", 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains("pdfs")) db.createObjectStore("pdfs");
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function getCachedDirectPdfBlob(key) {
+      try {
+        const db = await openStudentPdfCacheDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction("pdfs", "readonly");
+          const req = tx.objectStore("pdfs").get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function saveCachedDirectPdfBlob(key, blob) {
+      try {
+        if (!blob || blob.size > 40 * 1024 * 1024) return;
+        const db = await openStudentPdfCacheDB();
+        const tx = db.transaction("pdfs", "readwrite");
+        tx.objectStore("pdfs").put(blob, key);
+      } catch (_) {}
+    }
+
+    function createRangeTransportForUrl(pdfjs, streamUrl, totalLength, initialData) {
+      const progressiveDone = initialData && initialData.byteLength >= totalLength;
+      const transport = new pdfjs.PDFDataRangeTransport(totalLength, initialData, progressiveDone);
+      transport._aborted = false;
+      transport.requestDataRange = function(begin, end) {
+        if (this._aborted) return;
+        const clampedBegin = Math.max(0, begin);
+        const clampedEnd = Math.min(this.length, end);
+        if (clampedBegin >= clampedEnd) {
+          this.onDataRange(clampedBegin, new Uint8Array(0));
+          return;
+        }
+        const fetchWithRetry = async (attempt) => {
+          if (this._aborted) return;
+          try {
+            const res = await fetch(streamUrl, {
+              method: "GET",
+              mode: "cors",
+              headers: { Range: `bytes=${clampedBegin}-${clampedEnd - 1}` }
+            });
+            if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status}`);
+            const buf = await res.arrayBuffer();
+            if (!this._aborted) {
+              this.onDataRange(clampedBegin, new Uint8Array(buf));
+            }
+          } catch (err) {
+            if (!this._aborted && attempt < 2) {
+              setTimeout(() => fetchWithRetry(attempt + 1), 250 * (attempt + 1));
+            }
+          }
+        };
+        fetchWithRetry(0);
+      };
+      transport.abort = function() {
+        this._aborted = true;
+      };
+      return transport;
+    }
+
+    function teardownStudentNativePdfSession() {
+      if (studentNativeScrollObserver) {
+        studentNativeScrollObserver.disconnect();
+        studentNativeScrollObserver = null;
+      }
+      if (studentNativeSession) {
+        studentNativeSession.cancelled = true;
+        if (studentNativeSession.scrollHandler && studentNativeSession.stage) {
+          studentNativeSession.stage.removeEventListener("scroll", studentNativeSession.scrollHandler);
+        }
+        if (studentNativeSession.pdfDoc) {
+          try { studentNativeSession.pdfDoc.destroy(); } catch (_) {}
+        }
+        studentNativeSession = null;
+      }
+      const nav = document.getElementById("pdfNativeControls");
+      if (nav) nav.classList.add("d-none");
+    }
+
+    function updateStudentNativePageBadge(pageNum, totalPages) {
+      const inp = document.getElementById("studentPdfPageInput");
+      const tot = document.getElementById("studentPdfPageTotal");
+      if (inp) {
+        inp.max = String(totalPages || 1);
+        inp.value = String(pageNum || 1);
+      }
+      if (tot) tot.textContent = `/ ${totalPages || 1}`;
+    }
+
+    function studentPdfStepPage(delta) {
+      if (!studentNativeSession || !studentNativeSession.pdfDoc) return;
+      const target = Math.max(1, Math.min(studentNativeSession.pdfDoc.numPages, (studentNativeSession.currentPage || 1) + delta));
+      studentPdfJumpToPage(target);
+    }
+
+    function studentPdfJumpToPage(rawVal) {
+      if (!studentNativeSession || !studentNativeSession.pdfDoc) return;
+      const total = studentNativeSession.pdfDoc.numPages;
+      const target = Math.max(1, Math.min(total, parseInt(rawVal, 10) || 1));
+      studentNativeSession.currentPage = target;
+      updateStudentNativePageBadge(target, total);
+      const wrap = document.getElementById(`stuPdfSheet_${target}`);
+      if (wrap) {
+        wrap.scrollIntoView({ behavior: "auto", block: "start" });
+      }
+      if (typeof studentNativeSession.prioritizeAround === "function") {
+        studentNativeSession.prioritizeAround(target);
+      }
+    }
+
+    function studentPdfZoom(delta) {
+      if (!studentNativeSession || !studentNativeSession.pdfDoc) return;
+      const nextZoom = Math.max(0.7, Math.min(2.2, Math.round((studentNativeSession.zoomMultiplier + delta) * 10) / 10));
+      if (nextZoom === studentNativeSession.zoomMultiplier) return;
+      studentNativeSession.zoomMultiplier = nextZoom;
+      if (typeof studentNativeSession.rerenderAfterZoom === "function") {
+        studentNativeSession.rerenderAfterZoom();
+      }
+    }
+
+    async function renderNativePdfInApp(resolved, cacheKey, sessionToken) {
+      const nativeStage = document.getElementById("pdfNativeStage");
+      const frameStage = document.getElementById("pdfFrameStage");
+      const navControls = document.getElementById("pdfNativeControls");
+      if (!nativeStage || !frameStage) throw new Error("Stage tidak ditemukan");
+
+      teardownStudentNativePdfSession();
+      hideAllPooledPdfFrames();
+      frameStage.classList.add("d-none");
+      nativeStage.classList.remove("d-none");
+      nativeStage.innerHTML = "";
+      nativeStage.scrollTop = 0;
+
+      const pdfjs = await ensurePdfJsLoaded();
+      let docParams = null;
+      let objectUrlToRevoke = null;
+
+      const commonPdfOpts = {
+        cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/",
+        cMapPacked: true,
+        standardFontDataUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/",
+        disableAutoFetch: true,
+        rangeChunkSize: 65536
+      };
+
+      const cachedBlob = await getCachedDirectPdfBlob(cacheKey || resolved.streamUrl);
+      if (cachedBlob) {
+        objectUrlToRevoke = URL.createObjectURL(cachedBlob);
+        docParams = { ...commonPdfOpts, url: objectUrlToRevoke };
+      } else if (resolved.kind === "drive") {
+        const probe = await probeDrivePdfStream(resolved.streamUrl);
+        if (currentPdfReaderState && currentPdfReaderState.sessionToken !== sessionToken) return;
+        const transport = createRangeTransportForUrl(pdfjs, resolved.streamUrl, probe.totalLength, probe.initialData);
+        docParams = {
+          ...commonPdfOpts,
+          range: transport,
+          length: probe.totalLength,
+          disableStream: true
+        };
+      } else {
+        const url = resolved.primaryUrl;
+        if (!url.startsWith("blob:")) {
+          fetch(url).then(res => res.ok ? res.blob() : null).then(blob => {
+            if (blob && blob.type.includes("pdf")) saveCachedDirectPdfBlob(cacheKey || url, blob);
+          }).catch(() => {});
+        }
+        docParams = { ...commonPdfOpts, url };
       }
 
+      const pdfDoc = await pdfjs.getDocument(docParams).promise;
+      if (currentPdfReaderState && currentPdfReaderState.sessionToken !== sessionToken) {
+        try { pdfDoc.destroy(); } catch (_) {}
+        return;
+      }
+
+      const session = {
+        cancelled: false,
+        pdfDoc,
+        stage: nativeStage,
+        currentPage: 1,
+        zoomMultiplier: 1.0,
+        rendered: new Set(),
+        rendering: new Set(),
+        queue: [],
+        activeWorkers: 0,
+        scrollHandler: null,
+        prioritizeAround: null,
+        rerenderAfterZoom: null
+      };
+      studentNativeSession = session;
+
+      const firstPage = await pdfDoc.getPage(1);
+      if (session.cancelled) return;
+      const baseVp = firstPage.getViewport({ scale: 1 });
+      const getFitScale = () => {
+        const stageWidth = Math.max(280, Math.min(920, (nativeStage.clientWidth || window.innerWidth) - 18));
+        return Math.max(0.55, Math.min(2.2, (stageWidth / baseVp.width) * session.zoomMultiplier));
+      };
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+      const renderSingleSheet = async (pageNum) => {
+        if (session.cancelled || session.rendered.has(pageNum) || session.rendering.has(pageNum)) return;
+        const sheet = document.getElementById(`stuPdfSheet_${pageNum}`);
+        const canvas = document.getElementById(`stuPdfCanvas_${pageNum}`);
+        const ph = document.getElementById(`stuPdfPh_${pageNum}`);
+        if (!sheet || !canvas) return;
+
+        session.rendering.add(pageNum);
+        try {
+          const fitScale = getFitScale();
+          const page = await pdfDoc.getPage(pageNum);
+          if (session.cancelled) return;
+          const vp = page.getViewport({ scale: fitScale * dpr });
+          const cssW = Math.round(vp.width / dpr);
+          const cssH = Math.round(vp.height / dpr);
+
+          canvas.width = vp.width;
+          canvas.height = vp.height;
+          canvas.style.width = `${cssW}px`;
+          canvas.style.height = `${cssH}px`;
+          sheet.style.width = `${cssW}px`;
+          sheet.style.minHeight = `${cssH}px`;
+
+          const ctx = canvas.getContext("2d", { alpha: false });
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          await page.render({
+            canvasContext: ctx,
+            viewport: vp,
+            background: "rgb(255,255,255)"
+          }).promise;
+
+          if (session.cancelled) return;
+          session.rendered.add(pageNum);
+          if (ph) ph.style.display = "none";
+        } catch (err) {
+          if (!session.cancelled && ph) {
+            ph.innerHTML = `<i class="bi bi-arrow-clockwise text-primary fs-4"></i><span>Ketuk untuk muat Halaman ${pageNum}</span>`;
+            ph.style.cursor = "pointer";
+            ph.onclick = () => enqueuePages([pageNum], true);
+          }
+        } finally {
+          session.rendering.delete(pageNum);
+        }
+      };
+
+      const pumpQueue = () => {
+        if (session.cancelled) return;
+        while (session.activeWorkers < 2 && session.queue.length > 0) {
+          const nextPage = session.queue.shift();
+          if (session.rendered.has(nextPage) || session.rendering.has(nextPage)) continue;
+          session.activeWorkers++;
+          renderSingleSheet(nextPage).finally(() => {
+            session.activeWorkers--;
+            pumpQueue();
+          });
+        }
+      };
+
+      const enqueuePages = (pageList, highPriority) => {
+        if (session.cancelled) return;
+        const list = highPriority ? [...pageList].reverse() : pageList;
+        for (const p of list) {
+          if (p < 1 || p > pdfDoc.numPages) continue;
+          if (session.rendered.has(p) || session.rendering.has(p)) continue;
+          const existingIdx = session.queue.indexOf(p);
+          if (existingIdx !== -1) {
+            if (highPriority) {
+              session.queue.splice(existingIdx, 1);
+              session.queue.unshift(p);
+            }
+          } else {
+            if (highPriority) session.queue.unshift(p);
+            else session.queue.push(p);
+          }
+        }
+        pumpQueue();
+      };
+
+      const buildSheets = () => {
+        const fitScale = getFitScale();
+        const estW = Math.round(baseVp.width * fitScale);
+        const estH = Math.round(baseVp.height * fitScale);
+        nativeStage.innerHTML = "";
+        const frag = document.createDocumentFragment();
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const wrap = document.createElement("div");
+          wrap.id = `stuPdfSheet_${i}`;
+          wrap.className = "pdf-page-sheet";
+          wrap.style.width = `${estW}px`;
+          wrap.style.minHeight = `${estH}px`;
+          wrap.style.maxWidth = "100%";
+          wrap.setAttribute("data-page-num", i);
+
+          const ph = document.createElement("div");
+          ph.id = `stuPdfPh_${i}`;
+          ph.className = "pdf-page-placeholder";
+          ph.innerHTML = `<div class="spinner-border spinner-border-sm text-primary"></div><span>Memuat Halaman ${i} / ${pdfDoc.numPages}...</span>`;
+
+          const c = document.createElement("canvas");
+          c.id = `stuPdfCanvas_${i}`;
+          c.style.display = "block";
+          c.style.width = "100%";
+          c.style.background = "#ffffff";
+
+          wrap.appendChild(ph);
+          wrap.appendChild(c);
+          frag.appendChild(wrap);
+        }
+        nativeStage.appendChild(frag);
+      };
+
+      const prioritizeAround = (centerPage) => {
+        const list = [];
+        for (let offset = 0; offset <= 3; offset++) {
+          if (centerPage + offset <= pdfDoc.numPages) list.push(centerPage + offset);
+          if (offset > 0 && centerPage - offset >= 1) list.push(centerPage - offset);
+        }
+        enqueuePages(list, true);
+      };
+      session.prioritizeAround = prioritizeAround;
+
+      const detectVisiblePages = () => {
+        if (session.cancelled) return;
+        const scrollTop = nativeStage.scrollTop;
+        const viewH = nativeStage.clientHeight || window.innerHeight || 640;
+        const viewBottom = scrollTop + viewH;
+        const midPoint = scrollTop + viewH * 0.4;
+        let centerPage = session.currentPage || 1;
+        const visible = [];
+
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const el = document.getElementById(`stuPdfSheet_${i}`);
+          if (!el) continue;
+          const top = el.offsetTop;
+          const bottom = top + el.offsetHeight;
+          if (top <= midPoint && bottom >= midPoint) {
+            centerPage = i;
+          }
+          if (bottom >= scrollTop - 900 && top <= viewBottom + 1200) {
+            visible.push(i);
+          }
+        }
+        if (centerPage !== session.currentPage) {
+          session.currentPage = centerPage;
+          updateStudentNativePageBadge(centerPage, pdfDoc.numPages);
+        }
+        if (visible.length > 0) {
+          enqueuePages(visible, true);
+        }
+      };
+
+      buildSheets();
+      updateStudentNativePageBadge(1, pdfDoc.numPages);
+      if (navControls) navControls.classList.remove("d-none");
+
+      await renderSingleSheet(1);
+      if (session.cancelled) return;
+      handlePdfLoaded();
+      prioritizeAround(1);
+
+      let scrollDebounce = null;
+      session.scrollHandler = () => {
+        if (scrollDebounce) clearTimeout(scrollDebounce);
+        scrollDebounce = setTimeout(detectVisiblePages, 60);
+      };
+      nativeStage.addEventListener("scroll", session.scrollHandler, { passive: true });
+
+      if (typeof IntersectionObserver !== "undefined") {
+        studentNativeScrollObserver = new IntersectionObserver((entries) => {
+          const hitPages = [];
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const p = parseInt(entry.target.getAttribute("data-page-num"), 10);
+              if (p) hitPages.push(p);
+            }
+          });
+          if (hitPages.length > 0) {
+            const firstHit = hitPages[0];
+            session.currentPage = firstHit;
+            updateStudentNativePageBadge(firstHit, pdfDoc.numPages);
+            enqueuePages(hitPages, true);
+          }
+        }, { root: nativeStage, rootMargin: "1000px 0px", threshold: 0.01 });
+        nativeStage.querySelectorAll("[data-page-num]").forEach(el => studentNativeScrollObserver.observe(el));
+      }
+
+      session.rerenderAfterZoom = () => {
+        const keepPage = session.currentPage || 1;
+        session.rendered.clear();
+        session.rendering.clear();
+        session.queue = [];
+        buildSheets();
+        if (studentNativeScrollObserver) {
+          studentNativeScrollObserver.disconnect();
+          nativeStage.querySelectorAll("[data-page-num]").forEach(el => studentNativeScrollObserver.observe(el));
+        }
+        studentPdfJumpToPage(keepPage);
+      };
+
+      if (objectUrlToRevoke) {
+        setTimeout(() => URL.revokeObjectURL(objectUrlToRevoke), 120000);
+      }
+    }
+
+    function updatePdfEngineButton(engine) {
+      const btn = document.getElementById("btnTogglePdfEngine");
+      if (!btn) return;
+      if (!currentPdfReaderState || (!currentPdfReaderState.liteUrl && !currentPdfReaderState.primaryUrl)) {
+        btn.classList.add("d-none");
+        return;
+      }
+      btn.classList.remove("d-none");
+      if (engine === "native") {
+        btn.classList.remove("btn-info", "text-dark");
+        btn.classList.add("btn-outline-info");
+        btn.innerHTML = '<i class="bi bi-eye-fill"></i> <span class="d-none d-sm-inline">Mode Viewer</span>';
+        btn.title = "Ganti ke Mode Google Viewer di dalam aplikasi";
+      } else if (engine === "lite") {
+        btn.classList.remove("btn-outline-info");
+        btn.classList.add("btn-info", "text-dark");
+        btn.innerHTML = '<i class="bi bi-file-earmark-check-fill"></i> <span class="d-none d-sm-inline">Mode PDF Jelas</span>';
+        btn.title = "Kembali ke mode render PDF putih jernih di dalam aplikasi";
+      } else {
+        btn.classList.remove("btn-info", "text-dark");
+        btn.classList.add("btn-outline-info");
+        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> <span class="d-none d-sm-inline">Mode Ringan</span>';
+        btn.title = "Gunakan Mode Ringan Google Viewer di dalam aplikasi";
+      }
+    }
+
+    function switchPdfReaderEngine(targetEngine) {
+      if (!currentPdfReaderState) return;
+      const canUseNative = Boolean(currentPdfReaderState.streamUrl);
+      let engine = targetEngine;
+      if (!engine) {
+        if (currentPdfReaderState.engine === "native") engine = "lite";
+        else if (canUseNative) engine = "native";
+        else engine = currentPdfReaderState.engine === "lite" ? "primary" : "lite";
+      }
+      currentPdfReaderState.engine = engine;
+      updatePdfEngineButton(engine);
+
+      const frameStage = document.getElementById("pdfFrameStage");
+      const nativeStage = document.getElementById("pdfNativeStage");
+      const slowHint = document.getElementById("slowNetworkHint");
+      const loading = document.getElementById("pdfLoading");
+      const loadTitle = document.getElementById("pdfLoadingTitle");
+      const loadDesc = document.getElementById("pdfLoadingDesc");
+
+      if (engine === "native" && canUseNative) {
+        if (slowHint) slowHint.classList.add("d-none");
+        if (loadTitle) loadTitle.innerText = "Membuka Lembar Buku...";
+        if (loadDesc) loadDesc.innerText = "Merender halaman putih jernih di dalam aplikasi.";
+        if (loading) loading.classList.remove("d-none");
+        const token = currentPdfReaderState.sessionToken;
+        renderNativePdfInApp(currentPdfReaderState, currentPdfReaderState.bookId || currentPdfReaderState.streamUrl, token).catch(() => {
+          if (currentPdfReaderState && currentPdfReaderState.sessionToken === token) {
+            switchPdfReaderEngine("lite");
+          }
+        });
+        return;
+      }
+
+      teardownStudentNativePdfSession();
+      if (nativeStage) {
+        nativeStage.classList.add("d-none");
+        nativeStage.innerHTML = "";
+      }
+      if (frameStage) frameStage.classList.remove("d-none");
+
+      const targetUrl = engine === "lite"
+        ? (currentPdfReaderState.liteUrl || currentPdfReaderState.primaryUrl)
+        : currentPdfReaderState.primaryUrl;
+
+      if (slowHint) slowHint.classList.add("d-none");
+      if (loadTitle) {
+        loadTitle.innerText = engine === "lite" ? "Memuat Mode Ringan..." : "Membuka Lembar Buku...";
+      }
+      if (loadDesc) {
+        loadDesc.innerText = engine === "lite"
+          ? "Merender halaman latar terang langsung di dalam aplikasi."
+          : "Menyiapkan halaman pertama di dalam aplikasi.";
+      }
+
+      const entry = getOrCreatePooledPdfIframe(targetUrl, engine, true);
+      if (entry && entry.loaded) {
+        handlePdfLoaded();
+        return;
+      }
+
+      if (loading) loading.classList.remove("d-none");
+      if (pdfLoadTimeout) clearTimeout(pdfLoadTimeout);
+      pdfLoadTimeout = setTimeout(() => {
+        if (slowHint) slowHint.classList.remove("d-none");
+      }, 2800);
+    }
+
+    function togglePdfReaderEngine() {
+      if (!currentPdfReaderState) return;
+      switchPdfReaderEngine();
+    }
+
+    function openPdfReader(title, grade, url, bookId) {
+      document.getElementById("pdfBookTitle").innerText = title;
+      document.getElementById("pdfBookGrade").innerText = grade;
+
+      const resolved = resolveBookReaderUrls(url);
+      const sessionToken = Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+      const preferNative = (resolved.kind === "drive" && Boolean(resolved.streamUrl)) || resolved.kind === "direct-pdf";
+
+      currentPdfReaderState = {
+        sessionToken,
+        bookId: bookId || "",
+        title,
+        grade,
+        url: url || "",
+        engine: preferNative ? "native" : "primary",
+        ...resolved
+      };
+
       const extLink = document.getElementById("btnExternalPdfLink");
-      if (extLink) extLink.href = directUrl;
+      if (extLink) extLink.href = resolved.directUrl || "#";
       const directDl = document.getElementById("btnDirectDownloadPdf");
-      if (directDl) directDl.href = directUrl;
+      if (directDl) directDl.href = resolved.directUrl || "#";
 
       const slowHint = document.getElementById("slowNetworkHint");
       if (slowHint) slowHint.classList.add("d-none");
       const loading = document.getElementById("pdfLoading");
-      if (loading) loading.classList.remove("d-none");
+      const loadTitle = document.getElementById("pdfLoadingTitle");
+      const loadDesc = document.getElementById("pdfLoadingDesc");
+      if (loadTitle) loadTitle.innerText = "Membuka Lembar Buku...";
+      if (loadDesc) loadDesc.innerText = "Merender halaman jernih langsung di dalam aplikasi.";
 
-      if (pdfLoadTimeout) clearTimeout(pdfLoadTimeout);
-      pdfLoadTimeout = setTimeout(() => {
-        if (slowHint) slowHint.classList.remove("d-none");
-      }, 2500);
+      updatePdfEngineButton(currentPdfReaderState.engine);
 
-      const frame = document.getElementById("pdfFrame");
-      if (frame) {
-        if (frame.src !== viewUrl) {
-          frame.src = viewUrl;
-        } else {
-          handlePdfLoaded();
-        }
+      if (preferNative) {
+        if (loading) loading.classList.remove("d-none");
+        if (pdfLoadTimeout) clearTimeout(pdfLoadTimeout);
+        pdfLoadTimeout = setTimeout(() => {
+          if (slowHint) slowHint.classList.remove("d-none");
+        }, 4500);
+        renderNativePdfInApp(resolved, bookId || resolved.streamUrl, sessionToken).catch(() => {
+          if (currentPdfReaderState && currentPdfReaderState.sessionToken === sessionToken) {
+            switchPdfReaderEngine("lite");
+          }
+        });
+        pdfModal.show();
+        return;
       }
+
+      switchPdfReaderEngine("primary");
       pdfModal.show();
     }
 
