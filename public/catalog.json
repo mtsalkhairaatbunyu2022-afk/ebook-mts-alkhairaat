@@ -46,5 +46,53 @@
     "pageCount": 100,
     "category": "mp",
     "description": "Buku Pelajaran Nahwu untuk Kelas VIII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "book_bahasa_arab_8702_785",
+    "title": "Buku Mata Pelajaran Bahasa Arab",
+    "author": "MTs Bunyu",
+    "subject": "Bahasa Arab",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://drive.google.com/file/d/15pI3yiAWMqXIU9taXDUbdg8aiMo9p109/preview",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 2500000,
+    "pageCount": 100,
+    "category": "mp",
+    "description": "Buku Pelajaran Bahasa Arab untuk Kelas VII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "book_informatika_8702_632",
+    "title": "Buku Mata Pelajaran Informatika",
+    "author": "MTs Bunyu",
+    "subject": "Informatika",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://drive.google.com/file/d/1Wum7dz1p44uiWQdcawj-TKC7b6nBKu2n/preview",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 2500000,
+    "pageCount": 100,
+    "category": "mp",
+    "description": "Buku Pelajaran Informatika untuk Kelas VII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "book_qawaid_8702_862",
+    "title": "Buku Mata Pelajaran Qawaid",
+    "author": "MTs Bunyu",
+    "subject": "Qawaid",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://drive.google.com/file/d/1t6zPWm9Oir82FVARPRj8bYcXbkWVEDK4/preview",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 2500000,
+    "pageCount": 100,
+    "category": "mp",
+    "description": "Buku Pelajaran Qawaid untuk Kelas VII MTs Al-Khairaat Bunyu."
   }
 ]
