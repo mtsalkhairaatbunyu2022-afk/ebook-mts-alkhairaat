@@ -690,7 +690,24 @@
                 <i class="bi bi-file-earmark-excel-fill text-success fs-3"></i>
                 <h5 class="fw-bold mb-0 text-dark">Unggah File Excel / CSV Siswa</h5>
               </div>
-              <p class="text-muted small">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama Siswa</strong>, <strong>Kelas</strong> (VII, VIII, IX), dan <strong>Kata Sandi</strong> (Opsional).</p>
+              <p class="text-muted small mb-2">Pilih file Excel (<code>.xlsx</code> / <code>.csv</code>) 1 Sheet gabungan dengan kolom: <strong>No</strong>, <strong>Nama Siswa</strong>, <strong>Kelas</strong> (VII, VIII, IX), dan <strong>Kata Sandi</strong> (Opsional).</p>
+
+              <!-- Sinkronisasi / Cadangan students.json Lama -->
+              <div class="alert alert-info border-0 bg-info-subtle text-dark py-2 px-3 mb-3 small">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                  <span class="fw-bold"><i class="bi bi-shield-check text-primary me-1"></i>Pengaman Data Siswa Lama:</span>
+                  <div class="d-flex flex-wrap gap-1">
+                    <label class="btn btn-outline-primary btn-sm py-0 px-2 fw-semibold mb-0" style="cursor: pointer;" title="Gabungkan dari file students.json cadangan di komputer">
+                      <i class="bi bi-upload me-1"></i>Impor students.json
+                      <input type="file" id="importStudentsJsonFile" accept=".json" class="d-none">
+                    </label>
+                    <button id="fetchLiveStudentsBtn" type="button" class="btn btn-primary btn-sm py-0 px-2 fw-semibold" title="Muat &amp; gabungkan data siswa dari server live">
+                      <i class="bi bi-cloud-download me-1"></i>Muat Live
+                    </button>
+                  </div>
+                </div>
+                <span class="fs-8 text-secondary d-block">Penambahan siswa baru otomatis <strong>digabungkan</strong> dengan daftar siswa lama agar data lama tetap terjaga saat menimpa <code>students.json</code> di GitHub.</span>
+              </div>
 
               <!-- Download Template Button -->
               <div class="d-flex justify-content-between align-items-center mb-2">
@@ -704,7 +721,7 @@
               <div class="upload-excel-box mb-3" onclick="document.getElementById('excelFileInput').click()">
                 <i class="bi bi-cloud-arrow-up-fill text-success fs-1"></i>
                 <h6 class="fw-bold text-dark mt-2 mb-1" id="excelUploadTitle">Pilih / Tarik File Excel (.xlsx / .csv)</h6>
-                <p class="text-muted fs-7 mb-0" id="excelUploadDesc">Format file Excel dengan kolom No, Nama, Kelas & Sandi</p>
+                <p class="text-muted fs-7 mb-0" id="excelUploadDesc">Siswa baru akan ditambahkan tanpa menghapus siswa lama</p>
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="d-none">
               </div>
 
@@ -1083,6 +1100,11 @@
       let liveVideosSnapshot = [];
       let explicitlyDeletedVideoIds = new Set();
       let videoCatalogExplicitlyReset = false;
+
+      let liveStudentsSnapshot = [];
+      let explicitlyDeletedStudentIds = new Set();
+      let explicitlyDeletedStudentKeys = new Set();
+      let studentsExplicitlyReset = false;
 
       function enterMainApp() {
         document.getElementById('landingPageView').classList.add('d-none');
@@ -3178,9 +3200,86 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         .replace(/'/g, '&#39;');
     }
 
+    function getStudentIdentityKey(stu) {
+      if (!stu) return '';
+      const cleanName = (stu.nama || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+      const cleanGrade = normalizeGrade(stu.kelas).toLowerCase();
+      return `${cleanName}|${cleanGrade}`;
+    }
+
+    function mergeStudentItems(baseList, incomingList, options = {}) {
+      const overwriteExisting = Boolean(options.overwriteExisting);
+      const merged = [];
+      const keyToIndex = new Map();
+      const idToIndex = new Map();
+
+      const normalizeStudentRecord = (raw) => {
+        if (!raw || typeof raw !== 'object') return null;
+        const cleanName = (raw.nama || raw.username || '').toString().trim();
+        if (!cleanName) return null;
+        const cleanGrade = normalizeGrade(raw.kelas);
+        const cleanPass = (raw.password || '').toString().trim() || getPasswordForGrade(cleanGrade);
+        const id = (raw.id || '').toString().trim() ||
+          ("stu_" + cleanName.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + Math.floor(Math.random() * 1000));
+        return {
+          ...raw,
+          id,
+          nama: cleanName,
+          kelas: cleanGrade,
+          role: 'STUDENT',
+          username: (raw.username || cleanName).toString().trim(),
+          password: cleanPass
+        };
+      };
+
+      (Array.isArray(baseList) ? baseList : []).forEach(item => {
+        const rec = normalizeStudentRecord(item);
+        if (!rec) return;
+        const key = getStudentIdentityKey(rec);
+        if (keyToIndex.has(key) || idToIndex.has(rec.id)) return;
+        const idx = merged.length;
+        merged.push(rec);
+        keyToIndex.set(key, idx);
+        idToIndex.set(rec.id, idx);
+      });
+
+      let addedCount = 0;
+      let updatedCount = 0;
+      let skippedCount = 0;
+
+      (Array.isArray(incomingList) ? incomingList : []).forEach(item => {
+        const rec = normalizeStudentRecord(item);
+        if (!rec) return;
+        const key = getStudentIdentityKey(rec);
+        const existingIdx = keyToIndex.has(key)
+          ? keyToIndex.get(key)
+          : (idToIndex.has(rec.id) ? idToIndex.get(rec.id) : undefined);
+
+        if (existingIdx !== undefined) {
+          if (overwriteExisting && item._hasCustomPass && rec.password !== merged[existingIdx].password) {
+            merged[existingIdx].password = rec.password;
+            updatedCount++;
+          } else {
+            skippedCount++;
+          }
+          return;
+        }
+
+        const newRec = { ...rec };
+        delete newRec._hasCustomPass;
+        const idx = merged.length;
+        merged.push(newRec);
+        keyToIndex.set(key, idx);
+        idToIndex.set(newRec.id, idx);
+        addedCount++;
+      });
+
+      return { merged, addedCount, updatedCount, skippedCount };
+    }
+
     function processStudentList(rows) {
-      importedStudents = [];
-      rows.forEach((row, idx) => {
+      const incomingStudents = [];
+      rows.forEach((row) => {
         let name = '';
         let gradeRaw = '';
         let customPass = '';
@@ -3213,29 +3312,61 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         if (name && name.toString().trim() !== '' && name.toString().toLowerCase() !== 'nama') {
           const cleanName = name.toString().trim();
           const cleanGrade = normalizeGrade(gradeRaw);
-          const password = customPass && customPass.toString().trim() !== '' ? customPass.toString().trim() : getPasswordForGrade(cleanGrade);
+          const hasCustomPass = Boolean(customPass && customPass.toString().trim() !== '');
+          const password = hasCustomPass ? customPass.toString().trim() : getPasswordForGrade(cleanGrade);
           const username = cleanName;
 
-          importedStudents.push({
+          const newStudent = {
             id: "stu_" + cleanName.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + Math.floor(Math.random() * 1000),
-            no: importedStudents.length + 1,
+            no: 1,
             nama: cleanName,
             kelas: cleanGrade,
             role: "STUDENT",
             username: username,
-            password: password
-          });
+            password: password,
+            _hasCustomPass: hasCustomPass
+          };
+          explicitlyDeletedStudentIds.delete(newStudent.id);
+          explicitlyDeletedStudentKeys.delete(getStudentIdentityKey(newStudent));
+          incomingStudents.push(newStudent);
         }
       });
+
+      if (importedStudents.length === 0 && !studentsExplicitlyReset && Array.isArray(liveStudentsSnapshot) && liveStudentsSnapshot.length > 0) {
+        importedStudents = liveStudentsSnapshot.filter(s => {
+          const idBlocked = s.id && explicitlyDeletedStudentIds.has(s.id);
+          const keyBlocked = explicitlyDeletedStudentKeys.has(getStudentIdentityKey(s));
+          return !idBlocked && !keyBlocked;
+        });
+      }
+
+      const mergeResult = mergeStudentItems(importedStudents, incomingStudents, { overwriteExisting: true });
+      importedStudents = mergeResult.merged.map(s => {
+        const clean = { ...s };
+        delete clean._hasCustomPass;
+        return clean;
+      });
+      studentsExplicitlyReset = false;
 
       sortAndRenumberStudents();
       renderStudentTable();
       saveStudentsToStorage();
+
+      return {
+        addedCount: mergeResult.addedCount,
+        updatedCount: mergeResult.updatedCount,
+        skippedCount: mergeResult.skippedCount,
+        processedCount: incomingStudents.length,
+        totalCount: importedStudents.length
+      };
     }
 
     function deleteStudent(index) {
       if (index < 0 || index >= importedStudents.length) return;
-      if (confirm(`Hapus akun siswa "${importedStudents[index].nama}"?`)) {
+      const target = importedStudents[index];
+      if (confirm(`Hapus akun siswa "${target.nama}"?`)) {
+        if (target.id) explicitlyDeletedStudentIds.add(target.id);
+        explicitlyDeletedStudentKeys.add(getStudentIdentityKey(target));
         importedStudents.splice(index, 1);
         sortAndRenumberStudents();
         renderStudentTable();
@@ -3314,6 +3445,76 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
       });
     });
 
+    // Import Old students.json Backup File (Merge-Safe)
+    const importStudentsJsonFile = document.getElementById('importStudentsJsonFile');
+    if (importStudentsJsonFile) {
+      importStudentsJsonFile.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const parsed = JSON.parse(evt.target.result);
+            if (!Array.isArray(parsed)) {
+              alert('Format file JSON siswa harus berupa array [ ... ].');
+              return;
+            }
+            const studentOnly = parsed.filter(u => !u.role || u.role === 'STUDENT');
+            if (importedStudents.length > 0 && confirm(`Di daftar saat ini sudah ada ${importedStudents.length} siswa. Gabungkan dengan ${studentOnly.length} siswa dari file JSON agar siswa lama & baru tersimpan semua?\n\nOK = Gabungkan (Pertahankan Semua)\nBatal = Ganti Total dengan Isi File`)) {
+              importedStudents = mergeStudentItems(studentOnly, importedStudents).merged;
+            } else {
+              importedStudents = mergeStudentItems([], studentOnly).merged;
+            }
+            studentsExplicitlyReset = false;
+            sortAndRenumberStudents();
+            renderStudentTable();
+            saveStudentsToStorage();
+            const counts = getStudentGradeCounts();
+            alert(`✅ Berhasil memuat ${counts.all} siswa ke daftar!\n(Kelas VII: ${counts.vii} | Kelas VIII: ${counts.viii} | Kelas IX: ${counts.ix})`);
+          } catch (err) {
+            alert('Gagal membaca file students.json: ' + err.message);
+          } finally {
+            e.target.value = '';
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // Fetch & Merge Live students.json from Server
+    const fetchLiveStudentsBtn = document.getElementById('fetchLiveStudentsBtn');
+    if (fetchLiveStudentsBtn) {
+      fetchLiveStudentsBtn.addEventListener('click', async function() {
+        try {
+          const res = await fetch('/students.json?t=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) {
+            alert('File /students.json belum ditemukan di server live. Pastikan sudah di-push ke GitHub & Cloudflare.');
+            return;
+          }
+          const liveData = await res.json();
+          if (!Array.isArray(liveData)) return;
+          const liveStudents = liveData.filter(u => !u.role || u.role === 'STUDENT');
+          liveStudentsSnapshot = liveStudents;
+
+          if (importedStudents.length > 0 && confirm(`Di daftar saat ini sudah ada ${importedStudents.length} siswa. Gabungkan dengan ${liveStudents.length} siswa dari server live agar tidak ada yang hilang?\n\nOK = Gabungkan (Pertahankan Semua)\nBatal = Ganti Total dengan Data Server Live`)) {
+            importedStudents = mergeStudentItems(liveStudents, importedStudents).merged;
+          } else {
+            importedStudents = mergeStudentItems([], liveStudents).merged;
+          }
+          studentsExplicitlyReset = false;
+          explicitlyDeletedStudentIds.clear();
+          explicitlyDeletedStudentKeys.clear();
+          sortAndRenumberStudents();
+          renderStudentTable();
+          saveStudentsToStorage();
+          const counts = getStudentGradeCounts();
+          alert(`✅ Data students.json live berhasil dimuat & digabungkan! Total: ${counts.all} siswa\n(Kelas VII: ${counts.vii} | Kelas VIII: ${counts.viii} | Kelas IX: ${counts.ix})`);
+        } catch (err) {
+          alert('Gagal mengambil students.json live: ' + err.message);
+        }
+      });
+    }
+
     // Student Excel File Upload Handler
     const excelFileInput = document.getElementById('excelFileInput');
     if (excelFileInput) {
@@ -3322,7 +3523,7 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         if (!file) return;
 
         document.getElementById('excelUploadTitle').textContent = file.name;
-        document.getElementById('excelUploadDesc').textContent = `Membaca data Excel...`;
+        document.getElementById('excelUploadDesc').textContent = `Membaca & menggabungkan data Excel...`;
 
         const reader = new FileReader();
         reader.onload = function(evt) {
@@ -3333,12 +3534,20 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
             const worksheet = workbook.Sheets[firstSheetName];
             const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            processStudentList(jsonRows);
+            const result = processStudentList(jsonRows);
             const counts = getStudentGradeCounts();
-            document.getElementById('excelUploadDesc').textContent = `Berhasil membaca ${counts.all} siswa (VII: ${counts.vii}, VIII: ${counts.viii}, IX: ${counts.ix})`;
-            alert(`✅ Berhasil mengimpor ${counts.all} siswa dari "${file.name}"!\n(Kelas VII: ${counts.vii} | Kelas VIII: ${counts.viii} | Kelas IX: ${counts.ix})`);
+            document.getElementById('excelUploadDesc').textContent = `Total ${counts.all} siswa (VII: ${counts.vii}, VIII: ${counts.viii}, IX: ${counts.ix})`;
+            alert(
+              `✅ Impor dari "${file.name}" selesai!\n` +
+              `• Siswa baru ditambahkan: ${result.addedCount}\n` +
+              (result.updatedCount > 0 ? `• Sandi diperbarui: ${result.updatedCount}\n` : '') +
+              (result.skippedCount > 0 ? `• Siswa lama tetap terjaga: ${result.skippedCount}\n` : '') +
+              `• Total keseluruhan: ${counts.all} siswa (VII: ${counts.vii} | VIII: ${counts.viii} | IX: ${counts.ix})`
+            );
           } catch (err) {
             alert('Gagal membaca file Excel: ' + err.message);
+          } finally {
+            e.target.value = '';
           }
         };
         reader.readAsArrayBuffer(file);
@@ -3358,9 +3567,15 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         if (rawText) {
           const lines = rawText.split('\n');
           const rows = lines.map(line => line.split(','));
-          processStudentList(rows);
+          const result = processStudentList(rows);
           const counts = getStudentGradeCounts();
-          alert(`✅ Berhasil memproses ${counts.all} akun siswa!\n(Kelas VII: ${counts.vii} | Kelas VIII: ${counts.viii} | Kelas IX: ${counts.ix})`);
+          document.getElementById('manualStudentInput').value = '';
+          alert(
+            `✅ Data siswa berhasil digabungkan!\n` +
+            `• Siswa baru ditambahkan: ${result.addedCount}\n` +
+            (result.updatedCount > 0 ? `• Sandi diperbarui: ${result.updatedCount}\n` : '') +
+            `• Total keseluruhan: ${counts.all} siswa (VII: ${counts.vii} | VIII: ${counts.viii} | IX: ${counts.ix})`
+          );
         }
       });
     }
@@ -3593,7 +3808,47 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
     // =====================================
     // EXPORT & DOWNLOAD HANDLERS
     // =====================================
-    function downloadStudentsJson() {
+    async function ensureLiveStudentsNotLostBeforeExport() {
+      if (studentsExplicitlyReset) return;
+      if (!Array.isArray(liveStudentsSnapshot) || liveStudentsSnapshot.length === 0) {
+        try {
+          const res = await fetch('/students.json?t=' + Date.now(), { cache: 'no-store' });
+          if (res.ok) {
+            const liveData = await res.json();
+            if (Array.isArray(liveData)) {
+              liveStudentsSnapshot = liveData.filter(u => !u.role || u.role === 'STUDENT');
+            }
+          }
+        } catch (_) {}
+      }
+      if (!Array.isArray(liveStudentsSnapshot) || liveStudentsSnapshot.length === 0) return;
+
+      const currentKeys = new Set(importedStudents.map(getStudentIdentityKey));
+      const missingLiveStudents = liveStudentsSnapshot.filter(stu => {
+        if (stu.id && explicitlyDeletedStudentIds.has(stu.id)) return false;
+        const key = getStudentIdentityKey(stu);
+        if (explicitlyDeletedStudentKeys.has(key)) return false;
+        const idMatch = stu.id && importedStudents.some(s => s.id === stu.id);
+        const keyMatch = currentKeys.has(key);
+        return !idMatch && !keyMatch;
+      });
+
+      if (missingLiveStudents.length > 0) {
+        const msg =
+          `⚠️ PERHATIAN: Terdapat ${missingLiveStudents.length} siswa lama yang sudah ada di server (students.json) tetapi belum masuk di daftar ini.\n\n` +
+          `Jika tidak digabungkan, data siswa lama akan TERHAPUS saat kode students.json ini ditempel ke GitHub!\n\n` +
+          `Klik OK untuk MENGGABUNGKAN otomatis siswa lama + siswa baru sekarang.\nKlik Batal jika Anda memang sengaja ingin menghapusnya.`;
+        if (confirm(msg)) {
+          importedStudents = mergeStudentItems(missingLiveStudents, importedStudents).merged;
+          sortAndRenumberStudents();
+          renderStudentTable();
+          saveStudentsToStorage();
+        }
+      }
+    }
+
+    async function downloadStudentsJson() {
+      await ensureLiveStudentsNotLostBeforeExport();
       sortAndRenumberStudents();
       const jsonText = JSON.stringify(importedStudents, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
@@ -3620,11 +3875,13 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
       URL.revokeObjectURL(url);
     }
 
-    function copyStudentsJson() {
+    async function copyStudentsJson() {
+      await ensureLiveStudentsNotLostBeforeExport();
       sortAndRenumberStudents();
       const jsonText = JSON.stringify(importedStudents, null, 2);
       navigator.clipboard.writeText(jsonText).then(() => {
-        alert('📋 Kode students.json berhasil disalin ke clipboard!');
+        const counts = getStudentGradeCounts();
+        alert(`📋 Kode students.json berhasil disalin (${counts.all} siswa — VII: ${counts.vii}, VIII: ${counts.viii}, IX: ${counts.ix})!\nAman untuk langsung ditempel menimpa file public/students.json di GitHub.`);
       });
     }
 
@@ -3699,8 +3956,11 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
     const resetStudentsBtn = document.getElementById('resetStudentsBtn');
     if (resetStudentsBtn) {
       resetStudentsBtn.addEventListener('click', function() {
-        if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun siswa?')) {
+        if (confirm('Apakah Anda yakin ingin mengosongkan seluruh data akun siswa dan membuat dari awal?')) {
           importedStudents = [];
+          studentsExplicitlyReset = true;
+          explicitlyDeletedStudentIds.clear();
+          explicitlyDeletedStudentKeys.clear();
           renderStudentTable();
           saveStudentsToStorage();
         }
@@ -3824,23 +4084,43 @@ Video: Materi Nahwu Dasar Kelas VIII\tNahwu\tVIII\tGuru MTs Al-Khairaat Bunyu\th
         localStorage.setItem('guru_videos_has_saved', 'true');
       }
 
-      // 2. Load Students
+      // 2. Always fetch live students.json snapshot (bypass cache) & merge with local edits
+      try {
+        const res = await fetch('/students.json?t=' + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            liveStudentsSnapshot = data.filter(u => !u.role || u.role === 'STUDENT');
+          }
+        }
+      } catch (e) {}
+
       const hasSavedStudents = localStorage.getItem('guru_students_has_saved');
+      let loadedLocalStudents = false;
       if (hasSavedStudents === 'true') {
         try {
           const stored = localStorage.getItem('guru_students_override');
-          if (stored) importedStudents = JSON.parse(stored);
-        } catch (e) {}
-      } else {
-        try {
-          const res = await fetch('/students.json?t=' + Date.now(), { cache: 'no-store' });
-          if (res.ok) {
-            const data = await res.json();
-            importedStudents = Array.isArray(data) ? data.filter(u => u.role === 'STUDENT') : [];
-            saveStudentsToStorage();
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              importedStudents = parsed;
+              loadedLocalStudents = true;
+            }
           }
         } catch (e) {}
       }
+
+      if (!loadedLocalStudents && liveStudentsSnapshot.length > 0) {
+        importedStudents = [...liveStudentsSnapshot];
+        saveStudentsToStorage();
+      } else if (loadedLocalStudents && liveStudentsSnapshot.length > 0) {
+        const mergeInit = mergeStudentItems(importedStudents, liveStudentsSnapshot);
+        if (mergeInit.addedCount > 0) {
+          importedStudents = mergeInit.merged;
+          saveStudentsToStorage();
+        }
+      }
+
       if (Array.isArray(importedStudents) && importedStudents.length > 0) {
         sortAndRenumberStudents();
       }
