@@ -14,5 +14,37 @@
     "pageCount": 1,
     "category": "Video",
     "description": "Video Pembelajaran Informatika untuk Kelas VIII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "video_informatika_3171_31",
+    "title": "Video: Pelajaran Informatika",
+    "author": "Guru MTs Al-Khairaat Bunyu",
+    "subject": "Informatika",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://youtu.be/MkDMvwa6qy0?si=M15I4U4b__T_pcg6",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 15000000,
+    "pageCount": 1,
+    "category": "Video",
+    "description": "Video Pembelajaran Informatika untuk Kelas VII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "video_bahasa_arab_3171_92",
+    "title": "Video: Pembelajaran Bahasa Arab",
+    "author": "Guru MTs Al-Khairaat Bunyu",
+    "subject": "Bahasa Arab",
+    "gradeClass": "Kelas VII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://youtu.be/CeHqTgFsHiw?si=4nsHgoETlh2xHq8j",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 15000000,
+    "pageCount": 1,
+    "category": "Video",
+    "description": "Video Pembelajaran Bahasa Arab untuk Kelas VII MTs Al-Khairaat Bunyu."
   }
 ]
