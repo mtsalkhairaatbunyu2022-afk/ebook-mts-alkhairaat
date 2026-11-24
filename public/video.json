@@ -16,3 +16,21 @@
     "description": "Video Pembelajaran Percakapan Bahasa Arab untuk Kelas VIII MTs Al-Khairaat Bunyu."
   }
 ]
+[
+  {
+    "id": "video_informatika_8566_277",
+    "title": "Video Pembahasan Informatika",
+    "author": "MTs Alkhairaat Bunyu",
+    "subject": "Informatika",
+    "gradeClass": "Kelas VIII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://youtu.be/zYBOjzlfpR0?si=zdJkhQKq2cjXrvNh",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 15000000,
+    "pageCount": 1,
+    "category": "Video",
+    "description": "Video Pembelajaran Informatika untuk Kelas VIII MTs Al-Khairaat Bunyu."
+  }
+]
