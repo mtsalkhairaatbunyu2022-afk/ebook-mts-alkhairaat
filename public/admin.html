@@ -1203,13 +1203,13 @@
       const url = (rawUrl || '').trim();
       if (!url) return { kind: 'empty', streamUrl: '', primaryUrl: '', liteUrl: '' };
       if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
-        const fileIdMatch = url.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/);
+        const fileIdMatch = url.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (fileIdMatch && fileIdMatch[1]) {
           const id = fileIdMatch[1];
           return {
             kind: 'drive',
             streamUrl: `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
-            primaryUrl: `https://drive.google.com/file/d/${id}/preview`,
+            primaryUrl: `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
             liteUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`
           };
         }
