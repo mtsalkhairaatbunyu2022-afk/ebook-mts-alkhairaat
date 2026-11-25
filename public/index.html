@@ -465,6 +465,32 @@
     .nav-tab-btn {
       transition: all 0.2s ease;
     }
+    .running-text-container {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      margin: 0;
+    }
+    .running-text-track {
+      display: inline-block;
+      padding-left: 100%;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #10b981;
+      letter-spacing: 0.3px;
+      text-shadow: 0 1px 2px rgba(16, 185, 129, 0.18);
+      animation: runningTextMarquee 9s linear infinite;
+      will-change: transform;
+    }
+    @keyframes runningTextMarquee {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
   </style>
 </head>
 <body>
@@ -512,9 +538,9 @@
           <img src="/logo_alkhairaat.jpg" alt="Logo MTs Al-Khairaat Bunyu" class="school-logo-img">
         </div>
 
-        <!-- App Header Title -->
-        <h4 class="fw-black text-primary mb-1" style="color: #1e3a8a !important; font-weight: 900;">
-          Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu
+        <!-- App Header Title (Running Text) -->
+        <h4 class="running-text-container mb-1" aria-label="E-Book MTs Alkhairaat Bunyu">
+          <span class="running-text-track">E-Book MTs Alkhairaat Bunyu</span>
         </h4>
         <p class="text-secondary small fw-semibold mb-3">
           Perpustakaan Digital Terintegrasi Sekolah
