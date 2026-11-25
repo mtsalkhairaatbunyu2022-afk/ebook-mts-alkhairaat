@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ebook-mts-v2.8';
+const CACHE_NAME = 'ebook-mts-v2.9';
 const CDN_CACHE_NAME = 'ebook-mts-cdn-v2';
 
 const urlsToCache = [
@@ -11,7 +11,8 @@ const urlsToCache = [
   '/video.json',
   '/students.json',
   '/teachers.json',
-  '/manifest.json'
+  '/manifest.json',
+  '/manifest-admin.json'
 ];
 
 self.addEventListener('install', event => {

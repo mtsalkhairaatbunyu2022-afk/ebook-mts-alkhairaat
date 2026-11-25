@@ -1,0 +1,19 @@
+{
+  "id": "/admin",
+  "short_name": "Portal Admin",
+  "name": "Portal Admin - MTs Al-Khairaat Bunyu",
+  "description": "Portal Admin dan Manajemen Katalog MTs Al-Khairaat Bunyu",
+  "icons": [
+    {
+      "src": "/logo_alkhairaat.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/admin",
+  "scope": "/admin",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "display": "standalone"
+}
