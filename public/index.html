@@ -1816,33 +1816,6 @@
         }
 
         const safeId = escapeHtml(b.id);
-        const isSavedOffline = savedOfflineBookIds.has(b.id);
-        const dlProgress = offlineDownloadProgress.get(b.id);
-        let offlineBtnHtml = "";
-        if (typeof dlProgress === "number") {
-          offlineBtnHtml = `
-            <button type="button" id="btnOfflineAction_${safeId}" class="btn btn-success btn-sm w-100 fw-semibold py-1 mt-1 disabled" style="font-size: 0.72rem;" onclick="event.stopPropagation()">
-              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan ${dlProgress}%
-            </button>
-          `;
-        } else if (isSavedOffline) {
-          offlineBtnHtml = `
-            <div class="d-flex gap-1 mt-1" onclick="event.stopPropagation()">
-              <button type="button" class="btn btn-success btn-sm flex-grow-1 fw-bold py-1 text-truncate" style="font-size: 0.72rem;" onclick="event.stopPropagation(); openOfflineSavedBook('${safeId}')" title="Baca salinan tersimpan tanpa internet">
-                <i class="bi bi-check-circle-fill me-1"></i> Baca Offline
-              </button>
-              <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" style="font-size: 0.72rem;" onclick="event.stopPropagation(); removeOfflineSavedBook('${safeId}')" title="Hapus salinan offline dari HP">
-                <i class="bi bi-trash3"></i>
-              </button>
-            </div>
-          `;
-        } else {
-          offlineBtnHtml = `
-            <button type="button" id="btnOfflineAction_${safeId}" class="btn btn-outline-success btn-sm w-100 fw-semibold py-1 mt-1" style="font-size: 0.72rem;" onclick="event.stopPropagation(); downloadBookForOffline('${safeId}')" title="Simpan buku di memori aplikasi agar bisa dibaca offline">
-              <i class="bi bi-cloud-arrow-down me-1"></i> Simpan Offline
-            </button>
-          `;
-        }
 
         return `
           <div class="col-6 col-sm-6">
@@ -1850,7 +1823,6 @@
               <div class="book-cover">
                 <div class="d-flex justify-content-between align-items-start w-100 gap-1">
                   <span class="badge bg-warning text-dark fw-bold fs-8">${escapeHtml(b.gradeClass)}</span>
-                  ${isSavedOffline ? '<span class="badge bg-success text-white fs-9"><i class="bi bi-wifi-off me-1"></i>Offline</span>' : ''}
                 </div>
                 <div class="text-white">
                   <i class="bi bi-book-half fs-3 mb-1"></i>
@@ -1862,7 +1834,6 @@
                 <button class="btn btn-primary btn-sm w-100 fw-bold py-1 fs-8 shadow-sm">
                   <i class="bi bi-journal-bookmark me-1"></i> BACA
                 </button>
-                ${offlineBtnHtml}
               </div>
             </div>
           </div>
@@ -2570,7 +2541,7 @@
       if (!cachedBlob) {
         savedOfflineBookIds.delete(bookId);
         renderBooks();
-        alert("Salinan offline tidak ditemukan. Silakan tekan 'Simpan Offline' saat terhubung ke internet.");
+        alert("Salinan buku belum tersedia secara lokal. Silakan aktifkan koneksi internet untuk membaca buku.");
         return;
       }
       openOfflinePdfBlobInModal(book.id, book.title, book.gradeClass, book.fileUrl, cachedBlob);
@@ -3125,7 +3096,7 @@
         const loadTitle = document.getElementById("pdfLoadingTitle");
         const loadDesc = document.getElementById("pdfLoadingDesc");
         if (loadTitle) loadTitle.innerText = "Anda Sedang Offline";
-        if (loadDesc) loadDesc.innerText = "Buku ini belum disimpan ke memori aplikasi. Aktifkan internet sebentar lalu tekan 'Simpan Offline' pada kartu buku.";
+        if (loadDesc) loadDesc.innerText = "Aktifkan koneksi internet pada perangkat Anda untuk membuka dan membaca buku pelajaran ini.";
         if (loading) loading.classList.remove("d-none");
         if (pdfModal) pdfModal.show();
         return;

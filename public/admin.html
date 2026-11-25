@@ -1609,14 +1609,13 @@
       if (mode === 'offline') {
         if (iconEl) iconEl.className = 'bi bi-wifi-off text-warning display-3 mb-3 d-block';
         if (headingEl) headingEl.textContent = 'Anda Sedang Offline';
-        if (descEl) descEl.innerHTML = 'Salinan offline buku ini belum tersimpan di penyimpanan browser aplikasi.';
+        if (descEl) descEl.innerHTML = 'Koneksi internet tidak terdeteksi pada perangkat Anda.';
         if (guideEl) {
           guideEl.innerHTML = `
-            <strong class="d-block mb-1">💡 Cara Membaca Buku Tanpa Internet:</strong>
+            <strong class="d-block mb-1">💡 Cara Membuka Buku:</strong>
             <ol class="mb-0 ps-3">
-              <li>Aktifkan koneksi internet sebentar.</li>
-              <li>Tekan tombol <strong>Simpan Offline</strong> pada kartu buku ini di Ruang Baca Guru.</li>
-              <li>Setelah tersimpan, gunakan tombol <strong>Baca Offline</strong> kapan saja tanpa sinyal.</li>
+              <li>Pastikan perangkat laptop/komputer terhubung ke koneksi internet (Wi-Fi / hotspot).</li>
+              <li>Tutup jendela ini lalu buka kembali buku di Ruang Baca Guru.</li>
             </ol>
           `;
         }
@@ -2288,40 +2287,11 @@
         col.className = 'col-md-6 col-lg-4 col-xl-3';
         const canvasId = `pdf_cover_canvas_${index}`;
         const safeId = escapeStudentHtml(book.id);
-        const isSavedOffline = teacherSavedOfflineIds.has(book.id);
-        const dlProgress = teacherOfflineDlProgress.get(book.id);
-
-        let offlineControlsHtml = '';
-        if (typeof dlProgress === 'number') {
-          offlineControlsHtml = `
-            <button type="button" id="btnTeacherOffline_${safeId}" class="btn btn-success btn-sm w-100 fw-semibold mt-2 disabled" onclick="event.stopPropagation()">
-              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan ${dlProgress}%
-            </button>
-          `;
-        } else if (isSavedOffline) {
-          offlineControlsHtml = `
-            <div class="d-flex gap-1 mt-2" onclick="event.stopPropagation()">
-              <button type="button" class="btn btn-success btn-sm flex-grow-1 fw-bold text-truncate" onclick="event.stopPropagation(); openWebReader('${safeId}', { forceOffline: true })" title="Baca salinan tersimpan di dalam aplikasi tanpa internet">
-                <i class="bi bi-check-circle-fill me-1"></i> Baca Offline
-              </button>
-              <button type="button" class="btn btn-outline-danger btn-sm px-2" onclick="event.stopPropagation(); removeTeacherBookOffline('${safeId}')" title="Hapus salinan offline dari penyimpanan aplikasi">
-                <i class="bi bi-trash3"></i>
-              </button>
-            </div>
-          `;
-        } else {
-          offlineControlsHtml = `
-            <button type="button" id="btnTeacherOffline_${safeId}" class="btn btn-outline-success btn-sm w-100 fw-semibold mt-2" onclick="event.stopPropagation(); downloadTeacherBookOffline('${safeId}')" title="Simpan buku di memori aplikasi agar bisa dibaca offline">
-              <i class="bi bi-cloud-arrow-down me-1"></i> Simpan Offline
-            </button>
-          `;
-        }
 
         col.innerHTML = `
           <div class="card book-card h-100 shadow-sm overflow-hidden" onpointerdown="prewarmTeacherBook('${safeId}')" onmouseenter="prewarmTeacherBook('${safeId}')">
             <div class="book-cover position-relative overflow-hidden d-flex flex-column align-items-center justify-content-center p-3 text-center" style="min-height: 180px; cursor: pointer;" onclick="openWebReader('${safeId}')">
               <canvas id="${canvasId}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0.9; display: none;"></canvas>
-              ${isSavedOffline ? '<span class="badge bg-success text-white position-absolute top-0 end-0 m-2 z-2 shadow-sm"><i class="bi bi-wifi-off me-1"></i>Offline</span>' : ''}
               <div class="position-relative z-1 text-center w-100">
                 <i class="bi bi-book-fill fs-1 text-warning mb-2 d-block"></i>
                 <h6 class="fw-bold mb-1 text-white text-truncate w-100 px-2" title="${escapeStudentHtml(book.title)}">${escapeStudentHtml(book.title)}</h6>
@@ -2344,7 +2314,6 @@
                   <i class="bi bi-eye-fill"></i>
                   <span>Pratinjau & Baca Buku</span>
                 </button>
-                ${offlineControlsHtml}
               </div>
             </div>
           </div>
