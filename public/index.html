@@ -811,7 +811,7 @@
             <div class="mb-3">
               <label class="form-label fw-bold fs-7">Kata Sandi:</label>
               <div class="input-group">
-                <input type="password" id="studentPasswordInput" class="form-control" placeholder="Masukkan password Anda">
+                <input type="password" id="studentPasswordInput" name="student_pin_nohistory" autocomplete="new-password" data-lpignore="true" class="form-control" placeholder="Masukkan password Anda">
                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('studentPasswordInput', 'studentPassIcon')">
                   <i class="bi bi-eye" id="studentPassIcon"></i>
                 </button>
@@ -841,27 +841,29 @@
         </div>
         <div class="modal-body">
           <p class="text-secondary fs-8 mb-3">Masuk menggunakan Username dan Kata Sandi Guru Anda untuk mengakses koleksi pegangan guru.</p>
-          
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Username Guru:</label>
-            <input type="text" id="teacherUsernameInput" class="form-control" placeholder="Masukkan Username Anda">
-          </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-bold fs-7">Kata Sandi / PIN Guru:</label>
-            <div class="input-group">
-              <input type="password" id="teacherPasswordInput" class="form-control" placeholder="Masukkan Kata Sandi Guru">
-              <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('teacherPasswordInput', 'teacherPassIcon')">
-                <i class="bi bi-eye" id="teacherPassIcon"></i>
-              </button>
+          <form id="teacherLoginForm" autocomplete="off" onsubmit="event.preventDefault(); submitTeacherLogin();">
+            <div class="mb-3">
+              <label class="form-label fw-bold fs-7">Username Guru:</label>
+              <input type="text" id="teacherUsernameInput" name="teacher_access_code_nohistory" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-form-type="other" readonly onpointerdown="this.removeAttribute('readonly')" onfocus="this.removeAttribute('readonly')" class="form-control" placeholder="Masukkan Username Anda">
             </div>
-          </div>
 
-          <div id="teacherLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
+            <div class="mb-3">
+              <label class="form-label fw-bold fs-7">Kata Sandi / PIN Guru:</label>
+              <div class="input-group">
+                <input type="password" id="teacherPasswordInput" name="teacher_pin_nohistory" autocomplete="new-password" data-lpignore="true" data-form-type="other" readonly onpointerdown="this.removeAttribute('readonly')" onfocus="this.removeAttribute('readonly')" class="form-control" placeholder="Masukkan Kata Sandi Guru">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('teacherPasswordInput', 'teacherPassIcon')">
+                  <i class="bi bi-eye" id="teacherPassIcon"></i>
+                </button>
+              </div>
+            </div>
 
-          <button type="button" class="btn btn-teacher" onclick="submitTeacherLogin()">
-            MASUK AKUN GURU
-          </button>
+            <div id="teacherLoginError" class="alert alert-danger py-2 fs-8 d-none"></div>
+
+            <button type="submit" class="btn btn-teacher">
+              MASUK AKUN GURU
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -1475,9 +1477,37 @@
       document.getElementById("studentLoginStep2").classList.add("d-none");
     }
 
+    function clearTeacherLoginFields() {
+      const userEl = document.getElementById("teacherUsernameInput");
+      const passEl = document.getElementById("teacherPasswordInput");
+      const errEl = document.getElementById("teacherLoginError");
+      const iconEl = document.getElementById("teacherPassIcon");
+      if (userEl) {
+        userEl.value = "";
+        userEl.setAttribute("readonly", "readonly");
+      }
+      if (passEl) {
+        passEl.value = "";
+        passEl.type = "password";
+        passEl.setAttribute("readonly", "readonly");
+      }
+      if (iconEl) iconEl.className = "bi bi-eye";
+      if (errEl) errEl.classList.add("d-none");
+    }
+
     function openTeacherLoginModal() {
-      if (teacherModal) teacherModal.show();
-      else alert("Sistem login sedang memuat, silakan tunggu sebentar...");
+      clearTeacherLoginFields();
+      if (teacherModal) {
+        teacherModal.show();
+        setTimeout(() => {
+          const userEl = document.getElementById("teacherUsernameInput");
+          const passEl = document.getElementById("teacherPasswordInput");
+          if (userEl) userEl.removeAttribute("readonly");
+          if (passEl) passEl.removeAttribute("readonly");
+        }, 120);
+      } else {
+        alert("Sistem login sedang memuat, silakan tunggu sebentar...");
+      }
     }
 
     function openChangePasswordModal() {
@@ -1596,6 +1626,7 @@
         rekapUrl: teacher.rekapUrl || ""
       };
       localStorage.setItem("app_current_user", JSON.stringify(currentUser));
+      clearTeacherLoginFields();
       teacherModal.hide();
       showLibraryView();
     }
@@ -1710,6 +1741,7 @@
       currentCategoryFilter = "Buku";
       currentDashboardTab = "books";
       stopVideoPlayer();
+      clearTeacherLoginFields();
       document.getElementById("libraryScreen").classList.add("d-none");
       document.getElementById("welcomeScreen").classList.remove("d-none");
     }
