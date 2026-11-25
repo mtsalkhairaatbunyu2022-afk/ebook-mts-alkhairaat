@@ -1036,34 +1036,26 @@
             </div>
           </div>
 
-          <!-- Direct Page Control Toolbar for Presentation -->
+          <!-- Direct Reader Controls for Presentation -->
           <div class="d-flex align-items-center gap-2">
-            <button id="pdfPrevPageBtn" class="btn btn-sm btn-outline-warning text-white fw-bold py-1 px-2">
-              <i class="bi bi-chevron-left me-1"></i> Prev
-            </button>
-            <span class="text-white fs-7 font-monospace fw-bold px-2" id="pdfPageNumDisplay">Halaman 1 / 1</span>
-            <button id="pdfNextPageBtn" class="btn btn-sm btn-outline-warning text-white fw-bold py-1 px-2">
-              Next <i class="bi bi-chevron-right ms-1"></i>
-            </button>
-            <div class="vr bg-secondary mx-1 d-none d-md-block" style="height: 20px;"></div>
-            <button id="pdfZoomOutBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-out"></i></button>
-            <span class="text-light fs-7 font-monospace" id="pdfZoomDisplay">120%</span>
-            <button id="pdfZoomInBtn" class="btn btn-sm btn-outline-light py-1 px-2"><i class="bi bi-zoom-in"></i></button>
+            <button id="pdfZoomOutBtn" class="btn btn-sm btn-outline-light py-1 px-2" title="Perkecil"><i class="bi bi-zoom-out"></i></button>
+            <span class="text-light fs-7 font-monospace" id="pdfZoomDisplay">100%</span>
+            <button id="pdfZoomInBtn" class="btn btn-sm btn-outline-light py-1 px-2" title="Perbesar"><i class="bi bi-zoom-in"></i></button>
             <div class="vr bg-secondary mx-1 d-none d-md-block" style="height: 20px;"></div>
 
             <!-- Mode Baca: Scroll Down (Default) vs Per Halaman -->
             <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Mode Baca">
-              <button id="modeScrollBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold py-1 px-2" title="Mode Baca Gulir ke Bawah (Scroll Down)">
+              <button id="modeScrollBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold py-1 px-2" title="Mode Baca Lebar Penuh (Scroll Down)">
                 <i class="bi bi-arrows-vertical me-1"></i> Scroll Down
               </button>
-              <button id="modeSinglePageBtn" type="button" class="btn btn-sm btn-outline-light text-white py-1 px-2" title="Mode Baca Per Halaman">
+              <button id="modeSinglePageBtn" type="button" class="btn btn-sm btn-outline-light text-white py-1 px-2" title="Mode Fokus Per Halaman">
                 <i class="bi bi-file-earmark-text me-1"></i> Per Halaman
               </button>
             </div>
           </div>
 
           <div class="d-flex align-items-center gap-2">
-            <a id="readerOpenNewTabBtn" href="#" target="_blank" class="btn btn-outline-light btn-sm">
+            <a id="readerOpenNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="return openTeacherExternalPdf(event);" class="btn btn-outline-light btn-sm">
               <i class="bi bi-box-arrow-up-right me-1"></i> Buka File PDF
             </a>
             <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
@@ -1212,13 +1204,41 @@
     let currentTeacherReaderState = null;
     let activeAdminReaderToken = 0;
     let activeAdminFetchController = null;
+    let activeReaderExternalBlobUrl = null;
     let teacherScrollQueue = [];
     let teacherRenderingPages = new Set();
     let teacherActiveWorkers = 0;
 
+    function updateAdminPageDisplay(pageNum, totalPages) {
+      const disp = document.getElementById('pdfPageNumDisplay');
+      if (disp) disp.textContent = `Halaman ${pageNum} / ${totalPages}`;
+    }
+
+    function openTeacherExternalPdf(event) {
+      const btn = document.getElementById('readerOpenNewTabBtn');
+      const url = (btn && (btn.dataset.openUrl || btn.getAttribute('href'))) || '';
+      if (!url || url === '#') {
+        if (event) event.preventDefault();
+        showIframeNavHint('Tautan file PDF belum tersedia untuk buku ini.');
+        return false;
+      }
+      if (event) event.preventDefault();
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        const tempLink = document.createElement('a');
+        tempLink.href = url;
+        tempLink.target = '_blank';
+        tempLink.rel = 'noopener noreferrer';
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+      }
+      return false;
+    }
+
     function resolveTeacherReaderUrls(rawUrl) {
       const url = (rawUrl || '').trim();
-      if (!url) return { kind: 'empty', streamUrl: '', primaryUrl: '', liteUrl: '' };
+      if (!url) return { kind: 'empty', streamUrl: '', primaryUrl: '', liteUrl: '', directUrl: '' };
       if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
         const fileIdMatch = url.match(/\/(?:file\/d\/|open\?id=|uc\?id=|document\/d\/|spreadsheets\/d\/)([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (fileIdMatch && fileIdMatch[1]) {
@@ -1227,22 +1247,26 @@
             kind: 'drive',
             streamUrl: `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
             primaryUrl: `https://drive.google.com/file/d/${id}/preview`,
-            liteUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`
+            liteUrl: `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`,
+            directUrl: `https://drive.google.com/file/d/${id}/view`
           };
         }
         const previewUrl = url.endsWith('/preview') ? url : url.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
+        const directUrl = previewUrl.replace(/\/preview(\?.*)?$/, '/view');
         return {
           kind: 'drive',
           streamUrl: '',
           primaryUrl: previewUrl,
-          liteUrl: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
+          liteUrl: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`,
+          directUrl
         };
       }
       return {
         kind: 'generic',
         streamUrl: '',
         primaryUrl: url,
-        liteUrl: ''
+        liteUrl: '',
+        directUrl: url
       };
     }
 
@@ -1588,7 +1612,7 @@
 
       currentPdfDoc = loadedDoc;
       currentBookPageTotal = currentPdfDoc.numPages;
-      document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
+      updateAdminPageDisplay(1, currentPdfDoc.numPages);
       if (spinner) spinner.classList.add('d-none');
 
       if (readerViewMode === 'scroll') {
@@ -1780,16 +1804,20 @@
       container.style.right = '0';
       container.style.height = '100%';
       if (mode === 'single') {
-        container.style.maxWidth = '1120px';
+        container.style.maxWidth = '760px';
         container.style.width = '100%';
         container.style.margin = '0 auto';
         container.style.borderRadius = '0';
-        container.style.boxShadow = '0 10px 30px rgba(0,0,0,0.6)';
+        container.style.borderLeft = '2px solid #475569';
+        container.style.borderRight = '2px solid #475569';
+        container.style.boxShadow = '0 0 40px rgba(0,0,0,0.85)';
       } else {
         container.style.maxWidth = '100%';
         container.style.width = '100%';
         container.style.margin = '0';
         container.style.borderRadius = '0';
+        container.style.borderLeft = 'none';
+        container.style.borderRight = 'none';
         container.style.boxShadow = 'none';
       }
       applyIframeZoom();
@@ -1813,8 +1841,9 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${num} / ${currentPdfDoc.numPages}`;
-        document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
+        updateAdminPageDisplay(num, currentPdfDoc.numPages);
+        const zoomDisp = document.getElementById('pdfZoomDisplay');
+        if (zoomDisp) zoomDisp.textContent = `${Math.round(pdfZoomScale * 100)}%`;
 
         await page.render({
           canvasContext: ctx,
@@ -1914,7 +1943,7 @@
           const pageNum = parseInt(entry.target.getAttribute('data-page-num'), 10);
           if (entry.isIntersecting && pageNum) {
             hits.push(pageNum);
-            document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${pageNum} / ${currentPdfDoc.numPages}`;
+            updateAdminPageDisplay(pageNum, currentPdfDoc.numPages);
             currentPdfPage = pageNum;
           }
         });
@@ -1991,7 +2020,7 @@
           }
         }
         if (top <= scrollTop + modalBody.clientHeight / 2 && bottom >= scrollTop + modalBody.clientHeight / 2) {
-          document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${i} / ${currentPdfDoc.numPages}`;
+          updateAdminPageDisplay(i, currentPdfDoc.numPages);
           currentPdfPage = i;
         }
       }
@@ -2424,9 +2453,22 @@
       const forceOffline = Boolean(options && options.forceOffline);
       const isOffline = navigator.onLine === false;
 
+      const rawFileUrl = (book.fileUrl || '').trim();
+      const resolved = resolveTeacherReaderUrls(rawFileUrl);
+      const isDriveBook = resolved.kind === 'drive';
+      if (activeReaderExternalBlobUrl) {
+        try { URL.revokeObjectURL(activeReaderExternalBlobUrl); } catch (_) {}
+        activeReaderExternalBlobUrl = null;
+      }
+      const initialExternalUrl = book.localBlobUrl || resolved.directUrl || rawFileUrl || '#';
+      const openNewTabBtn = document.getElementById('readerOpenNewTabBtn');
+      if (openNewTabBtn) {
+        openNewTabBtn.href = initialExternalUrl;
+        openNewTabBtn.dataset.openUrl = initialExternalUrl;
+      }
+
       document.getElementById('readerModalTitle').textContent = book.title;
       document.getElementById('readerModalSubtitle').textContent = `${book.subject} • ${book.gradeClass} • Penulis: ${book.author}${forceOffline || isOffline ? ' • Mode Offline' : ''}`;
-      document.getElementById('readerOpenNewTabBtn').href = book.fileUrl || '#';
 
       const spinner = document.getElementById('pdfLoadingSpinner');
       const loadingText = document.getElementById('pdfLoadingText');
@@ -2475,12 +2517,9 @@
       currentPdfPage = 1;
       currentBookPageTotal = Math.max(1, parseInt(book.pageCount, 10) || 1);
       pdfZoomScale = 1.0;
-      document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentBookPageTotal}`;
-      document.getElementById('pdfZoomDisplay').textContent = '100%';
-
-      const rawFileUrl = (book.fileUrl || '').trim();
-      const resolved = resolveTeacherReaderUrls(rawFileUrl);
-      const isDriveBook = resolved.kind === 'drive';
+      updateAdminPageDisplay(1, currentBookPageTotal);
+      const zoomDisplayEl = document.getElementById('pdfZoomDisplay');
+      if (zoomDisplayEl) zoomDisplayEl.textContent = '100%';
 
       // 1. Online Google Drive Book (normal click): restore realtime Google Drive /preview filling 100% of modal body
       if (!forceOffline && !isOffline && isDriveBook && resolved.primaryUrl) {
@@ -2508,6 +2547,11 @@
 
       if (idbFile) {
         try {
+          if (!book.localBlobUrl && openNewTabBtn) {
+            activeReaderExternalBlobUrl = URL.createObjectURL(idbFile);
+            openNewTabBtn.href = activeReaderExternalBlobUrl;
+            openNewTabBtn.dataset.openUrl = activeReaderExternalBlobUrl;
+          }
           const ab = await idbFile.arrayBuffer();
           if (myToken !== activeAdminReaderToken) return;
           await renderAdminPdfBytes(ab, book.id, myToken, 'offline-blob');
@@ -2516,7 +2560,12 @@
           console.warn('PDF.js IDB render failed:', offlinePdfErr);
           if (myToken !== activeAdminReaderToken) return;
           try {
-            const blobUrl = URL.createObjectURL(idbFile);
+            const blobUrl = activeReaderExternalBlobUrl || URL.createObjectURL(idbFile);
+            activeReaderExternalBlobUrl = blobUrl;
+            if (openNewTabBtn) {
+              openNewTabBtn.href = blobUrl;
+              openNewTabBtn.dataset.openUrl = blobUrl;
+            }
             spinner.classList.add('d-none');
             setReaderModalScrollable(false);
             if (modalBody) modalBody.classList.remove('py-3');
@@ -2537,7 +2586,11 @@
 
       // 4. Non-Drive URL (e.g., local /pdfs/... uploaded file or direct PDF URL)
       let targetUrl = book.localBlobUrl || rawFileUrl;
-      document.getElementById('readerOpenNewTabBtn').href = targetUrl || '#';
+      if (openNewTabBtn && (book.localBlobUrl || targetUrl)) {
+        const finalUrl = book.localBlobUrl || resolved.directUrl || targetUrl || '#';
+        openNewTabBtn.href = finalUrl;
+        openNewTabBtn.dataset.openUrl = finalUrl;
+      }
 
       if (targetUrl) {
         try {
@@ -2545,7 +2598,7 @@
           if (myToken !== activeAdminReaderToken) return;
           setReaderModalScrollable(true);
           pdfZoomScale = 1.2;
-          document.getElementById('pdfZoomDisplay').textContent = '120%';
+          if (zoomDisplayEl) zoomDisplayEl.textContent = '120%';
           const loadingTask = pdfjs.getDocument({
             url: targetUrl,
             cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
@@ -2561,7 +2614,7 @@
           }
           currentPdfDoc = loadedDoc;
           currentBookPageTotal = currentPdfDoc.numPages;
-          document.getElementById('pdfPageNumDisplay').textContent = `Halaman 1 / ${currentPdfDoc.numPages}`;
+          updateAdminPageDisplay(1, currentPdfDoc.numPages);
           spinner.classList.add('d-none');
           if (readerViewMode === 'scroll') {
             await initScrollDownView();
@@ -2588,70 +2641,67 @@
       showTeacherReaderErrorCard('missing', book.fileUrl);
     }
 
-    // Modal Page Controls Event Listeners
+    // Modal Reader Controls Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('pdfPrevPageBtn').addEventListener('click', () => {
-        if (currentPdfDoc && currentPdfPage > 1) {
+      const zoomInBtn = document.getElementById('pdfZoomInBtn');
+      const zoomOutBtn = document.getElementById('pdfZoomOutBtn');
+      const zoomDisp = document.getElementById('pdfZoomDisplay');
+
+      if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+          if (pdfZoomScale < 2.4) {
+            pdfZoomScale = Math.round((pdfZoomScale + 0.2) * 10) / 10;
+          }
+          if (zoomDisp) zoomDisp.textContent = `${Math.round(pdfZoomScale * 100)}%`;
+          if (isIframeReaderActive()) {
+            applyIframeZoom();
+          } else if (currentPdfDoc) {
+            if (readerViewMode === 'scroll') {
+              renderedScrollPages.clear();
+              initScrollDownView();
+            } else {
+              renderModalPdfPage(currentPdfPage);
+            }
+          }
+        });
+      }
+
+      if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+          if (pdfZoomScale > 0.5) {
+            pdfZoomScale = Math.max(0.5, Math.round((pdfZoomScale - 0.2) * 10) / 10);
+          }
+          if (zoomDisp) zoomDisp.textContent = `${Math.round(pdfZoomScale * 100)}%`;
+          if (isIframeReaderActive()) {
+            applyIframeZoom();
+          } else if (currentPdfDoc) {
+            if (readerViewMode === 'scroll') {
+              renderedScrollPages.clear();
+              initScrollDownView();
+            } else {
+              renderModalPdfPage(currentPdfPage);
+            }
+          }
+        });
+      }
+
+      // Keyboard navigation support when reading local PDF.js files
+      document.addEventListener('keydown', (e) => {
+        const readerModal = document.getElementById('webReaderModal');
+        if (!readerModal || !readerModal.classList.contains('show') || !currentPdfDoc) return;
+        if (e.key === 'ArrowLeft' && currentPdfPage > 1) {
           currentPdfPage--;
           if (readerViewMode === 'scroll') {
             const el = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${currentPdfPage} / ${currentPdfDoc.numPages}`;
           } else {
             renderModalPdfPage(currentPdfPage);
           }
-        } else if (isIframeReaderActive()) {
-          const iframe = getActiveReaderIframe();
-          if (iframe) iframe.focus();
-          showIframeNavHint('Pratinjau Google Drive: gunakan gulir atau tombol panah di dalam area PDF untuk pindah halaman.');
-        }
-      });
-
-      document.getElementById('pdfNextPageBtn').addEventListener('click', () => {
-        if (currentPdfDoc && currentPdfPage < currentPdfDoc.numPages) {
+        } else if (e.key === 'ArrowRight' && currentPdfPage < currentPdfDoc.numPages) {
           currentPdfPage++;
           if (readerViewMode === 'scroll') {
             const el = document.getElementById(`pdfPageWrapper_${currentPdfPage}`);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.getElementById('pdfPageNumDisplay').textContent = `Halaman ${currentPdfPage} / ${currentPdfDoc.numPages}`;
-          } else {
-            renderModalPdfPage(currentPdfPage);
-          }
-        } else if (isIframeReaderActive()) {
-          const iframe = getActiveReaderIframe();
-          if (iframe) iframe.focus();
-          showIframeNavHint('Pratinjau Google Drive: gunakan gulir atau tombol panah di dalam area PDF untuk pindah halaman.');
-        }
-      });
-
-      document.getElementById('pdfZoomInBtn').addEventListener('click', () => {
-        if (pdfZoomScale < 2.4) {
-          pdfZoomScale = Math.round((pdfZoomScale + 0.2) * 10) / 10;
-        }
-        document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
-        if (isIframeReaderActive()) {
-          applyIframeZoom();
-        } else if (currentPdfDoc) {
-          if (readerViewMode === 'scroll') {
-            renderedScrollPages.clear();
-            initScrollDownView();
-          } else {
-            renderModalPdfPage(currentPdfPage);
-          }
-        }
-      });
-
-      document.getElementById('pdfZoomOutBtn').addEventListener('click', () => {
-        if (pdfZoomScale > 0.5) {
-          pdfZoomScale = Math.max(0.5, Math.round((pdfZoomScale - 0.2) * 10) / 10);
-        }
-        document.getElementById('pdfZoomDisplay').textContent = `${Math.round(pdfZoomScale * 100)}%`;
-        if (isIframeReaderActive()) {
-          applyIframeZoom();
-        } else if (currentPdfDoc) {
-          if (readerViewMode === 'scroll') {
-            renderedScrollPages.clear();
-            initScrollDownView();
           } else {
             renderModalPdfPage(currentPdfPage);
           }
@@ -2671,6 +2721,15 @@
           try { activeAdminFetchController.abort(); } catch (_) {}
           activeAdminFetchController = null;
         }
+        if (activeReaderExternalBlobUrl) {
+          try { URL.revokeObjectURL(activeReaderExternalBlobUrl); } catch (_) {}
+          activeReaderExternalBlobUrl = null;
+        }
+        const openNewTabBtn = document.getElementById('readerOpenNewTabBtn');
+        if (openNewTabBtn) {
+          openNewTabBtn.href = '#';
+          openNewTabBtn.dataset.openUrl = '';
+        }
         const iframe = getActiveReaderIframe();
         const iframeContainer = document.getElementById('readerIframeContainer');
         const toast = document.getElementById('iframeNavToast');
@@ -2687,6 +2746,9 @@
           iframeContainer.style.display = 'none';
           iframeContainer.style.maxWidth = '100%';
           iframeContainer.style.margin = '0';
+          iframeContainer.style.borderLeft = 'none';
+          iframeContainer.style.borderRight = 'none';
+          iframeContainer.style.boxShadow = 'none';
         }
         if (toast) toast.classList.add('d-none');
         if (scrollObserver) scrollObserver.disconnect();
