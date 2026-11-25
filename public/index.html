@@ -64,7 +64,8 @@
     }
 
     .app-container {
-      max-width: 480px;
+      width: 100%;
+      max-width: 520px;
       margin: 0 auto;
       background: #ffffff;
       min-height: 100vh;
@@ -72,13 +73,47 @@
       position: relative;
     }
 
+    .welcome-hero-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .library-tabs-pill {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
     @media (min-width: 768px) {
       .app-container {
+        max-width: 740px;
         margin: 20px auto;
         min-height: calc(100vh - 40px);
         border-radius: 28px;
         overflow: hidden;
         border: 1px solid #e2e8f0;
+      }
+      #welcomeScreen {
+        padding: 2rem 2.25rem !important;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .app-container {
+        max-width: 960px;
+      }
+      .book-cover {
+        height: 170px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .app-container {
+        max-width: 1180px;
+        margin: 24px auto;
+        min-height: calc(100vh - 48px);
+      }
+      .book-cover {
+        height: 180px;
       }
     }
 
@@ -532,7 +567,7 @@
         </div>
       </div>
 
-      <div class="text-center pt-2 pb-3">
+      <div class="welcome-hero-wrap text-center pt-2 pb-3">
         <!-- School Logo -->
         <div class="school-logo-wrapper mb-3">
           <img src="/logo_alkhairaat.jpg" alt="Logo MTs Al-Khairaat Bunyu" class="school-logo-img">
@@ -554,44 +589,54 @@
         <h6 class="fw-bold text-dark mb-3">Pilih Peran Login Anda</h6>
       </div>
 
-      <!-- CARD 1: SISWA -->
-      <div class="role-card-student p-3 mb-3">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="icon-box-blue">
-            <i class="bi bi-mortarboard-fill"></i>
-          </div>
-          <div>
-            <span class="badge bg-primary-subtle text-primary fw-bold mb-1" style="font-size: 0.65rem;">SISWA KELAS VII, VIII, IX</span>
-            <h6 class="fw-bold text-dark mb-0">Kartu Akses Siswa</h6>
+      <div class="row g-3 mb-3">
+        <!-- CARD 1: SISWA -->
+        <div class="col-12 col-md-6">
+          <div class="role-card-student p-3 h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="icon-box-blue">
+                  <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div>
+                  <span class="badge bg-primary-subtle text-primary fw-bold mb-1" style="font-size: 0.65rem;">SISWA KELAS VII, VIII, IX</span>
+                  <h6 class="fw-bold text-dark mb-0">Kartu Akses Siswa</h6>
+                </div>
+              </div>
+              <p class="text-secondary fs-8 mb-3">
+                Masuk menggunakan Nama Siswa dan Sandi Kelas dari Kartu Login madrasah untuk mengakses buku pelajaran kelas Anda.
+              </p>
+            </div>
+            <button type="button" class="btn btn-student d-flex align-items-center justify-content-center gap-2" onclick="openStudentLoginModal()">
+              <i class="bi bi-box-arrow-in-right"></i>
+              <span>MASUK AKUN SISWA</span>
+            </button>
           </div>
         </div>
-        <p class="text-secondary fs-8 mb-3">
-          Masuk menggunakan Nama Siswa dan Sandi Kelas dari Kartu Login madrasah untuk mengakses buku pelajaran kelas Anda.
-        </p>
-        <button type="button" class="btn btn-student d-flex align-items-center justify-content-center gap-2" onclick="openStudentLoginModal()">
-          <i class="bi bi-box-arrow-in-right"></i>
-          <span>MASUK AKUN SISWA</span>
-        </button>
-      </div>
 
-      <!-- CARD 2: GURU -->
-      <div class="role-card-teacher p-3 mb-3">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="icon-box-orange">
-            <i class="bi bi-person-badge-fill"></i>
-          </div>
-          <div>
-            <span class="badge bg-warning-subtle text-warning-emphasis fw-bold mb-1" style="font-size: 0.65rem; background-color: #fff7ed !important; color: #c2410c !important;">GURU & MAJELIS PENGAJAR</span>
-            <h6 class="fw-bold text-dark mb-0">Kartu Akses Guru & Pengajar</h6>
+        <!-- CARD 2: GURU -->
+        <div class="col-12 col-md-6">
+          <div class="role-card-teacher p-3 h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="icon-box-orange">
+                  <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <div>
+                  <span class="badge bg-warning-subtle text-warning-emphasis fw-bold mb-1" style="font-size: 0.65rem; background-color: #fff7ed !important; color: #c2410c !important;">GURU & MAJELIS PENGAJAR</span>
+                  <h6 class="fw-bold text-dark mb-0">Kartu Akses Guru & Pengajar</h6>
+                </div>
+              </div>
+              <p class="text-secondary fs-8 mb-3">
+                Masuk menggunakan Akun Guru / Pengajar untuk membuka koleksi pegangan guru & modul pengajaran mata pelajaran Anda.
+              </p>
+            </div>
+            <button type="button" class="btn btn-teacher d-flex align-items-center justify-content-center gap-2" onclick="openTeacherLoginModal()">
+              <i class="bi bi-card-heading"></i>
+              <span>MASUK AKUN GURU</span>
+            </button>
           </div>
         </div>
-        <p class="text-secondary fs-8 mb-3">
-          Masuk menggunakan Akun Guru / Pengajar untuk membuka koleksi pegangan guru & modul pengajaran mata pelajaran Anda.
-        </p>
-        <button type="button" class="btn btn-teacher d-flex align-items-center justify-content-center gap-2" onclick="openTeacherLoginModal()">
-          <i class="bi bi-card-heading"></i>
-          <span>MASUK AKUN GURU</span>
-        </button>
       </div>
 
       <div class="text-center mb-4">
@@ -599,37 +644,41 @@
       </div>
 
       <!-- NOTIFICATIONS FOOTER -->
-      <div class="d-flex flex-column gap-2 mb-2">
+      <div class="row g-3 mb-2">
         
         <!-- App Update Notice -->
-        <div class="notice-card-blue p-3">
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-phone-vibrate text-primary fs-5"></i>
-              <div>
-                <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.0 aktif.</div>
+        <div class="col-12 col-md-6">
+          <div class="notice-card-blue p-3 h-100 d-flex align-items-center">
+            <div class="d-flex align-items-center justify-content-between w-100 gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-phone-vibrate text-primary fs-5"></i>
+                <div>
+                  <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
+                  <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.0 aktif.</div>
+                </div>
               </div>
+              <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2 flex-shrink-0" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
+                <span id="btnCheckUpdateText">Cek Update</span>
+              </button>
             </div>
-            <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
-              <span id="btnCheckUpdateText">Cek Update</span>
-            </button>
           </div>
         </div>
 
         <!-- Catalog Sync Notice -->
-        <div class="notice-card-purple p-3">
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-book-half text-purple fs-5" style="color: #6b21a8;"></i>
-              <div>
-                <div class="fw-bold fs-7" style="color: #581c87;">📚 Notifikasi Buku & Katalog Terbaru</div>
-                <div class="text-secondary fs-8" id="catalogCountText">Memuat katalog server...</div>
+        <div class="col-12 col-md-6">
+          <div class="notice-card-purple p-3 h-100 d-flex align-items-center">
+            <div class="d-flex align-items-center justify-content-between w-100 gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-book-half text-purple fs-5" style="color: #6b21a8;"></i>
+                <div>
+                  <div class="fw-bold fs-7" style="color: #581c87;">📚 Notifikasi Buku & Katalog Terbaru</div>
+                  <div class="text-secondary fs-8" id="catalogCountText">Memuat katalog server...</div>
+                </div>
               </div>
+              <button id="btnSyncCatalog" class="btn btn-sm text-white fw-bold px-3 d-flex align-items-center gap-2 flex-shrink-0" style="font-size: 0.75rem; background-color: #7e22ce;" onclick="syncCatalog()">
+                <span id="btnSyncCatalogText">Refresh Buku</span>
+              </button>
             </div>
-            <button id="btnSyncCatalog" class="btn btn-sm text-white fw-bold px-3 d-flex align-items-center gap-2" style="font-size: 0.75rem; background-color: #7e22ce;" onclick="syncCatalog()">
-              <span id="btnSyncCatalogText">Refresh Buku</span>
-            </button>
           </div>
         </div>
 
@@ -642,7 +691,7 @@
     <div id="libraryScreen" class="d-none">
       
       <!-- Top Bar Header -->
-      <div class="p-3 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;">
+      <div class="p-3 px-md-4 py-md-3 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;">
         <div class="d-flex flex-column gap-2 mb-2">
           <!-- Row 1: Welcome & Global Logout -->
           <div class="d-flex align-items-center justify-content-between">
@@ -682,8 +731,8 @@
       </div>
 
       <!-- Segmented Navigation: Koleksi Buku vs Catatan Belajar -->
-      <div class="p-2 bg-light border-bottom sticky-top" style="z-index: 5;">
-        <div class="d-flex p-1 bg-white rounded-pill border shadow-sm">
+      <div class="p-2 px-md-4 bg-light border-bottom sticky-top" style="z-index: 5;">
+        <div class="d-flex p-1 bg-white rounded-pill border shadow-sm library-tabs-pill">
           <button id="navTabBooks" type="button" class="btn btn-sm rounded-pill fw-bold flex-fill py-2 text-white bg-primary shadow-sm nav-tab-btn" onclick="switchDashboardTab('books')">
             <i class="bi bi-book-half me-1"></i> Koleksi Buku
           </button>
@@ -697,19 +746,23 @@
       <!-- TAB 1: KOLEKSI BUKU & MATERI -->
       <div id="booksTabContent">
         <!-- Filter Chips -->
-        <div class="p-3 bg-light border-bottom" id="filterSection">
-          <div class="fw-bold fs-8 text-primary mb-2" id="filterLabel">Pilih Jenjang Kelas:</div>
-          <div class="d-flex gap-2 overflow-x-auto pb-1" id="filterChipsContainer">
-            <!-- Grade Chips -->
-          </div>
-          <div class="d-flex gap-2 overflow-x-auto pt-2" id="categoryFilterContainer">
-            <div class="nav-chip active" id="chipCategoryBuku" onclick="setCategoryFilter('Buku', this)">📚 Buku</div>
-            <div class="nav-chip chip-video" id="chipCategoryVideo" onclick="setCategoryFilter('Video', this)">🎬 Video</div>
+        <div class="p-3 px-md-4 bg-light border-bottom" id="filterSection">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2">
+            <div>
+              <div class="fw-bold fs-8 text-primary mb-2 mb-md-1" id="filterLabel">Pilih Jenjang Kelas:</div>
+              <div class="d-flex gap-2 overflow-x-auto pb-1 pb-md-0" id="filterChipsContainer">
+                <!-- Grade Chips -->
+              </div>
+            </div>
+            <div class="d-flex gap-2 overflow-x-auto pt-1 pt-md-0" id="categoryFilterContainer">
+              <div class="nav-chip active" id="chipCategoryBuku" onclick="setCategoryFilter('Buku', this)">📚 Buku</div>
+              <div class="nav-chip chip-video" id="chipCategoryVideo" onclick="setCategoryFilter('Video', this)">🎬 Video</div>
+            </div>
           </div>
         </div>
 
         <!-- Notice Banner for Students -->
-        <div class="px-3 pt-3">
+        <div class="px-3 px-md-4 pt-3">
           <div class="alert alert-primary py-2 px-3 fs-8 mb-0 d-flex align-items-center gap-2 border-0 bg-primary-subtle text-primary-emphasis">
             <i class="bi bi-check-circle-fill"></i>
             <span>Katalog terhubung dengan Portal Guru. Buku otomatis diperbarui.</span>
@@ -717,7 +770,7 @@
         </div>
 
         <!-- Books Grid -->
-        <div class="p-3">
+        <div class="p-3 p-md-4">
           <div class="row g-3" id="booksGrid">
             <!-- Dynamic Book Cards rendered via JS -->
           </div>
@@ -728,7 +781,7 @@
       <div id="notesTabContent" class="d-none">
         
         <!-- Notes Action Bar -->
-        <div class="p-3 bg-white border-bottom">
+        <div class="p-3 px-md-4 bg-white border-bottom">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <div>
               <h6 class="fw-bold text-primary mb-0"><i class="bi bi-journal-bookmark-fill me-1"></i> Catatan Belajar Siswa</h6>
@@ -755,7 +808,7 @@
         </div>
 
         <!-- Notes Cards List Container -->
-        <div class="p-3" id="notesListContainer">
+        <div class="p-3 p-md-4" id="notesListContainer">
           <!-- Rendered dynamically via JavaScript -->
         </div>
 
@@ -1825,8 +1878,8 @@
 
         if (isItemVideo) {
           return `
-            <div class="col-6 col-sm-6">
-              <div class="book-card border-danger-subtle" onmouseenter="warmUpResource('${escapeHtml(b.fileUrl)}')" ontouchstart="warmUpResource('${escapeHtml(b.fileUrl)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
+            <div class="col-6 col-sm-6 col-md-4 col-lg-3">
+              <div class="book-card h-100 d-flex flex-column justify-content-between border-danger-subtle" onmouseenter="warmUpResource('${escapeHtml(b.fileUrl)}')" ontouchstart="warmUpResource('${escapeHtml(b.fileUrl)}')" onclick="handleBookItemClick('${escapeHtml(b.id)}')">
                 <div class="book-cover" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">
                   <span class="badge bg-white text-danger fw-bold align-self-start fs-8">
                     <i class="bi bi-play-circle-fill me-1"></i> ${escapeHtml(b.gradeClass)}
@@ -1850,8 +1903,8 @@
         const safeId = escapeHtml(b.id);
 
         return `
-          <div class="col-6 col-sm-6">
-            <div class="book-card" onpointerdown="prewarmBookPdf('${safeId}')" onmouseenter="prewarmBookPdf('${safeId}')" onclick="handleBookItemClick('${safeId}')">
+          <div class="col-6 col-sm-6 col-md-4 col-lg-3">
+            <div class="book-card h-100 d-flex flex-column justify-content-between" onpointerdown="prewarmBookPdf('${safeId}')" onmouseenter="prewarmBookPdf('${safeId}')" onclick="handleBookItemClick('${safeId}')">
               <div class="book-cover">
                 <div class="d-flex justify-content-between align-items-start w-100 gap-1">
                   <span class="badge bg-warning text-dark fw-bold fs-8">${escapeHtml(b.gradeClass)}</span>
@@ -3605,59 +3658,63 @@
             <i class="bi bi-share me-1"></i> Salin Semua Catatan
           </button>
         </div>
-        <div class="d-flex flex-column gap-3">
+        <div class="row g-3">
           ${filtered.map(n => {
             const tagBadgeClass = n.tag === "Penting" ? "bg-danger-subtle text-danger border-danger-subtle" :
                                   n.tag === "Tugas" ? "bg-warning-subtle text-warning-emphasis border-warning-subtle" :
                                   n.tag === "Rumus" ? "bg-info-subtle text-info-emphasis border-info-subtle" :
                                   "bg-primary-subtle text-primary border-primary-subtle";
             return `
-              <div class="note-card p-3">
-                <div class="d-flex align-items-start justify-content-between mb-2">
-                  <div style="max-width: 78%;">
-                    <span class="badge border px-2 py-1 rounded-pill fw-bold fs-9 mb-1 ${tagBadgeClass}">${escapeHtml(n.tag || 'Ringkasan')}</span>
-                    <h6 class="fw-bold text-dark mb-0 text-truncate" style="cursor: pointer;" onclick="openNoteDetail('${n.id}')">
-                      ${escapeHtml(n.title)}
-                    </h6>
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="note-card p-3 h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex align-items-start justify-content-between mb-2">
+                      <div style="max-width: 78%;">
+                        <span class="badge border px-2 py-1 rounded-pill fw-bold fs-9 mb-1 ${tagBadgeClass}">${escapeHtml(n.tag || 'Ringkasan')}</span>
+                        <h6 class="fw-bold text-dark mb-0 text-truncate" style="cursor: pointer;" onclick="openNoteDetail('${n.id}')">
+                          ${escapeHtml(n.title)}
+                        </h6>
+                      </div>
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 fs-8">
+                          <li><button class="dropdown-item" onclick="openNoteDetail('${n.id}')"><i class="bi bi-eye text-primary me-2"></i> Lihat Detail</button></li>
+                          <li><button class="dropdown-item" onclick="editStudentNote('${n.id}')"><i class="bi bi-pencil text-warning me-2"></i> Edit Catatan</button></li>
+                          <li><button class="dropdown-item" onclick="copyNoteContent('${n.id}')"><i class="bi bi-clipboard text-secondary me-2"></i> Salin Teks</button></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><button class="dropdown-item text-danger" onclick="deleteStudentNote('${n.id}')"><i class="bi bi-trash me-2"></i> Hapus</button></li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-2 fs-9 text-secondary">
+                      <span class="badge bg-light text-primary border"><i class="bi bi-book me-1"></i> ${escapeHtml(n.bookTitle || 'Umum')}</span>
+                      ${n.page ? `<span class="badge bg-light text-secondary border"><i class="bi bi-bookmark me-1"></i> ${escapeHtml(n.page)}</span>` : ''}
+                      <span class="text-muted ms-auto"><i class="bi bi-clock me-1"></i> ${escapeHtml(n.date || '')}</span>
+                    </div>
+
+                    <div class="text-secondary fs-8 mb-3" style="white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; cursor: pointer;" onclick="openNoteDetail('${n.id}')">
+                      ${escapeHtml(n.content)}
+                    </div>
                   </div>
-                  <div class="dropdown">
-                    <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 fs-8">
-                      <li><button class="dropdown-item" onclick="openNoteDetail('${n.id}')"><i class="bi bi-eye text-primary me-2"></i> Lihat Detail</button></li>
-                      <li><button class="dropdown-item" onclick="editStudentNote('${n.id}')"><i class="bi bi-pencil text-warning me-2"></i> Edit Catatan</button></li>
-                      <li><button class="dropdown-item" onclick="copyNoteContent('${n.id}')"><i class="bi bi-clipboard text-secondary me-2"></i> Salin Teks</button></li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li><button class="dropdown-item text-danger" onclick="deleteStudentNote('${n.id}')"><i class="bi bi-trash me-2"></i> Hapus</button></li>
-                    </ul>
-                  </div>
-                </div>
 
-                <div class="d-flex flex-wrap gap-2 align-items-center mb-2 fs-9 text-secondary">
-                  <span class="badge bg-light text-primary border"><i class="bi bi-book me-1"></i> ${escapeHtml(n.bookTitle || 'Umum')}</span>
-                  ${n.page ? `<span class="badge bg-light text-secondary border"><i class="bi bi-bookmark me-1"></i> ${escapeHtml(n.page)}</span>` : ''}
-                  <span class="text-muted ms-auto"><i class="bi bi-clock me-1"></i> ${escapeHtml(n.date || '')}</span>
-                </div>
-
-                <div class="text-secondary fs-8 mb-3" style="white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; cursor: pointer;" onclick="openNoteDetail('${n.id}')">
-                  ${escapeHtml(n.content)}
-                </div>
-
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
-                  <button type="button" class="btn btn-outline-primary btn-sm py-1 px-3 fs-9 fw-bold rounded-pill" onclick="openNoteDetail('${n.id}')">
-                    <i class="bi bi-eye me-1"></i> Buka Catatan
-                  </button>
-                  <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-light btn-sm text-secondary py-1 px-2 fs-9 rounded-circle" title="Salin" onclick="copyNoteContent('${n.id}')">
-                      <i class="bi bi-clipboard"></i>
+                  <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                    <button type="button" class="btn btn-outline-primary btn-sm py-1 px-3 fs-9 fw-bold rounded-pill" onclick="openNoteDetail('${n.id}')">
+                      <i class="bi bi-eye me-1"></i> Buka Catatan
                     </button>
-                    <button type="button" class="btn btn-light btn-sm text-warning py-1 px-2 fs-9 rounded-circle" title="Edit" onclick="editStudentNote('${n.id}')">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-light btn-sm text-danger py-1 px-2 fs-9 rounded-circle" title="Hapus" onclick="deleteStudentNote('${n.id}')">
-                      <i class="bi bi-trash"></i>
-                    </button>
+                    <div class="d-flex gap-1">
+                      <button type="button" class="btn btn-light btn-sm text-secondary py-1 px-2 fs-9 rounded-circle" title="Salin" onclick="copyNoteContent('${n.id}')">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                      <button type="button" class="btn btn-light btn-sm text-warning py-1 px-2 fs-9 rounded-circle" title="Edit" onclick="editStudentNote('${n.id}')">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button type="button" class="btn btn-light btn-sm text-danger py-1 px-2 fs-9 rounded-circle" title="Hapus" onclick="deleteStudentNote('${n.id}')">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
