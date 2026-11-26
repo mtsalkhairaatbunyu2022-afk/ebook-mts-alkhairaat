@@ -46,5 +46,21 @@
     "pageCount": 1,
     "category": "Video",
     "description": "Video Pembelajaran Bahasa Arab untuk Kelas VII MTs Al-Khairaat Bunyu."
+  },
+  {
+    "id": "video_ipa_9465_777",
+    "title": "Video: Sistem Peredaran Darah",
+    "author": "SMPN 1 BUNYU",
+    "subject": "IPA",
+    "gradeClass": "Kelas VIII",
+    "teacherOwner": "Guru MTs Al-Khairaat Bunyu",
+    "year": "2026",
+    "fileUrl": "https://youtu.be/msP5CAyj8NM?si=4wzgIB_JlDfPGlBf",
+    "localBlobUrl": "",
+    "isDownloaded": false,
+    "fileSize": 15000000,
+    "pageCount": 1,
+    "category": "Video",
+    "description": "Video Pembelajaran IPA untuk Kelas VIII MTs Al-Khairaat Bunyu."
   }
 ]
