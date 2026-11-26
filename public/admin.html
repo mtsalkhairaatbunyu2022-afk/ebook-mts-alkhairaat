@@ -273,8 +273,8 @@
     }
     @keyframes fadeInOutSync {
       0%, 100% {
-        opacity: 0.15;
-        transform: scale(0.98);
+        opacity: 0.8;
+        transform: scale(0.99);
       }
       50% {
         opacity: 1;
@@ -3040,73 +3040,6 @@
       if (typeof renderTeacherBookshelf === 'function') {
         renderTeacherBookshelf();
       }
-    }
-
-    async function downloadTeacherBookOffline(bookId) {
-      const book = catalog.find(b => b.id === bookId);
-      if (!book || isVideoCatalogItem(book)) return;
-      if (teacherOfflineDlProgress.has(bookId)) return;
-
-      if (navigator.onLine === false) {
-        alert('Aktifkan koneksi internet sebentar untuk menyimpan buku ini agar bisa dibaca offline di dalam aplikasi.');
-        return;
-      }
-
-      const resolved = resolveTeacherReaderUrls(book.fileUrl);
-      const downloadUrl = (resolved.kind === 'drive' && resolved.streamUrl)
-        ? resolved.streamUrl
-        : (resolved.primaryUrl || book.fileUrl);
-      if (!downloadUrl) {
-        alert('Tautan file buku tidak valid.');
-        return;
-      }
-
-      teacherOfflineDlProgress.set(bookId, 0);
-      renderTeacherBookshelf();
-
-      try {
-        cacheTeacherPdfJsForOffline();
-        ensureAdminPdfJsLoaded().catch(() => {});
-
-        const mergedBytes = await fetchPdfBytesWithProgress(downloadUrl, null, (received, totalBytes) => {
-          const btnEl = document.getElementById(`btnTeacherOffline_${bookId}`);
-          if (totalBytes > 0) {
-            const pct = Math.min(99, Math.round((received / totalBytes) * 100));
-            teacherOfflineDlProgress.set(bookId, pct);
-            if (btnEl) {
-              btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${pct}%`;
-            }
-          } else {
-            const mb = (received / (1024 * 1024)).toFixed(1);
-            if (btnEl) {
-              btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${mb} MB...`;
-            }
-          }
-        });
-
-        const pdfBlob = new Blob([mergedBytes], { type: 'application/pdf' });
-        const savedOk = await savePdfToIDB(bookId, pdfBlob);
-        if (!savedOk) {
-          throw new Error('Gagal menyimpan buku ke memori aplikasi (ruang penyimpanan mungkin penuh).');
-        }
-
-        teacherSavedOfflineIds.add(bookId);
-        teacherOfflineDlProgress.delete(bookId);
-        renderTeacherBookshelf();
-      } catch (err) {
-        teacherOfflineDlProgress.delete(bookId);
-        renderTeacherBookshelf();
-        alert(`Gagal menyimpan buku untuk mode offline: ${err.message || 'Periksa koneksi internet Anda.'}`);
-      }
-    }
-
-    async function removeTeacherBookOffline(bookId) {
-      const book = catalog.find(b => b.id === bookId);
-      const title = book ? book.title : 'buku ini';
-      if (!confirm(`Hapus salinan offline "${title}" dari penyimpanan aplikasi?`)) return;
-      await deletePdfFromIDB(bookId);
-      teacherSavedOfflineIds.delete(bookId);
-      renderTeacherBookshelf();
     }
 
     let currentUploadedBlobUrl = "";

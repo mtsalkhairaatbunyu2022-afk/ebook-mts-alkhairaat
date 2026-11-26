@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <title>Sistem Pembelajaran Terpadu MTs Al-Khairaat Bunyu</title>
 
@@ -654,7 +654,7 @@
                 <i class="bi bi-phone-vibrate text-primary fs-5"></i>
                 <div>
                   <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                  <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.0 aktif.</div>
+                  <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.1 aktif.</div>
                 </div>
               </div>
               <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2 flex-shrink-0" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -1328,9 +1328,27 @@
 
       loadCatalogData();
       loadUsersData();
+      loadAppVersionInfo();
       checkSavedUserSession();
       refreshOfflineBooksIndex();
     });
+
+    const APP_LOCAL_VERSION = "2.2.1";
+    async function loadAppVersionInfo() {
+      const statusEl = document.getElementById("appVersionStatus");
+      try {
+        const res = await fetch("/version.json?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.versionName && statusEl) {
+          statusEl.innerText = `Status: Versi v${data.versionName} aktif.`;
+        }
+      } catch (_) {
+        if (statusEl && !statusEl.innerText.trim()) {
+          statusEl.innerText = `Status: Versi v${APP_LOCAL_VERSION} aktif.`;
+        }
+      }
+    }
 
     function isVideoItem(item) {
       if (!item) return false;
@@ -2522,116 +2540,6 @@
       }
     }
 
-    async function downloadBookForOffline(bookId) {
-      const book = allBooks.find(item => item.id === bookId);
-      if (!book || isVideoItem(book)) return;
-      if (offlineDownloadProgress.has(bookId)) return;
-
-      if (navigator.onLine === false) {
-        alert("Aktifkan koneksi internet sebentar untuk menyimpan buku ini agar bisa dibaca offline di dalam aplikasi.");
-        return;
-      }
-
-      const resolved = resolveBookReaderUrls(book.fileUrl);
-      const downloadUrl = resolved.streamUrl || resolved.primaryUrl;
-      if (!downloadUrl) {
-        alert("Tautan file buku tidak valid.");
-        return;
-      }
-
-      offlineDownloadProgress.set(bookId, 0);
-      renderBooks();
-
-      try {
-        // Ensure PDF.js library & worker are cached for offline usage
-        cachePdfJsForOffline();
-        ensurePdfJsLoaded().catch(() => {});
-
-        const res = await fetch(downloadUrl, { mode: "cors" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const totalBytes = parseInt(res.headers.get("content-length") || "0", 10);
-        let mergedBytes = null;
-
-        if (res.body && typeof res.body.getReader === "function") {
-          const reader = res.body.getReader();
-          const chunks = [];
-          let received = 0;
-          let lastPct = -1;
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (value && value.byteLength) {
-              chunks.push(value);
-              received += value.byteLength;
-              if (totalBytes > 0) {
-                const pct = Math.min(99, Math.round((received / totalBytes) * 100));
-                if (pct !== lastPct) {
-                  lastPct = pct;
-                  offlineDownloadProgress.set(bookId, pct);
-                  const btnEl = document.getElementById(`btnOfflineAction_${bookId}`);
-                  if (btnEl) {
-                    btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ${pct}%`;
-                  }
-                }
-              }
-            }
-          }
-          mergedBytes = new Uint8Array(received);
-          let offset = 0;
-          for (const chunk of chunks) {
-            mergedBytes.set(chunk, offset);
-            offset += chunk.byteLength;
-          }
-        } else {
-          const ab = await res.arrayBuffer();
-          mergedBytes = new Uint8Array(ab);
-        }
-
-        const isPdfMagic = mergedBytes && mergedBytes.length >= 5 &&
-          mergedBytes[0] === 0x25 && mergedBytes[1] === 0x50 && mergedBytes[2] === 0x44 && mergedBytes[3] === 0x46 && mergedBytes[4] === 0x2D;
-        if (!isPdfMagic) {
-          throw new Error("File yang diunduh bukan format PDF yang valid.");
-        }
-
-        const pdfBlob = new Blob([mergedBytes], { type: "application/pdf" });
-        const savedOk = await saveCachedDirectPdfBlob(bookId, pdfBlob);
-        if (!savedOk) {
-          throw new Error("Gagal menyimpan buku ke memori aplikasi (ruang penyimpanan mungkin penuh).");
-        }
-
-        savedOfflineBookIds.add(bookId);
-        offlineDownloadProgress.delete(bookId);
-        renderBooks();
-      } catch (err) {
-        offlineDownloadProgress.delete(bookId);
-        renderBooks();
-        alert(`Gagal menyimpan buku untuk mode offline: ${err.message || "Periksa koneksi internet Anda."}`);
-      }
-    }
-
-    async function removeOfflineSavedBook(bookId) {
-      const book = allBooks.find(item => item.id === bookId);
-      const title = book ? book.title : "buku ini";
-      if (!confirm(`Hapus salinan offline "${title}" dari penyimpanan aplikasi di HP?`)) return;
-      await deleteCachedDirectPdfBlob(bookId);
-      savedOfflineBookIds.delete(bookId);
-      renderBooks();
-    }
-
-    async function openOfflineSavedBook(bookId) {
-      const book = allBooks.find(item => item.id === bookId);
-      if (!book) return;
-      const cachedBlob = await getCachedDirectPdfBlob(bookId);
-      if (!cachedBlob) {
-        savedOfflineBookIds.delete(bookId);
-        renderBooks();
-        alert("Salinan buku belum tersedia secara lokal. Silakan aktifkan koneksi internet untuk membaca buku.");
-        return;
-      }
-      openOfflinePdfBlobInModal(book.id, book.title, book.gradeClass, book.fileUrl, cachedBlob);
-    }
-
     function openOfflinePdfBlobInModal(bookId, title, grade, url, cachedBlob) {
       if (pdfLoadTimeout) {
         clearTimeout(pdfLoadTimeout);
@@ -3262,40 +3170,56 @@
     async function checkAppUpdate() {
       const btn = document.getElementById("btnCheckUpdate");
       const btnText = document.getElementById("btnCheckUpdateText");
+      const statusEl = document.getElementById("appVersionStatus");
       if (!btn || !btnText) return;
 
-      // Start Loading State
       btn.disabled = true;
       btnText.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memeriksa...`;
 
       try {
-        // 1. Force Service Worker Update Check
-        if ('serviceWorker' in navigator) {
+        if ("serviceWorker" in navigator) {
           const registration = await navigator.serviceWorker.getRegistration();
           if (registration) {
             await registration.update();
-            console.log("Service Worker update check triggered");
           }
         }
 
-        // 2. Simulate network delay for "Progress" feel
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        const res = await fetch("/version.json?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const versionInfo = await res.json();
+        const serverVersion = (versionInfo && versionInfo.versionName) ? String(versionInfo.versionName).trim() : APP_LOCAL_VERSION;
 
-        // 3. Show Success
+        if (serverVersion !== APP_LOCAL_VERSION) {
+          if (statusEl) {
+            statusEl.innerText = `Versi baru v${serverVersion} tersedia!`;
+          }
+          const banner = document.getElementById("pwaUpdateBanner");
+          if (banner) banner.classList.remove("d-none");
+          btn.classList.remove("btn-primary");
+          btn.classList.add("btn-warning", "text-dark");
+          btnText.innerHTML = `<i class="bi bi-arrow-clockwise"></i> Muat Ulang`;
+          btn.disabled = false;
+          btn.onclick = () => reloadForUpdate();
+          return;
+        }
+
+        if (statusEl) {
+          statusEl.innerText = `Status: Versi v${serverVersion} aktif (Terbaru).`;
+        }
         btn.classList.remove("btn-primary");
         btn.classList.add("btn-success");
-        btnText.innerHTML = `<i class="bi bi-check-lg"></i> Update Sukses`;
-        
-        // Reset after 3 seconds
+        btnText.innerHTML = `<i class="bi bi-check-lg"></i> Versi Terbaru`;
+
         setTimeout(() => {
           btn.disabled = false;
           btn.classList.remove("btn-success");
           btn.classList.add("btn-primary");
           btnText.innerText = "Cek Update";
         }, 3000);
-
       } catch (e) {
         btn.disabled = false;
+        btn.classList.remove("btn-success", "btn-warning", "text-dark");
+        btn.classList.add("btn-primary");
         btnText.innerText = "Cek Update";
         alert("Gagal memeriksa update. Pastikan koneksi internet aktif.");
       }
