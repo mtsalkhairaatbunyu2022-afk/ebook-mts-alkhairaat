@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ebook-mts-v2.13';
+const CACHE_NAME = 'ebook-mts-v2.14';
 const CDN_CACHE_NAME = 'ebook-mts-cdn-v2';
 
 const urlsToCache = [
@@ -7,6 +7,8 @@ const urlsToCache = [
   '/admin.html',
   '/admin',
   '/logo_alkhairaat.jpg',
+  '/assets/aistudio/image_4831d2a3.png',
+  '/assets/aistudio/image_88cddbc0.png',
   '/catalog.json',
   '/video.json',
   '/students.json',
