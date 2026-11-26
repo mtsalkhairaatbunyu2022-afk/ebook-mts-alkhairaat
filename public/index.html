@@ -526,6 +526,21 @@
         transform: translateX(-100%);
       }
     }
+    .update-alert-persistent {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+      color: #ffffff;
+      border: 2px solid #fef3c7;
+      box-shadow: 0 8px 24px rgba(217, 119, 6, 0.35);
+      animation: updateNoticePulse 2.4s ease-in-out infinite;
+    }
+    @keyframes updateNoticePulse {
+      0%, 100% {
+        box-shadow: 0 6px 20px rgba(217, 119, 6, 0.32);
+      }
+      50% {
+        box-shadow: 0 10px 28px rgba(217, 119, 6, 0.58);
+      }
+    }
   </style>
 </head>
 <body>
@@ -551,18 +566,18 @@
         </div>
       </div>
 
-      <!-- New Update Notification Banner -->
-      <div id="pwaUpdateBanner" class="pwa-install-banner mb-3 d-none" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);">
-        <div class="d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-repeat fs-3 text-white"></i>
+      <!-- New Persistent Update Notification Banner (Above Logo) -->
+      <div id="pwaUpdateBanner" class="pwa-install-banner update-alert-persistent mb-3 d-none" role="alert">
+        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+          <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 200px;">
+            <i class="bi bi-bell-fill fs-3 text-white flex-shrink-0"></i>
             <div>
-              <div class="fw-bold fs-7">✨ Versi Baru Tersedia!</div>
-              <div class="fs-9 opacity-90">Ada pembaruan menu & fitur baru.</div>
+              <div class="fw-bold fs-7" id="pwaUpdateTitle">🔔 Pembaharuan Tersedia!</div>
+              <div class="fs-9 opacity-95" id="pwaUpdateDesc">Ada pembaruan buku, video, atau fitur terbaru. Tekan tombol Cek Update di bawah untuk memperbarui.</div>
             </div>
           </div>
-          <button type="button" class="btn btn-light btn-sm fw-bold text-primary px-3 shadow-sm" onclick="reloadForUpdate()">
-            PERBARUI
+          <button id="pwaUpdateBannerBtn" type="button" class="btn btn-light btn-sm fw-bold text-warning-emphasis px-3 shadow-sm flex-shrink-0" onclick="checkAppUpdate()">
+            <i class="bi bi-arrow-repeat me-1"></i> Cek Update
           </button>
         </div>
       </div>
@@ -654,7 +669,7 @@
                 <i class="bi bi-phone-vibrate text-primary fs-5"></i>
                 <div>
                   <div class="fw-bold fs-7 text-primary">⚡ Notifikasi Pembaharuan Aplikasi</div>
-                  <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.1 aktif.</div>
+                  <div class="text-secondary fs-8" id="appVersionStatus">Status: Versi v2.2.2 aktif.</div>
                 </div>
               </div>
               <button id="btnCheckUpdate" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2 flex-shrink-0" style="font-size: 0.75rem;" onclick="checkAppUpdate()">
@@ -1207,22 +1222,94 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // PWA Service Worker Registration & Update Detection
+    // PWA Service Worker Registration & Persistent Update Detection
     let deferredPwaPrompt = null;
     let newWorker = null;
+    let swRegistrationRef = null;
+    let lastBgUpdateCheckAt = 0;
+
+    const LS_PENDING_UPDATE_KEY = "app_pending_update_notice";
+    const LS_ACKED_VERSION_KEY = "app_acked_version_key";
+    const LS_ACKED_CONTENT_SIG_KEY = "app_acked_content_sig";
+    const APP_LOCAL_VERSION = "2.2.2";
+
+    function showPersistentUpdateBanner(title, desc, persist = true) {
+      const banner = document.getElementById("pwaUpdateBanner");
+      const titleEl = document.getElementById("pwaUpdateTitle");
+      const descEl = document.getElementById("pwaUpdateDesc");
+      if (titleEl && title) titleEl.innerText = title;
+      if (descEl && desc) descEl.innerText = desc;
+      if (banner) banner.classList.remove("d-none");
+      if (persist) {
+        try {
+          localStorage.setItem(LS_PENDING_UPDATE_KEY, JSON.stringify({
+            title: title || "🔔 Pembaharuan Tersedia!",
+            desc: desc || "Ada pembaruan aplikasi atau materi terbaru. Tekan tombol Cek Update untuk memperbarui.",
+            detectedAt: Date.now()
+          }));
+        } catch (_) {}
+      }
+    }
+
+    function hidePersistentUpdateBanner() {
+      const banner = document.getElementById("pwaUpdateBanner");
+      if (banner) banner.classList.add("d-none");
+      try {
+        localStorage.removeItem(LS_PENDING_UPDATE_KEY);
+      } catch (_) {}
+    }
+
+    function restorePendingUpdateNotice() {
+      try {
+        const raw = localStorage.getItem(LS_PENDING_UPDATE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          showPersistentUpdateBanner(parsed.title, parsed.desc, false);
+        }
+      } catch (_) {}
+    }
+
+    function computeContentSignature(books, videos) {
+      const normalize = (arr) => (Array.isArray(arr) ? arr : [])
+        .map(item => `${item.id || ""}|${item.title || ""}|${item.gradeClass || ""}|${item.category || ""}|${item.fileUrl || ""}`)
+        .sort()
+        .join(";;");
+      return `B${Array.isArray(books) ? books.length : 0}:${normalize(books)}#V${Array.isArray(videos) ? videos.length : 0}:${normalize(videos)}`;
+    }
+
+    function acknowledgeCurrentUpdates(versionKey, contentSig) {
+      try {
+        if (versionKey) localStorage.setItem(LS_ACKED_VERSION_KEY, versionKey);
+        if (contentSig) localStorage.setItem(LS_ACKED_CONTENT_SIG_KEY, contentSig);
+      } catch (_) {}
+      hidePersistentUpdateBanner();
+    }
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(reg => {
+          swRegistrationRef = reg;
           console.log('PWA Service Worker registered');
-          
+
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            newWorker = reg.waiting;
+            showPersistentUpdateBanner(
+              "🔔 Pembaharuan Aplikasi Tersedia!",
+              "Versi aplikasi baru siap diterapkan. Tekan tombol Cek Update di bawah untuk memperbarui."
+            );
+          }
+
           // Listen for updates
           reg.addEventListener('updatefound', () => {
             newWorker = reg.installing;
+            if (!newWorker) return;
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version found! Show the banner
-                document.getElementById('pwaUpdateBanner').classList.remove('d-none');
+                showPersistentUpdateBanner(
+                  "🔔 Pembaharuan Aplikasi Tersedia!",
+                  "Versi aplikasi baru telah terunduh. Tekan tombol Cek Update di bawah untuk memperbarui dan menutup notifikasi ini."
+                );
               }
             });
           });
@@ -1235,15 +1322,16 @@
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
-          window.location.reload();
           refreshing = true;
+          window.location.reload();
         }
       });
     }
 
     function reloadForUpdate() {
-      if (newWorker) {
-        newWorker.postMessage('skipWaiting');
+      const waiting = newWorker || (swRegistrationRef && swRegistrationRef.waiting);
+      if (waiting) {
+        waiting.postMessage('skipWaiting');
       } else {
         window.location.reload();
       }
@@ -1326,28 +1414,78 @@
       if (neEl) noteEditorModal = new bootstrap.Modal(neEl);
       if (ndEl) noteDetailModal = new bootstrap.Modal(ndEl);
 
+      restorePendingUpdateNotice();
       loadCatalogData();
       loadUsersData();
       loadAppVersionInfo();
       checkSavedUserSession();
       refreshOfflineBooksIndex();
+
+      // Periodic & resume checks for remote updates while app remains open
+      setInterval(() => {
+        checkForUpdatesInBackground();
+      }, 180000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          checkForUpdatesInBackground();
+        }
+      });
+      window.addEventListener("online", () => {
+        checkForUpdatesInBackground();
+      });
     });
 
-    const APP_LOCAL_VERSION = "2.2.1";
+    async function checkForUpdatesInBackground() {
+      const now = Date.now();
+      if (now - lastBgUpdateCheckAt < 20000) return;
+      lastBgUpdateCheckAt = now;
+      try {
+        if (swRegistrationRef && typeof swRegistrationRef.update === "function") {
+          swRegistrationRef.update().catch(() => {});
+        }
+      } catch (_) {}
+      await Promise.allSettled([
+        loadAppVersionInfo(),
+        loadCatalogData()
+      ]);
+    }
+
     async function loadAppVersionInfo() {
       const statusEl = document.getElementById("appVersionStatus");
       try {
         const res = await fetch("/version.json?t=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) return;
+        if (!res.ok) return null;
         const data = await res.json();
-        if (data && data.versionName && statusEl) {
-          statusEl.innerText = `Status: Versi v${data.versionName} aktif.`;
+        if (data && data.versionName) {
+          const serverVerName = String(data.versionName).trim();
+          const serverVersionKey = `${data.versionCode || ""}|${serverVerName}`;
+          const ackedVer = localStorage.getItem(LS_ACKED_VERSION_KEY);
+          const hasPriorLocalState = Boolean(
+            localStorage.getItem("app_catalog_json") ||
+            localStorage.getItem("app_videos_json") ||
+            localStorage.getItem("app_current_user")
+          );
+
+          if (statusEl) {
+            statusEl.innerText = `Status: Versi v${serverVerName} aktif.`;
+          }
+
+          if (serverVerName !== APP_LOCAL_VERSION || (ackedVer && ackedVer !== serverVersionKey) || (!ackedVer && hasPriorLocalState)) {
+            showPersistentUpdateBanner(
+              `🔔 Pembaharuan Versi v${serverVerName} Tersedia!`,
+              `${data.releaseNotes || "Ada pembaruan sistem terbaru."} Tekan tombol Cek Update di bawah untuk memperbarui.`
+            );
+          } else if (!ackedVer) {
+            try { localStorage.setItem(LS_ACKED_VERSION_KEY, serverVersionKey); } catch (_) {}
+          }
+          return { versionName: serverVerName, versionKey: serverVersionKey, releaseNotes: data.releaseNotes || "" };
         }
       } catch (_) {
         if (statusEl && !statusEl.innerText.trim()) {
           statusEl.innerText = `Status: Versi v${APP_LOCAL_VERSION} aktif.`;
         }
       }
+      return null;
     }
 
     function isVideoItem(item) {
@@ -1377,13 +1515,22 @@
       return merged;
     }
 
-    async function loadCatalogData() {
+    async function loadCatalogData(options = {}) {
+      const suppressUpdateNotice = Boolean(options && options.suppressUpdateNotice);
+      let prevBooks = [];
+      let prevVideos = [];
+      let hadPreviousLocalCache = false;
+      let ackedSig = null;
+
       try {
+        ackedSig = localStorage.getItem(LS_ACKED_CONTENT_SIG_KEY);
         const localSaved = localStorage.getItem("app_catalog_json");
         if (localSaved) {
           const parsedBooks = JSON.parse(localSaved);
           if (Array.isArray(parsedBooks)) {
+            prevBooks = parsedBooks;
             allBooks = parsedBooks;
+            hadPreviousLocalCache = true;
             allBooks.forEach(b => warmUpResource(b.fileUrl));
           }
         }
@@ -1391,24 +1538,31 @@
         if (localSavedVideos) {
           const parsedVideos = JSON.parse(localSavedVideos);
           if (Array.isArray(parsedVideos)) {
+            prevVideos = parsedVideos;
             allVideos = parsedVideos;
+            hadPreviousLocalCache = true;
             allVideos.forEach(v => warmUpResource(v.fileUrl));
           }
+        }
+        if (!ackedSig && hadPreviousLocalCache) {
+          ackedSig = computeContentSignature(prevBooks, prevVideos);
         }
 
         // Fetch live catalog.json & video.json in parallel from server
         const ts = Date.now();
         const [catalogResult, videoResult] = await Promise.allSettled([
-          fetch("/catalog.json?t=" + ts),
-          fetch("/video.json?t=" + ts)
+          fetch("/catalog.json?t=" + ts, { cache: "no-store" }),
+          fetch("/video.json?t=" + ts, { cache: "no-store" })
         ]);
 
+        let fetchedFromServer = false;
         if (catalogResult.status === "fulfilled" && catalogResult.value.ok) {
           const remoteBooks = await catalogResult.value.json();
           if (Array.isArray(remoteBooks)) {
             allBooks = remoteBooks;
             localStorage.setItem("app_catalog_json", JSON.stringify(allBooks));
             allBooks.forEach(b => warmUpResource(b.fileUrl));
+            fetchedFromServer = true;
             if (remoteBooks.length === 0) {
               console.log("Guru cleared catalog, resetting local shelf.");
             }
@@ -1421,6 +1575,19 @@
             allVideos = remoteVideos;
             localStorage.setItem("app_videos_json", JSON.stringify(allVideos));
             allVideos.forEach(v => warmUpResource(v.fileUrl));
+            fetchedFromServer = true;
+          }
+        }
+
+        if (fetchedFromServer) {
+          const latestSig = computeContentSignature(allBooks, allVideos);
+          if (!suppressUpdateNotice && ackedSig && ackedSig !== latestSig) {
+            showPersistentUpdateBanner(
+              "📢 Pembaharuan Katalog & Video!",
+              "Ada materi buku atau video pembelajaran baru dari Guru/Admin. Tekan tombol Cek Update di bawah untuk menutup notifikasi ini."
+            );
+          } else if (!ackedSig) {
+            try { localStorage.setItem(LS_ACKED_CONTENT_SIG_KEY, latestSig); } catch (_) {}
           }
         }
       } catch (e) {
@@ -3170,54 +3337,65 @@
     async function checkAppUpdate() {
       const btn = document.getElementById("btnCheckUpdate");
       const btnText = document.getElementById("btnCheckUpdateText");
+      const bannerBtn = document.getElementById("pwaUpdateBannerBtn");
       const statusEl = document.getElementById("appVersionStatus");
       if (!btn || !btnText) return;
 
       btn.disabled = true;
-      btnText.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memeriksa...`;
+      btnText.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memperbarui...`;
+      if (bannerBtn) bannerBtn.disabled = true;
 
       try {
+        let registration = null;
         if ("serviceWorker" in navigator) {
-          const registration = await navigator.serviceWorker.getRegistration();
+          registration = await navigator.serviceWorker.getRegistration();
           if (registration) {
+            swRegistrationRef = registration;
             await registration.update();
           }
         }
 
-        const res = await fetch("/version.json?t=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const versionInfo = await res.json();
-        const serverVersion = (versionInfo && versionInfo.versionName) ? String(versionInfo.versionName).trim() : APP_LOCAL_VERSION;
+        const [verRes] = await Promise.all([
+          fetch("/version.json?t=" + Date.now(), { cache: "no-store" }),
+          loadCatalogData({ suppressUpdateNotice: true }),
+          loadUsersData()
+        ]);
+        if (!verRes.ok) throw new Error(`HTTP ${verRes.status}`);
 
-        if (serverVersion !== APP_LOCAL_VERSION) {
+        const versionInfo = await verRes.json();
+        const serverVersion = (versionInfo && versionInfo.versionName) ? String(versionInfo.versionName).trim() : APP_LOCAL_VERSION;
+        const serverVersionKey = `${(versionInfo && versionInfo.versionCode) || ""}|${serverVersion}`;
+        const latestSig = computeContentSignature(allBooks, allVideos);
+
+        // Acknowledge update & hide persistent banner automatically when user triggers Cek Update
+        acknowledgeCurrentUpdates(serverVersionKey, latestSig);
+
+        const waitingWorker = newWorker || (registration && registration.waiting);
+        if (waitingWorker) {
           if (statusEl) {
-            statusEl.innerText = `Versi baru v${serverVersion} tersedia!`;
+            statusEl.innerText = `Memasang versi v${serverVersion}...`;
           }
-          const banner = document.getElementById("pwaUpdateBanner");
-          if (banner) banner.classList.remove("d-none");
-          btn.classList.remove("btn-primary");
-          btn.classList.add("btn-warning", "text-dark");
-          btnText.innerHTML = `<i class="bi bi-arrow-clockwise"></i> Muat Ulang`;
-          btn.disabled = false;
-          btn.onclick = () => reloadForUpdate();
+          waitingWorker.postMessage("skipWaiting");
           return;
         }
 
         if (statusEl) {
           statusEl.innerText = `Status: Versi v${serverVersion} aktif (Terbaru).`;
         }
-        btn.classList.remove("btn-primary");
+        btn.classList.remove("btn-primary", "btn-warning", "text-dark");
         btn.classList.add("btn-success");
-        btnText.innerHTML = `<i class="bi bi-check-lg"></i> Versi Terbaru`;
+        btnText.innerHTML = `<i class="bi bi-check-lg"></i> Update Sukses`;
 
         setTimeout(() => {
           btn.disabled = false;
+          if (bannerBtn) bannerBtn.disabled = false;
           btn.classList.remove("btn-success");
           btn.classList.add("btn-primary");
           btnText.innerText = "Cek Update";
         }, 3000);
       } catch (e) {
         btn.disabled = false;
+        if (bannerBtn) bannerBtn.disabled = false;
         btn.classList.remove("btn-success", "btn-warning", "text-dark");
         btn.classList.add("btn-primary");
         btnText.innerText = "Cek Update";
